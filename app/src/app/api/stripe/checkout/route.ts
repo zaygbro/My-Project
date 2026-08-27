@@ -11,6 +11,17 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Auth before anything else — an unauthenticated caller shouldn't learn
+  // about server configuration state (e.g. which prices are wired up).
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   const plan = body?.plan as "pro" | "studio" | undefined;
   const period = body?.period as BillingPeriod | undefined;
@@ -28,15 +39,6 @@ export async function POST(req: NextRequest) {
       { error: `No Stripe price configured for ${plan}/${period}. See app/README.md.` },
       { status: 500 }
     );
-  }
-
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
   const { data: subscription } = await supabase
