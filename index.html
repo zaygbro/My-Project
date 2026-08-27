@@ -3,313 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Francisity — Drafting System</title>
-<meta name="description" content="Francisity takes a brief and drafts it with a full team of specialist engines — structure, visual systems, copy, and assurance — then reconciles their work into one issued, production-ready site.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%230F2A4D%22/><path d=%22M4 4 L20 20 M4 20 L20 4%22 stroke=%22%23EAF3FF%22 stroke-width=%221.5%22/><circle cx=%2212%22 cy=%2212%22 r=%224%22 fill=%22none%22 stroke=%22%23FF7A45%22 stroke-width=%221.5%22/></svg>">
+<title>Francisity — Multi-Engine Site Builder</title>
+<meta name="description" content="Francisity takes your brief and runs it through a council of specialist AI engines — structure, visual, copy, and assurance — then reconciles their output into one issued, production-ready site.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%23000%22/><text x=%2212%22 y=%2217%22 font-family=%22monospace%22 font-size=%2214%22 fill=%22%233B82F6%22 text-anchor=%22middle%22>/</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<span class="reg-mark reg-tl"></span>
-<span class="reg-mark reg-tr"></span>
-<span class="reg-mark reg-bl"></span>
-<span class="reg-mark reg-br"></span>
-
 <header class="nav" id="nav">
   <div class="nav-inner">
     <a class="brand" href="#top">
-      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-        <path d="M4 4 L22 22 M4 22 L22 4" stroke="#EAF3FF" stroke-width="1.4"/>
-        <circle cx="13" cy="13" r="5" fill="none" stroke="#FF7A45" stroke-width="1.4"/>
-      </svg>
       <span class="brand-name">Francisity</span>
     </a>
     <nav class="nav-links">
-      <a href="#engines">Engines</a>
-      <a href="#process">Process</a>
-      <a href="#showcase">Issued Work</a>
-      <a href="#spec">Specification</a>
+      <a href="#showcase">Showcase</a>
+      <a href="#engines">Engine</a>
+      <a href="#pricing">Pricing</a>
     </nav>
     <div class="nav-cta">
-      <a href="#brief" class="btn btn-primary">New Brief</a>
+      <a href="#brief" class="btn btn-white">Get Started</a>
     </div>
     <button class="nav-burger" id="navBurger" aria-label="Toggle menu">
       <span></span><span></span><span></span>
     </button>
   </div>
   <div class="nav-mobile" id="navMobile">
-    <a href="#engines">Engines</a>
-    <a href="#process">Process</a>
-    <a href="#showcase">Issued Work</a>
-    <a href="#spec">Specification</a>
-    <a href="#brief" class="btn btn-primary">New Brief</a>
+    <a href="#showcase">Showcase</a>
+    <a href="#engines">Engine</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#brief" class="btn btn-white">Get Started</a>
   </div>
 </header>
 
 <main id="top">
 
-  <!-- HERO — SHEET 01 -->
+  <!-- HERO -->
   <section class="hero" id="brief">
-    <div class="hero-grid">
-      <div>
-        <div class="hero-eyebrow">Sheet 01 / Elevation — Rev. 2026.08</div>
-        <h1>Draft any site.<br>We build it <em>in concert</em>.</h1>
-        <p class="hero-sub">Submit a brief and a full team of specialist engines — structure, visual systems,
-          copy, and assurance — draft it concurrently. Francisity reconciles their work into one issued,
-          production-ready site.</p>
-
-        <form class="brief-form" id="briefForm">
-          <label class="brief-label" for="briefInput">Project brief</label>
-          <div class="brief-row">
-            <input type="text" id="briefInput" placeholder="A neon-noir portfolio for a synth music producer" autocomplete="off">
-            <button type="submit" class="btn btn-primary">Issue →</button>
-          </div>
-        </form>
-        <div class="reference-briefs">
-          <button class="tag-chip" data-fill="A minimalist studio site for an architecture firm">Architecture studio</button>
-          <button class="tag-chip" data-fill="A bold e-commerce store for a sneaker drop">Sneaker drop store</button>
-          <button class="tag-chip" data-fill="A sleek SaaS landing page for an analytics tool">SaaS landing page</button>
-        </div>
+    <div class="hero-inner">
+      <div class="pill">
+        <span class="pill-dot"></span>
+        Council v2.0 is live
       </div>
 
-      <div class="hero-diagram">
-        <svg viewBox="0 0 560 460" fill="none">
-          <!-- dimension top -->
-          <line class="draw-line d1" x1="60" y1="20" x2="420" y2="20" pathLength="100" stroke="#8FB4D8" stroke-width="1"/>
-          <line x1="60" y1="15" x2="60" y2="25" stroke="#8FB4D8" stroke-width="1"/>
-          <line x1="420" y1="15" x2="420" y2="25" stroke="#8FB4D8" stroke-width="1"/>
-          <text x="205" y="14" fill="#8FB4D8" font-family="IBM Plex Mono" font-size="10">1440 PX</text>
+      <h1 class="hero-title">Describe your vision.<br>Watch the council build.</h1>
+      <p class="hero-sub">One brief runs through four specialist engines at once — structure, visual, copy,
+        and assurance — and Francisity reconciles their work into a single site.</p>
 
-          <!-- browser frame -->
-          <rect class="draw-line d1" pathLength="100" x="60" y="40" width="360" height="270" rx="2" stroke="#EAF3FF" stroke-width="1.4"/>
-          <line class="draw-line d1" pathLength="100" x1="60" y1="66" x2="420" y2="66" stroke="#EAF3FF" stroke-width="1"/>
-          <circle cx="75" cy="53" r="3" stroke="#8FB4D8" stroke-width="1"/>
-          <circle cx="88" cy="53" r="3" stroke="#8FB4D8" stroke-width="1"/>
-          <circle cx="101" cy="53" r="3" stroke="#8FB4D8" stroke-width="1"/>
+      <form class="brief-bar" id="briefForm">
+        <span class="brief-slash">/</span>
+        <input type="text" id="briefInput" placeholder="A modern landing page for a minimalist coffee roastery in Kyoto…" autocomplete="off">
+        <span class="brief-cursor" aria-hidden="true"></span>
+        <button type="submit" class="btn btn-accent">Build</button>
+      </form>
 
-          <!-- content blocks -->
-          <rect class="draw-line d2" pathLength="100" x="80" y="82" width="200" height="52" stroke="#FF7A45" stroke-width="1.2"/>
-          <line class="draw-line d2" pathLength="100" x1="80" y1="150" x2="330" y2="150" stroke="#8FB4D8" stroke-width="1"/>
-          <line class="draw-line d2" pathLength="100" x1="80" y1="164" x2="290" y2="164" stroke="#8FB4D8" stroke-width="1"/>
-          <rect class="draw-line d3" pathLength="100" x="80" y="188" width="96" height="64" stroke="#8FB4D8" stroke-width="1"/>
-          <rect class="draw-line d3" pathLength="100" x="188" y="188" width="96" height="64" stroke="#8FB4D8" stroke-width="1"/>
-          <rect class="draw-line d3" pathLength="100" x="296" y="188" width="96" height="64" stroke="#8FB4D8" stroke-width="1"/>
-
-          <!-- leader lines to stamps -->
-          <line class="draw-line d4" pathLength="100" x1="280" y1="95" x2="470" y2="60" stroke="#8FB4D8" stroke-width="0.75" stroke-dasharray="3 3"/>
-          <line class="draw-line d4" pathLength="100" x1="330" y1="150" x2="470" y2="150" stroke="#8FB4D8" stroke-width="0.75" stroke-dasharray="3 3"/>
-          <line class="draw-line d5" pathLength="100" x1="176" y1="220" x2="60" y2="380" stroke="#8FB4D8" stroke-width="0.75" stroke-dasharray="3 3"/>
-          <line class="draw-line d5" pathLength="100" x1="392" y1="220" x2="470" y2="330" stroke="#8FB4D8" stroke-width="0.75" stroke-dasharray="3 3"/>
-
-          <!-- stamps -->
-          <g class="fade-in d1">
-            <circle cx="490" cy="55" r="30" fill="none" stroke="#FF7A45" stroke-width="1"/>
-            <circle cx="490" cy="55" r="24" fill="none" stroke="#FF7A45" stroke-width="0.5" stroke-dasharray="2 2"/>
-            <text x="490" y="53" fill="#FF7A45" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">VISUAL</text>
-            <text x="490" y="63" fill="#FF7A45" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">ENGINE</text>
-          </g>
-          <g class="fade-in d2">
-            <circle cx="500" cy="150" r="30" fill="none" stroke="#EAF3FF" stroke-width="1"/>
-            <circle cx="500" cy="150" r="24" fill="none" stroke="#EAF3FF" stroke-width="0.5" stroke-dasharray="2 2"/>
-            <text x="500" y="148" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">COPY</text>
-            <text x="500" y="158" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">ENGINE</text>
-          </g>
-          <g class="fade-in d3">
-            <circle cx="40" cy="400" r="30" fill="none" stroke="#EAF3FF" stroke-width="1"/>
-            <circle cx="40" cy="400" r="24" fill="none" stroke="#EAF3FF" stroke-width="0.5" stroke-dasharray="2 2"/>
-            <text x="40" y="398" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">STRUCTURE</text>
-            <text x="40" y="408" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">ENGINE</text>
-          </g>
-          <g class="fade-in d4">
-            <circle cx="500" cy="350" r="30" fill="none" stroke="#EAF3FF" stroke-width="1"/>
-            <circle cx="500" cy="350" r="24" fill="none" stroke="#EAF3FF" stroke-width="0.5" stroke-dasharray="2 2"/>
-            <text x="500" y="348" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">ASSURANCE</text>
-            <text x="500" y="358" fill="#EAF3FF" font-family="IBM Plex Mono" font-size="8" text-anchor="middle">ENGINE</text>
-          </g>
-        </svg>
+      <div class="try-row">
+        <span class="try-label">Try:</span>
+        <button class="chip" data-fill="A SaaS dashboard with dark mode">SaaS dashboard with dark mode</button>
+        <button class="chip" data-fill="An art gallery portfolio">Art gallery portfolio</button>
+        <button class="chip" data-fill="A Web3 crypto tracker">Web3 crypto tracker</button>
       </div>
-    </div>
-
-    <div class="dim-rule" style="margin-top:56px;">
-      <span class="tick"></span><span class="run"></span>
-      <span>4 ENGINES · 1 ISSUED SITE</span>
-      <span class="run"></span><span class="tick"></span>
     </div>
 
     <div class="stat-rail">
-      <div class="stat"><span class="stat-num" data-count="12">0</span><span class="stat-label">Engines on record</span></div>
+      <div class="stat"><span class="stat-num" data-count="12">0</span><span class="stat-label">Engines in the council</span></div>
       <div class="stat"><span class="stat-num" data-count="48">0</span><span class="stat-label">Seconds to first draft</span></div>
-      <div class="stat"><span class="stat-num" data-count="190000">0</span><span class="stat-label">Sites issued</span></div>
+      <div class="stat"><span class="stat-num" data-count="190000">0</span><span class="stat-label">Sites built</span></div>
       <div class="stat"><span class="stat-num" data-count="99">0</span><span class="stat-label">% uptime SLA</span></div>
     </div>
   </section>
 
-  <!-- ENGINES — SHEET 02 -->
-  <section class="engines" id="engines">
-    <div class="sheet-header reveal">
-      <div class="sheet-tag"><span class="rule"></span>Sheet 02 / Engines of Record</div>
-      <h2>A full consulting team, not one generalist guessing alone</h2>
-      <p class="lede">Every brief is drafted by specialists who each own one discipline — the same way a
-        real building drawing carries sign-off from structural, mechanical, and electrical consultants
-        before it's issued.</p>
-    </div>
-
-    <div class="engine-grid">
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 01</div>
-        <h3>Structure</h3>
-        <p>Drafts information architecture, page hierarchy, and layout grid from the brief alone.</p>
-      </div>
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 02</div>
-        <h3>Visual Systems</h3>
-        <p>Sets palette, type pairing, and component style so the draft holds together as one design.</p>
-      </div>
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 03</div>
-        <h3>Copy</h3>
-        <p>Writes headlines, body, and calls to action in the brief's voice — never placeholder text.</p>
-      </div>
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 04</div>
-        <h3>Assurance</h3>
-        <p>Checks contrast, responsive behavior, and broken states before a draft is ever shown.</p>
-      </div>
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 05</div>
-        <h3>Continuity</h3>
-        <p>Keeps naming, tone, and metadata consistent site-wide, and drafts on-page SEO structure.</p>
-      </div>
-      <div class="engine-card reveal">
-        <div class="engine-id">ENGINE NO. 06</div>
-        <h3>Foundation</h3>
-        <p>Turns the reconciled draft into clean, production-grade markup, styles, and scripts.</p>
-      </div>
-    </div>
-
-    <div class="reconcile">
-      <div class="reconcile-copy reveal">
-        <div class="sheet-tag"><span class="rule"></span>Reconciliation</div>
-        <h3>Six drafts. One issued site.</h3>
-        <p>Francisity doesn't pick a single engine's answer and discard the rest. A reconciliation pass
-          scores every engine's output against the brief, then merges the strongest structure, the
-          sharpest copy, and the most coherent visual system into a single file — the way a lead architect
-          reconciles every consultant's markup before a set goes out for construction.</p>
-      </div>
-      <div class="reconcile-diagram reveal">
-        <svg viewBox="0 0 480 260" fill="none">
-          <rect x="30" y="20" width="140" height="90" stroke="#8FB4D8" stroke-width="1" opacity="0.5"/>
-          <rect x="55" y="45" width="140" height="90" stroke="#8FB4D8" stroke-width="1" opacity="0.65"/>
-          <rect x="80" y="70" width="140" height="90" stroke="#8FB4D8" stroke-width="1" opacity="0.8"/>
-          <line x1="220" y1="115" x2="290" y2="115" stroke="#8FB4D8" stroke-width="1" stroke-dasharray="3 3"/>
-          <rect x="300" y="60" width="150" height="110" stroke="#FF7A45" stroke-width="1.4"/>
-          <text x="375" y="120" fill="#FF7A45" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">ISSUED</text>
-          <text x="375" y="134" fill="#FF7A45" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">SITE</text>
-        </svg>
-      </div>
-    </div>
-  </section>
-
-  <div class="dim-rule"><span class="tick"></span><span class="run"></span><span>REV. SEQ.</span><span class="run"></span><span class="tick"></span></div>
-
-  <!-- PROCESS — SHEET 03 -->
-  <section class="process" id="process">
-    <div class="sheet-header reveal">
-      <div class="sheet-tag"><span class="rule"></span>Sheet 03 / Revision Sequence</div>
-      <h2>From brief to issued site in four stages</h2>
-    </div>
-    <div class="rev-table">
-      <div class="rev-row reveal">
-        <div class="rev-num">01</div>
-        <div class="rev-stage">Brief intake</div>
-        <div class="rev-desc"><p>Describe the site in plain language, or hand over a reference link or moodboard. Francisity reads intent, not just keywords.</p></div>
-      </div>
-      <div class="rev-row reveal">
-        <div class="rev-num">02</div>
-        <div class="rev-stage">Concurrent drafting</div>
-        <div class="rev-desc"><p>Structure, visual, copy, and assurance engines draft against the same brief in parallel, each proposing its strongest interpretation.</p></div>
-      </div>
-      <div class="rev-row reveal">
-        <div class="rev-num">03</div>
-        <div class="rev-stage">Reconciliation</div>
-        <div class="rev-desc"><p>The merge layer scores every candidate against the brief and assembles one cohesive, production-grade draft.</p></div>
-      </div>
-      <div class="rev-row reveal">
-        <div class="rev-num">04</div>
-        <div class="rev-stage">Issue &amp; publish</div>
-        <div class="rev-desc"><p>Refine any section in plain English, connect your domain, and publish — hosting and SSL included.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SHOWCASE — SHEET 04 -->
+  <!-- SHOWCASE -->
   <section class="showcase" id="showcase">
-    <div class="sheet-header reveal">
-      <div class="sheet-tag"><span class="rule"></span>Sheet 04 / Issued Work</div>
-      <h2>Drafted, reconciled, and issued end-to-end</h2>
-      <p class="lede">Every drawing below came from a single brief, with no manual cleanup after.</p>
+    <div class="section-head reveal">
+      <span class="section-marker">(01) The Showcase</span>
+      <h2>Built end-to-end from a single brief</h2>
+      <p class="lede">No manual cleanup after. What the council ships is what goes live.</p>
     </div>
 
     <div class="showcase-grid">
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><line x1="10" y1="30" x2="190" y2="30" stroke="#8FB4D8" stroke-width="1"/><rect x="24" y="46" width="60" height="60" stroke="#FF7A45" stroke-width="1" fill="none"/><line x1="96" y1="50" x2="176" y2="50" stroke="#8FB4D8" stroke-width="1"/><line x1="96" y1="66" x2="160" y2="66" stroke="#8FB4D8" stroke-width="1"/><line x1="96" y1="82" x2="150" y2="82" stroke="#8FB4D8" stroke-width="1"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><line x1="8" y1="28" x2="192" y2="28" stroke="#2A2A31"/><rect x="22" y="44" width="60" height="62" rx="4" stroke="#3B82F6"/><line x1="94" y1="48" x2="176" y2="48" stroke="#4A4A54"/><line x1="94" y1="64" x2="160" y2="64" stroke="#4A4A54"/><line x1="94" y1="80" x2="150" y2="80" stroke="#4A4A54"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 014 — ISSUED IN 41S</div>
+          <div class="showcase-index">Built in 41s</div>
           <h3>Aurora Studio</h3>
           <p>Architecture portfolio</p>
         </div>
       </article>
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><circle cx="100" cy="45" r="22" stroke="#FF7A45" stroke-width="1" fill="none"/><line x1="40" y1="90" x2="160" y2="90" stroke="#8FB4D8" stroke-width="1"/><line x1="55" y1="102" x2="145" y2="102" stroke="#8FB4D8" stroke-width="1"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><circle cx="100" cy="48" r="22" stroke="#3B82F6"/><line x1="40" y1="92" x2="160" y2="92" stroke="#4A4A54"/><line x1="55" y1="104" x2="145" y2="104" stroke="#4A4A54"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 021 — ISSUED IN 52S</div>
+          <div class="showcase-index">Built in 52s</div>
           <h3>Nightform Records</h3>
           <p>Music label storefront</p>
         </div>
       </article>
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><line x1="26" y1="30" x2="174" y2="30" stroke="#8FB4D8" stroke-width="1"/><rect x="26" y="50" width="45" height="50" stroke="#8FB4D8" stroke-width="1" fill="none"/><rect x="78" y="50" width="45" height="50" stroke="#FF7A45" stroke-width="1" fill="none"/><rect x="130" y="50" width="45" height="50" stroke="#8FB4D8" stroke-width="1" fill="none"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><line x1="24" y1="30" x2="176" y2="30" stroke="#4A4A54"/><rect x="24" y="50" width="45" height="50" rx="4" stroke="#4A4A54"/><rect x="78" y="50" width="45" height="50" rx="4" stroke="#3B82F6"/><rect x="132" y="50" width="45" height="50" rx="4" stroke="#4A4A54"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 033 — ISSUED IN 37S</div>
+          <div class="showcase-index">Built in 37s</div>
           <h3>Pulse Analytics</h3>
           <p>SaaS landing page</p>
         </div>
       </article>
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><rect x="24" y="24" width="152" height="34" stroke="#8FB4D8" stroke-width="1" fill="none"/><rect x="24" y="66" width="46" height="46" stroke="#8FB4D8" stroke-width="1" fill="none"/><rect x="77" y="66" width="46" height="46" stroke="#FF7A45" stroke-width="1" fill="none"/><rect x="130" y="66" width="46" height="46" stroke="#8FB4D8" stroke-width="1" fill="none"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><rect x="24" y="24" width="152" height="34" rx="4" stroke="#4A4A54"/><rect x="24" y="68" width="46" height="46" rx="4" stroke="#4A4A54"/><rect x="77" y="68" width="46" height="46" rx="4" stroke="#3B82F6"/><rect x="130" y="68" width="46" height="46" rx="4" stroke="#4A4A54"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 048 — ISSUED IN 46S</div>
+          <div class="showcase-index">Built in 46s</div>
           <h3>Kindred Coffee Co.</h3>
           <p>E-commerce storefront</p>
         </div>
       </article>
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><line x1="30" y1="26" x2="170" y2="26" stroke="#8FB4D8" stroke-width="1"/><line x1="30" y1="40" x2="150" y2="40" stroke="#8FB4D8" stroke-width="1"/><rect x="30" y="58" width="140" height="52" stroke="#FF7A45" stroke-width="1" fill="none"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><line x1="30" y1="28" x2="170" y2="28" stroke="#4A4A54"/><line x1="30" y1="42" x2="150" y2="42" stroke="#4A4A54"/><rect x="30" y="58" width="140" height="52" rx="4" stroke="#3B82F6"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 052 — ISSUED IN 39S</div>
+          <div class="showcase-index">Built in 39s</div>
           <h3>Vertex Legal</h3>
           <p>Professional services site</p>
         </div>
       </article>
       <article class="showcase-card reveal">
         <div class="showcase-thumb">
-          <svg viewBox="0 0 200 130"><rect x="10" y="10" width="180" height="110" stroke="#8FB4D8" stroke-width="1" fill="none"/><circle cx="70" cy="55" r="18" stroke="#8FB4D8" stroke-width="1" fill="none"/><circle cx="110" cy="75" r="26" stroke="#FF7A45" stroke-width="1" fill="none"/><line x1="30" y1="105" x2="170" y2="105" stroke="#8FB4D8" stroke-width="1"/></svg>
+          <svg viewBox="0 0 200 130" fill="none"><rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31"/><circle cx="70" cy="52" r="18" stroke="#4A4A54"/><circle cx="112" cy="74" r="26" stroke="#3B82F6"/><line x1="30" y1="106" x2="170" y2="106" stroke="#4A4A54"/></svg>
         </div>
         <div class="showcase-meta">
-          <div class="showcase-index">NO. 061 — ISSUED IN 44S</div>
+          <div class="showcase-index">Built in 44s</div>
           <h3>Lumen 3D Studio</h3>
           <p>Motion artist portfolio</p>
         </div>
@@ -317,15 +147,94 @@
     </div>
   </section>
 
+  <!-- ENGINE -->
+  <section class="engines" id="engines">
+    <div class="section-head reveal">
+      <span class="section-marker">(02) The Engine</span>
+      <h2>A council, not one model guessing alone</h2>
+      <p class="lede">Every brief runs through four specialists at once, then a reconciliation pass merges
+        their strongest structure, copy, and visual system into one draft — instead of picking a single
+        answer and discarding the rest.</p>
+    </div>
+
+    <div class="engine-grid">
+      <div class="engine-card reveal">
+        <div class="engine-index">01</div>
+        <h3>Structure</h3>
+        <p>Drafts information architecture, page hierarchy, and layout grid from the brief alone.</p>
+      </div>
+      <div class="engine-card reveal">
+        <div class="engine-index">02</div>
+        <h3>Visual</h3>
+        <p>Sets palette, type pairing, and component style so the draft holds together as one system.</p>
+      </div>
+      <div class="engine-card reveal">
+        <div class="engine-index">03</div>
+        <h3>Copy</h3>
+        <p>Writes headlines, body, and calls to action in the brief's voice — never placeholder text.</p>
+      </div>
+      <div class="engine-card reveal">
+        <div class="engine-index">04</div>
+        <h3>Assurance</h3>
+        <p>Checks contrast, responsive behavior, and broken states before a draft is ever shown.</p>
+      </div>
+    </div>
+
+    <div class="console reveal">
+      <div class="console-bar">
+        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+        <span class="console-title">council --build "kyoto coffee roastery landing page"</span>
+      </div>
+      <div class="console-body">
+        <div class="console-line" style="--d:0s"><span class="ok">✓</span> structure &nbsp;drafted layout in 6.2s</div>
+        <div class="console-line" style="--d:.15s"><span class="ok">✓</span> visual &nbsp;&nbsp;&nbsp;&nbsp;set palette + type in 5.8s</div>
+        <div class="console-line" style="--d:.3s"><span class="ok">✓</span> copy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;wrote hero + 4 sections in 7.1s</div>
+        <div class="console-line" style="--d:.45s"><span class="ok">✓</span> assurance &nbsp;passed contrast + responsive checks</div>
+        <div class="console-line accent" style="--d:.65s">→ reconciling 4 drafts into one site…</div>
+        <div class="console-line accent strong" style="--d:.9s">✓ issued in 41.3s — <a href="#brief">preview →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESS -->
+  <section class="process" id="process">
+    <div class="section-head reveal">
+      <span class="section-marker">(03) The Process</span>
+      <h2>From brief to live site in four stages</h2>
+    </div>
+    <div class="step-grid">
+      <div class="step-card reveal">
+        <div class="step-num">01</div>
+        <h3>Brief intake</h3>
+        <p>Describe the site in plain language, or hand over a reference link or moodboard.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">02</div>
+        <h3>Concurrent drafting</h3>
+        <p>All four engines draft against the same brief in parallel, each proposing its strongest take.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">03</div>
+        <h3>Reconciliation</h3>
+        <p>The merge layer scores every candidate and assembles one cohesive, production-grade draft.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-num">04</div>
+        <h3>Publish</h3>
+        <p>Refine any section in plain English, connect your domain, and ship — SSL included.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- FIELD NOTES -->
   <section class="notes">
-    <div class="sheet-header reveal">
-      <div class="sheet-tag"><span class="rule"></span>Field Notes</div>
-      <h2>Marginalia from the drafting room</h2>
+    <div class="section-head reveal">
+      <span class="section-marker">(04) From the Field</span>
+      <h2>What teams say after shipping</h2>
     </div>
     <div class="notes-grid">
       <div class="note reveal">
-        <p>"It felt like hiring a designer, a copywriter, and a dev team who all agreed on the same vision instantly. We issued our rebrand in an afternoon."</p>
+        <p>"It felt like hiring a designer, a copywriter, and a dev team who all agreed on the same vision instantly. We shipped our rebrand in an afternoon."</p>
         <footer>Maya R. — Nightform Records</footer>
       </div>
       <div class="note reveal">
@@ -333,84 +242,69 @@
         <footer>Devon K. — Pulse Analytics</footer>
       </div>
       <div class="note reveal">
-        <p>"We reissued the hero a dozen times without touching anything else downstream. That alone saved us days."</p>
+        <p>"We rebuilt the hero a dozen times without touching anything else downstream. That alone saved us days."</p>
         <footer>Priya S. — Aurora Studio</footer>
       </div>
     </div>
   </section>
 
-  <!-- SPECIFICATION / PRICING — SHEET 05 -->
-  <section class="spec" id="spec">
-    <div class="sheet-header reveal">
-      <div class="sheet-tag"><span class="rule"></span>Sheet 05 / Specification Schedule</div>
-      <h2>Start free. Scale when the brief demands it.</h2>
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="section-head reveal">
+      <span class="section-marker">(05) Pricing</span>
+      <h2>Start free. Scale when you need to.</h2>
     </div>
-    <div class="spec-table reveal">
-      <table class="spec-grid">
-        <thead>
-          <tr>
-            <th></th>
-            <th><span class="tier-name">Spark</span><span class="tier-price">$0 / mo</span></th>
-            <th class="tier-featured"><span class="tier-name">Pro</span><span class="tier-price">$29 / mo</span></th>
-            <th><span class="tier-name">Studio</span><span class="tier-price">$99 / mo</span></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="row-label">Issued sites</td>
-            <td><span class="yes">3</span></td>
-            <td><span class="yes">Unlimited</span></td>
-            <td><span class="yes">Unlimited</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">Engine team</td>
-            <td><span class="yes">Core 4</span></td>
-            <td><span class="yes">Full 12</span></td>
-            <td><span class="yes">Full 12</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">Custom domain + SSL</td>
-            <td><span class="no">—</span></td>
-            <td><span class="yes">Included</span></td>
-            <td><span class="yes">Included</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">Section-level reissue</td>
-            <td><span class="no">—</span></td>
-            <td><span class="yes">Included</span></td>
-            <td><span class="yes">Included</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">Multi-seat workspace</td>
-            <td><span class="no">—</span></td>
-            <td><span class="no">—</span></td>
-            <td><span class="yes">Included</span></td>
-          </tr>
-          <tr>
-            <td class="row-label">White-label export + API</td>
-            <td><span class="no">—</span></td>
-            <td><span class="no">—</span></td>
-            <td><span class="yes">Included</span></td>
-          </tr>
-          <tr class="spec-cta-row">
-            <td></td>
-            <td><a href="#waitlist" class="btn btn-block">Get started</a></td>
-            <td><a href="#waitlist" class="btn btn-primary btn-block">Start building</a></td>
-            <td><a href="#waitlist" class="btn btn-block">Talk to us</a></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="pricing-grid">
+      <div class="price-card reveal">
+        <h3>Spark</h3>
+        <p class="price-desc">Explore the council for personal projects.</p>
+        <div class="price-amount">$0<span>/mo</span></div>
+        <ul class="price-features">
+          <li>3 sites</li>
+          <li>Core 4-engine council</li>
+          <li>Francisity subdomain</li>
+          <li>Community support</li>
+        </ul>
+        <a href="#brief" class="btn btn-ghost btn-block">Get started</a>
+      </div>
+      <div class="price-card featured reveal">
+        <span class="price-badge">Most popular</span>
+        <h3>Pro</h3>
+        <p class="price-desc">For creators and small teams shipping real products.</p>
+        <div class="price-amount">$29<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Unlimited sites</li>
+          <li>Full 12-engine council</li>
+          <li>Custom domain + SSL</li>
+          <li>Section-level rebuilds</li>
+          <li>Priority build queue</li>
+        </ul>
+        <a href="#brief" class="btn btn-accent btn-block">Start building</a>
+      </div>
+      <div class="price-card reveal">
+        <h3>Studio</h3>
+        <p class="price-desc">For agencies building for clients at scale.</p>
+        <div class="price-amount">$99<span>/mo</span></div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Multi-seat workspace</li>
+          <li>White-label export</li>
+          <li>API access</li>
+        </ul>
+        <a href="#brief" class="btn btn-ghost btn-block">Talk to us</a>
+      </div>
     </div>
   </section>
 
-  <!-- CTA — SHEET 06 -->
+  <!-- CTA -->
   <section class="cta" id="waitlist">
     <div class="cta-inner reveal">
-      <h2>Sheet 06 / Request the full set</h2>
-      <p>Join the waitlist and be first to draft with the complete Francisity engine team.</p>
+      <span class="section-marker center">(06) Get In</span>
+      <h2>Your next site is one brief away.</h2>
+      <p>Join the waitlist and be first to build with the full Francisity council.</p>
       <form class="cta-form" id="waitlistForm">
         <input type="email" id="waitlistEmail" placeholder="you@example.com" required>
-        <button type="submit" class="btn btn-primary">Join waitlist</button>
+        <button type="submit" class="btn btn-accent">Join waitlist</button>
       </form>
       <p class="cta-note" id="waitlistNote">No spam. Just a launch invite.</p>
     </div>
@@ -418,47 +312,33 @@
 
 </main>
 
-<!-- FOOTER — TITLE BLOCK -->
 <footer class="footer">
-  <div class="title-block">
-    <div class="tb-cell">
-      <a class="brand" href="#top">
-        <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
-          <path d="M4 4 L22 22 M4 22 L22 4" stroke="#EAF3FF" stroke-width="1.4"/>
-          <circle cx="13" cy="13" r="5" fill="none" stroke="#FF7A45" stroke-width="1.4"/>
-        </svg>
-        <span class="brand-name">Francisity</span>
-      </a>
-      <p>Every site you can draft, built by a full team of specialist engines.</p>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-name">Francisity</span>
+      <p>Every site you can describe, built by a council of AI engines.</p>
     </div>
-    <div class="tb-cell">
-      <span class="tb-label">Product</span>
-      <nav>
-        <a href="#engines">Engines</a>
-        <a href="#process">Process</a>
-        <a href="#spec">Specification</a>
-      </nav>
-    </div>
-    <div class="tb-cell">
-      <span class="tb-label">Company</span>
-      <nav>
+    <div class="footer-links">
+      <div>
+        <h4>Product</h4>
+        <a href="#showcase">Showcase</a>
+        <a href="#engines">Engine</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div>
+        <h4>Company</h4>
         <a href="#top">About</a>
         <a href="#top">Careers</a>
         <a href="#top">Contact</a>
-      </nav>
-    </div>
-    <div class="tb-cell">
-      <span class="tb-label">Drawn by</span>
-      <span class="tb-value">Francisity</span>
-    </div>
-    <div class="tb-cell">
-      <span class="tb-label">Sheet</span>
-      <span class="tb-value">06 of 06</span>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="#top">Privacy</a>
+        <a href="#top">Terms</a>
+      </div>
     </div>
   </div>
-  <div class="footer-bottom">
-    © 2026 FRANCISITY — ALL RIGHTS RESERVED
-  </div>
+  <div class="footer-bottom">© 2026 Francisity. All rights reserved.</div>
 </footer>
 
 <script src="script.js"></script>
