@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Francisity — Build Any Website With Multi-AI Intelligence</title>
+<meta name="description" content="Francisity fuses multiple AI models into one pipeline to design, write, and ship any website you can imagine — in minutes.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="noise"></div>
+<canvas id="bg-canvas"></canvas>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark">✦</span>
+      <span class="brand-name">Francisity</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#engine">Engine</a>
+      <a href="#how">How it works</a>
+      <a href="#showcase">Showcase</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#waitlist" class="btn btn-ghost">Sign in</a>
+      <a href="#waitlist" class="btn btn-primary">Start building</a>
+    </div>
+    <button class="nav-burger" id="navBurger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="nav-mobile" id="navMobile">
+    <a href="#engine">Engine</a>
+    <a href="#how">How it works</a>
+    <a href="#showcase">Showcase</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#waitlist" class="btn btn-primary">Start building</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="container hero-inner">
+      <div class="pill reveal">
+        <span class="pill-dot"></span>
+        Multi-model orchestration is live — v2.0
+      </div>
+      <h1 class="hero-title reveal">
+        Describe it once.<br>
+        <span class="gradient-text">A fleet of AIs</span> build it.
+      </h1>
+      <p class="hero-sub reveal">
+        Francisity routes your idea through a council of specialized AI models —
+        design, copy, code, and QA — then merges their best output into a single,
+        production-ready website. No templates. No limits. No code required.
+      </p>
+
+      <form class="hero-prompt reveal" id="heroForm">
+        <span class="hero-prompt-icon">✦</span>
+        <input type="text" id="heroInput" placeholder="A neon-noir portfolio for a synth music producer…" autocomplete="off">
+        <button type="submit" class="btn btn-primary">
+          Generate <span class="arrow">→</span>
+        </button>
+      </form>
+      <div class="hero-suggestions reveal">
+        <button class="chip" data-fill="A minimalist studio site for an architecture firm">Architecture studio</button>
+        <button class="chip" data-fill="A bold e-commerce store for a sneaker drop">Sneaker drop store</button>
+        <button class="chip" data-fill="A sleek SaaS landing page for an analytics tool">SaaS landing page</button>
+        <button class="chip" data-fill="A dreamy portfolio for a 3D motion artist">3D artist portfolio</button>
+      </div>
+
+      <div class="hero-stats reveal">
+        <div class="stat"><span class="stat-num" data-count="12">0</span><span class="stat-label">AI models orchestrated</span></div>
+        <div class="stat"><span class="stat-num" data-count="48">0</span><span class="stat-label">Seconds to first draft</span></div>
+        <div class="stat"><span class="stat-num" data-count="190000">0</span><span class="stat-label">Sites shipped</span></div>
+        <div class="stat"><span class="stat-num" data-count="99">0</span><span class="stat-label">% uptime SLA</span></div>
+      </div>
+    </div>
+
+    <div class="hero-mock reveal">
+      <div class="mock-window">
+        <div class="mock-bar">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+          <span class="mock-url">francisity.ai/build/preview</span>
+        </div>
+        <div class="mock-body">
+          <div class="mock-side">
+            <div class="mock-side-item active">🎨 Design Model</div>
+            <div class="mock-side-item">✍️ Copy Model</div>
+            <div class="mock-side-item">🧠 Layout Model</div>
+            <div class="mock-side-item">🛡️ QA Model</div>
+          </div>
+          <div class="mock-canvas">
+            <div class="mock-block block-hero"></div>
+            <div class="mock-block block-line w60"></div>
+            <div class="mock-block block-line w80"></div>
+            <div class="mock-grid">
+              <div class="mock-card"></div>
+              <div class="mock-card"></div>
+              <div class="mock-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGO STRIP -->
+  <section class="logos">
+    <div class="container">
+      <p class="logos-label">The council behind every build</p>
+      <div class="logos-row">
+        <span>Vision LLM</span><span>Design Diffusion</span><span>Copy Engine</span>
+        <span>Code Synth</span><span>Layout Solver</span><span>QA Auditor</span><span>SEO Model</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGINE / FEATURES -->
+  <section class="engine" id="engine">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">The Engine</span>
+        <h2>One prompt, an entire AI studio</h2>
+        <p>Every build fans out across specialized models running in parallel, then a synthesis layer merges
+          the strongest design, copy, structure, and code into one cohesive site.</p>
+      </div>
+
+      <div class="engine-grid">
+        <div class="engine-card lg reveal">
+          <div class="engine-icon">🧬</div>
+          <h3>Ensemble Synthesis</h3>
+          <p>We don't pick one model's answer — we blend the best structural idea, the sharpest copy, and the
+            cleanest visual system from every model in the council into a single unified output.</p>
+          <div class="engine-visual">
+            <div class="node n1">Design</div>
+            <div class="node n2">Copy</div>
+            <div class="node n3">Code</div>
+            <div class="node n4">QA</div>
+            <div class="node core">Francisity Core</div>
+          </div>
+        </div>
+
+        <div class="engine-card reveal">
+          <div class="engine-icon">⚡</div>
+          <h3>Real-time generation</h3>
+          <p>Watch your site assemble live — sections stream in as each model finishes its pass.</p>
+        </div>
+
+        <div class="engine-card reveal">
+          <div class="engine-icon">🎯</div>
+          <h3>Brand-aware output</h3>
+          <p>Feed it a logo, palette, or vibe — every model in the pipeline stays on-brand automatically.</p>
+        </div>
+
+        <div class="engine-card reveal">
+          <div class="engine-icon">🛡️</div>
+          <h3>Self-auditing QA</h3>
+          <p>A dedicated QA model checks accessibility, responsiveness, and broken states before you ever see a draft.</p>
+        </div>
+
+        <div class="engine-card reveal">
+          <div class="engine-icon">🧩</div>
+          <h3>Infinite remix</h3>
+          <p>Regenerate any section independently — swap the hero, keep the rest — without breaking the system.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Workflow</span>
+        <h2>From idea to live site in four steps</h2>
+      </div>
+
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <h3>Describe your vision</h3>
+          <p>Type a sentence, paste a moodboard, or drop in a competitor link. Francisity reads intent, not just keywords.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <h3>The council convenes</h3>
+          <p>Design, copy, layout, and code models generate in parallel, each proposing their strongest interpretation.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <h3>Francisity synthesizes</h3>
+          <p>Our merge layer scores every candidate against your brief and assembles one cohesive, production-grade site.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">04</div>
+          <h3>Refine &amp; publish</h3>
+          <p>Tweak anything in plain English, connect your domain, and ship — hosting and SSL included.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE -->
+  <section class="showcase" id="showcase">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Showcase</span>
+        <h2>Built entirely by the council</h2>
+        <p>Every example below was generated end-to-end from a single prompt.</p>
+      </div>
+
+      <div class="showcase-grid">
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-1"></div>
+          <div class="showcase-meta">
+            <h3>Aurora Studio</h3>
+            <p>Architecture portfolio · generated in 41s</p>
+          </div>
+        </article>
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-2"></div>
+          <div class="showcase-meta">
+            <h3>Nightform Records</h3>
+            <p>Music label storefront · generated in 52s</p>
+          </div>
+        </article>
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-3"></div>
+          <div class="showcase-meta">
+            <h3>Pulse Analytics</h3>
+            <p>SaaS landing page · generated in 37s</p>
+          </div>
+        </article>
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-4"></div>
+          <div class="showcase-meta">
+            <h3>Kindred Coffee Co.</h3>
+            <p>E-commerce site · generated in 46s</p>
+          </div>
+        </article>
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-5"></div>
+          <div class="showcase-meta">
+            <h3>Vertex Legal</h3>
+            <p>Law firm site · generated in 39s</p>
+          </div>
+        </article>
+        <article class="showcase-card reveal">
+          <div class="showcase-thumb thumb-6"></div>
+          <div class="showcase-meta">
+            <h3>Lumen 3D Studio</h3>
+            <p>Motion artist portfolio · generated in 44s</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="container">
+      <div class="testimonial-track reveal">
+        <blockquote>
+          <p>“It felt like hiring a designer, a copywriter, and a dev team who all agreed on the same vision instantly. We shipped our rebrand in an afternoon.”</p>
+          <footer>— Maya R., Founder, Nightform Records</footer>
+        </blockquote>
+        <blockquote>
+          <p>“The multi-model merge is the part that sold me. It doesn't feel generated — it feels art-directed.”</p>
+          <footer>— Devon K., Product Lead, Pulse Analytics</footer>
+        </blockquote>
+        <blockquote>
+          <p>“We regenerated the hero section a dozen times without touching anything else. That alone saved us days.”</p>
+          <footer>— Priya S., Aurora Studio</footer>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Pricing</span>
+        <h2>Start free. Scale when you're ready.</h2>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="price-card reveal">
+          <h3>Spark</h3>
+          <p class="price-desc">Explore the council for personal projects.</p>
+          <div class="price-amount">$0<span>/mo</span></div>
+          <ul class="price-features">
+            <li>3 AI-generated sites</li>
+            <li>Core model council</li>
+            <li>Francisity subdomain</li>
+            <li>Community support</li>
+          </ul>
+          <a href="#waitlist" class="btn btn-ghost btn-block">Get started</a>
+        </div>
+
+        <div class="price-card featured reveal">
+          <span class="price-badge">Most popular</span>
+          <h3>Pro</h3>
+          <p class="price-desc">For creators and small teams shipping real products.</p>
+          <div class="price-amount">$29<span>/mo</span></div>
+          <ul class="price-features">
+            <li>Unlimited AI-generated sites</li>
+            <li>Full 12-model council</li>
+            <li>Custom domain + SSL</li>
+            <li>Section-level regeneration</li>
+            <li>Priority build queue</li>
+          </ul>
+          <a href="#waitlist" class="btn btn-primary btn-block">Start building</a>
+        </div>
+
+        <div class="price-card reveal">
+          <h3>Studio</h3>
+          <p class="price-desc">For agencies building for clients at scale.</p>
+          <div class="price-amount">$99<span>/mo</span></div>
+          <ul class="price-features">
+            <li>Everything in Pro</li>
+            <li>Multi-seat workspace</li>
+            <li>White-label export</li>
+            <li>API access</li>
+            <li>Dedicated support</li>
+          </ul>
+          <a href="#waitlist" class="btn btn-ghost btn-block">Talk to us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA / WAITLIST -->
+  <section class="cta" id="waitlist">
+    <div class="container cta-inner">
+      <h2>Your next website is one sentence away.</h2>
+      <p>Join the waitlist and be first to build with the full Francisity council.</p>
+      <form class="cta-form" id="waitlistForm">
+        <input type="email" id="waitlistEmail" placeholder="you@example.com" required>
+        <button type="submit" class="btn btn-primary">Join waitlist</button>
+      </form>
+      <p class="cta-note" id="waitlistNote">No spam. Just a launch invite.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <span class="brand-mark">✦</span>
+      <span class="brand-name">Francisity</span>
+      <p>Every website you could dream of, built by a council of AIs.</p>
+    </div>
+    <div class="footer-links">
+      <div>
+        <h4>Product</h4>
+        <a href="#engine">Engine</a>
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <a href="#top">About</a>
+        <a href="#top">Careers</a>
+        <a href="#top">Contact</a>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <a href="#top">Privacy</a>
+        <a href="#top">Terms</a>
+      </div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>© 2026 Francisity. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
