@@ -80,6 +80,7 @@ export interface Database {
           custom_domain: string | null;
           badge_enabled: boolean;
           content: SiteSection[];
+          preferred_model: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at: string;
         };
         Insert: {
@@ -91,6 +92,7 @@ export interface Database {
           custom_domain?: string | null;
           badge_enabled?: boolean;
           content?: SiteSection[];
+          preferred_model?: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["sites"]["Insert"]>;

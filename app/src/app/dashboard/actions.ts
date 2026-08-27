@@ -6,6 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
+import { isAiModelId, recommendModel, type AiModelId } from "@/lib/ai/models";
+import { generateSectionDraft, isAnthropicConfigured } from "@/lib/ai/generate";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
 
 export interface CreateSiteState {
   error: string | null;
@@ -17,6 +21,8 @@ export async function createSite(
 ): Promise<CreateSiteState> {
   const name = String(formData.get("name") ?? "").trim();
   const brief = String(formData.get("brief") ?? "").trim();
+  const requestedModel = String(formData.get("model") ?? "");
+  const model: AiModelId = isAiModelId(requestedModel) ? requestedModel : recommendModel(brief);
 
   if (!name) {
     return { error: "Give your site a name." };
@@ -66,6 +72,7 @@ export async function createSite(
       brief: brief || null,
       badge_enabled: PLAN_LIMITS[plan].badge,
       content: initialContent,
+      preferred_model: model,
     })
     .select("id")
     .single();
@@ -85,6 +92,48 @@ export async function createSite(
 
   revalidatePath("/dashboard");
   return { error: null };
+}
+
+/** Shared by manual edits and AI-generated ones: writes the new content and a version snapshot. */
+async function writeSectionEdit(
+  supabase: SupabaseClient<Database>,
+  siteId: string,
+  currentContent: SiteSection[],
+  sectionKey: string,
+  newBody: string
+): Promise<{ error: string | null }> {
+  const newContent = currentContent.map((s) => (s.key === sectionKey ? { ...s, body: newBody } : s));
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ content: newContent })
+    .eq("id", siteId);
+  if (updateError) return { error: updateError.message };
+
+  const { error: versionError } = await supabase.from("site_versions").insert({
+    site_id: siteId,
+    content: newContent,
+    changed_sections: [sectionKey],
+    kind: "edit",
+  });
+  if (versionError) return { error: versionError.message };
+
+  return { error: null };
+}
+
+async function checkRebuildQuota(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  plan: PlanId
+): Promise<string | null> {
+  const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
+  if (rebuildLimit === null) return null;
+
+  const used = await getMonthlyEditCount(supabase, userId);
+  if (used >= rebuildLimit) {
+    return `You've used all ${rebuildLimit} rebuilds included on ${PLAN_LABELS[plan]} this month. Upgrade for unlimited rebuilds.`;
+  }
+  return null;
 }
 
 export interface UpdateSectionState {
@@ -112,52 +161,109 @@ export async function updateSiteSection(
     .eq("id", siteId)
     .eq("user_id", user.id)
     .single();
-
-  if (!site) {
-    return { error: "Site not found." };
-  }
+  if (!site) return { error: "Site not found." };
 
   const { data: subscription } = await supabase
     .from("subscriptions")
     .select("plan")
     .eq("user_id", user.id)
     .single();
-
   const plan = (subscription?.plan ?? "spark") as PlanId;
-  const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
 
-  if (rebuildLimit !== null) {
-    const used = await getMonthlyEditCount(supabase, user.id);
-    if (used >= rebuildLimit) {
-      return {
-        error: `You've used all ${rebuildLimit} rebuilds included on ${PLAN_LABELS[plan]} this month. Upgrade for unlimited rebuilds.`,
-      };
-    }
-  }
+  const quotaError = await checkRebuildQuota(supabase, user.id, plan);
+  if (quotaError) return { error: quotaError };
 
   const currentContent = site.content as SiteSection[];
   if (!currentContent.some((s) => s.key === sectionKey)) {
     return { error: "Unknown section." };
   }
 
-  const newContent = currentContent.map((s) => (s.key === sectionKey ? { ...s, body } : s));
-
-  const { error: updateError } = await supabase
-    .from("sites")
-    .update({ content: newContent })
-    .eq("id", siteId);
-  if (updateError) return { error: updateError.message };
-
-  const { error: versionError } = await supabase.from("site_versions").insert({
-    site_id: siteId,
-    content: newContent,
-    changed_sections: [sectionKey],
-    kind: "edit",
-  });
-  if (versionError) return { error: versionError.message };
+  const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, body);
+  if (writeError) return { error: writeError };
 
   revalidatePath(`/dashboard/sites/${siteId}`);
   return { error: null, success: true };
+}
+
+export interface GenerateSectionState {
+  error: string | null;
+  success?: boolean;
+}
+
+export async function generateSectionWithAI(
+  siteId: string,
+  sectionKey: string,
+  _prevState: GenerateSectionState,
+  _formData: FormData
+): Promise<GenerateSectionState> {
+  if (!isAnthropicConfigured) {
+    return { error: "AI generation isn't configured yet — set ANTHROPIC_API_KEY." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  const { data: site } = await supabase
+    .from("sites")
+    .select("id, name, brief, content, preferred_model")
+    .eq("id", siteId)
+    .eq("user_id", user.id)
+    .single();
+  if (!site) return { error: "Site not found." };
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan")
+    .eq("user_id", user.id)
+    .single();
+  const plan = (subscription?.plan ?? "spark") as PlanId;
+
+  const quotaError = await checkRebuildQuota(supabase, user.id, plan);
+  if (quotaError) return { error: quotaError };
+
+  const currentContent = site.content as SiteSection[];
+  const section = currentContent.find((s) => s.key === sectionKey);
+  if (!section) return { error: "Unknown section." };
+
+  let draft: string;
+  try {
+    draft = await generateSectionDraft({
+      model: site.preferred_model,
+      siteName: site.name,
+      siteBrief: site.brief,
+      sectionTitle: section.title,
+    });
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "AI generation failed." };
+  }
+
+  const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, draft);
+  if (writeError) return { error: writeError };
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  return { error: null, success: true };
+}
+
+export async function updateSitePreferredModel(siteId: string, formData: FormData) {
+  const model = String(formData.get("model") ?? "");
+  if (!isAiModelId(model)) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  await supabase
+    .from("sites")
+    .update({ preferred_model: model })
+    .eq("id", siteId)
+    .eq("user_id", user.id);
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
 }
 
 export async function rollbackToVersion(siteId: string, versionId: string) {

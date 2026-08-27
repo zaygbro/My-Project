@@ -1,16 +1,23 @@
 # Francisity — Account & Billing App
 
 The account/billing app: sign-in, a dashboard, plan/site limits, Stripe
-billing (Phase 1), and per-site content editing with version history and
-analytics (Phase 2), for the Spark / Pro / Studio tiers described on the
-marketing site (`../index.html`). It's a separate Next.js app so the
-static marketing site can keep deploying anywhere, cheaply, while this
-piece runs where it needs a server (Vercel, or any Node host).
+billing (Phase 1), per-site content editing with version history and
+analytics (Phase 2), export-to-code (Phase 3), and real AI-assisted
+section drafting via the Claude API, for the Spark / Pro / Studio tiers
+described on the marketing site (`../index.html`). It's a separate
+Next.js app so the static marketing site can keep deploying anywhere,
+cheaply, while this piece runs where it needs a server (Vercel, or any
+Node host).
 
-**What's here:** accounts, plan limits, and billing plumbing.
-**What's not here:** the actual AI site-generation engine — `createSite`
-just records a row (name + brief) as a placeholder for where that
-pipeline will hook in.
+**What's here:** accounts, plan limits, billing, and a real (if narrow)
+slice of AI generation — a user can pick a Claude model (with a
+recommendation) and click "Generate with AI" to draft one section's
+copy for real.
+**What's not here:** the full multi-engine "council" from the marketing
+copy — there's no concurrent structure/visual/copy/assurance pipeline,
+no full-site generation from a brief, and `createSite` still just seeds
+the first section with the brief text verbatim rather than an AI draft
+of it.
 
 ## 1. Create a Supabase project
 
@@ -20,12 +27,13 @@ pipeline will hook in.
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Copy the `service_role` key too, as
    `SUPABASE_SERVICE_ROLE_KEY` — keep this one server-only.
 3. **SQL Editor** — paste and run `supabase/migrations/0001_init.sql`,
-   then `0002_phase2.sql`, in that order. The first creates `profiles`,
-   `subscriptions`, and `sites`, turns on Row Level Security, and adds a
-   trigger that gives every new user a `profiles` row and a free-plan
-   `subscriptions` row automatically. The second adds structured site
-   `content`, `site_versions` (version history/rollback), and
-   `site_events` (analytics).
+   `0002_phase2.sql`, then `0003_ai_models.sql`, in that order. The first
+   creates `profiles`, `subscriptions`, and `sites`, turns on Row Level
+   Security, and adds a trigger that gives every new user a `profiles`
+   row and a free-plan `subscriptions` row automatically. The second
+   adds structured site `content`, `site_versions`
+   (version history/rollback), and `site_events` (analytics). The third
+   adds `sites.preferred_model` for AI section drafting.
 4. **Authentication → URL Configuration** — add
    `http://localhost:3000/auth/callback` (and your production URL's
    equivalent) to Redirect URLs.
@@ -59,7 +67,14 @@ In the Stripe Dashboard (test mode is fine to start):
 Spark has no Stripe price — it's the default free plan every new
 `subscriptions` row starts on.
 
-## 3. Configure and run
+## 3. Enable AI generation (optional)
+
+Get an API key from [console.anthropic.com](https://console.anthropic.com)
+and set it as `ANTHROPIC_API_KEY`. Without it, "Generate with AI" stays
+visibly disabled on every site's page rather than pretending to work —
+everything else in the app functions normally.
+
+## 4. Configure and run
 
 ```bash
 cp .env.example .env.local   # then fill in the values above
@@ -112,6 +127,22 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
   dependency-free starting point, not a copy of the marketing site's
   design — the "Export to code" button on a site's page is a plain
   download link, no client JS needed.
+- **AI-assisted section drafting**: `lib/ai/models.ts` is the catalog of
+  four real, current Claude models (Haiku 4.5 / Sonnet 5 / Opus 5 /
+  Fable 5, with accurate pricing) plus `recommendModel()`, a pure
+  word-count heuristic that picks a sensible default from a site's
+  brief — short brief -> Haiku, typical -> Sonnet, long/detailed ->
+  Opus. Fable 5 (the priciest tier) is never auto-recommended; it's an
+  explicit choice. The picker shows in `NewSiteForm` (live, as you
+  type the brief) and on a site's page (`ModelSettingsForm`, to change
+  it later). `lib/ai/generate.ts` calls the real Anthropic SDK
+  (`@anthropic-ai/sdk`) — genuinely tested end-to-end: with no key
+  configured it makes a real request and surfaces the real 401 rather
+  than a mocked failure. `generateSectionWithAI` (in
+  `dashboard/actions.ts`) writes the model's draft through the same
+  `writeSectionEdit` path a manual save uses, so it creates a real
+  version snapshot and consumes rebuild quota identically — there's no
+  separate "free AI generation" loophole.
 
 ## Connecting the marketing site
 
@@ -132,7 +163,10 @@ revenue split is a business decision, not an engineering one). **Rush
 build** specifically can't be built honestly yet at all: there's no
 generation queue for it to skip.
 
-The actual AI site-generation engine is also still out of scope
-everywhere — `createSite` and `updateSiteSection` write real rows and
-real version history, but nothing generates the content itself yet.
-Don't add copy implying any of the above exists until it does.
+AI generation itself is real for one section at a time (see above), but
+the full "council" from the marketing copy isn't: there's no
+structure/visual/copy/assurance pipeline, no concurrent multi-engine
+drafting, and no whole-site generation from a brief — `createSite`
+still seeds the first section with the brief text as typed, not an AI
+draft of it. Don't add copy implying any of the above (Phase 3 items or
+the full council) exists until it does.

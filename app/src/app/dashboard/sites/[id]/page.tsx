@@ -6,7 +6,10 @@ import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
 import { SectionEditor } from "./SectionEditor";
+import { ModelSettingsForm } from "./ModelSettingsForm";
 import { rollbackToVersion } from "../../actions";
+import { getModelInfo } from "@/lib/ai/models";
+import { isAnthropicConfigured } from "@/lib/ai/generate";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -61,6 +64,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   const content = site.content as SiteSection[];
   const hasTraffic = (totalViews ?? 0) > 0;
+  const modelInfo = getModelInfo(site.preferred_model);
 
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
@@ -122,13 +126,37 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           </div>
           <div className="space-y-4">
             {content.map((section) => (
-              <SectionEditor key={section.key} siteId={site.id} section={section} disabled={atRebuildLimit} />
+              // Keyed on body too: a plain key={section.key} wouldn't remount the
+              // uncontrolled textarea below after a save or AI generation changes
+              // the body server-side, so the field would keep showing stale text.
+              <SectionEditor
+                key={`${section.key}:${section.body}`}
+                siteId={site.id}
+                section={section}
+                disabled={atRebuildLimit}
+                aiConfigured={isAnthropicConfigured}
+                modelLabel={modelInfo.label}
+              />
             ))}
           </div>
           {atRebuildLimit && (
             <p className="mt-3 text-sm text-blue-400">
               You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for unlimited
               rebuilds.
+            </p>
+          )}
+        </section>
+
+        {/* AI model */}
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
+            AI model for this site
+          </h2>
+          {isAnthropicConfigured ? (
+            <ModelSettingsForm siteId={site.id} current={site.preferred_model} />
+          ) : (
+            <p className="text-sm text-neutral-500">
+              AI generation isn&rsquo;t configured yet — currently set to {modelInfo.label} for when it is.
             </p>
           )}
         </section>
