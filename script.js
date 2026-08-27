@@ -20,42 +20,22 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.15 });
 revealEls.forEach(el => revealObserver.observe(el));
 
-// ---------- Animated stat counters ----------
-const statEls = document.querySelectorAll('.stat-num');
-function formatNumber(n) {
-  if (n >= 1000) return n.toLocaleString('en-US');
-  return String(n);
-}
-function animateCount(el) {
-  const target = parseInt(el.dataset.count, 10) || 0;
-  const duration = 1200;
-  const start = performance.now();
-  function tick(now) {
-    const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const value = Math.floor(eased * target);
-    el.textContent = formatNumber(value);
-    if (progress < 1) requestAnimationFrame(tick);
-    else el.textContent = formatNumber(target);
-  }
-  requestAnimationFrame(tick);
-}
-const statObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      animateCount(entry.target);
-      statObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.5 });
-statEls.forEach(el => statObserver.observe(el));
-
 // ---------- Reference brief chips ----------
 const briefInput = document.getElementById('briefInput');
-document.querySelectorAll('.tag-chip').forEach(chip => {
+document.querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     briefInput.value = chip.dataset.fill;
     briefInput.focus();
+  });
+});
+
+// ---------- Billing toggle (monthly / annual) ----------
+const pricingSection = document.querySelector('.pricing');
+document.querySelectorAll('.billing-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.billing-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    pricingSection?.classList.toggle('annual', btn.dataset.period === 'annual');
   });
 });
 
