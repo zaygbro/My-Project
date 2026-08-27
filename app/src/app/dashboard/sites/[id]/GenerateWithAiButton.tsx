@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import { generateSectionWithAI, type GenerateSectionState } from "../../actions";
 
 const initialState: GenerateSectionState = { error: null };
@@ -19,17 +20,23 @@ export function GenerateWithAiButton({
   const action = generateSectionWithAI.bind(null, siteId, sectionKey);
   const [state, formAction, isPending] = useActionState(action, initialState);
 
+  useEffect(() => {
+    if (state.error) toast.error(state.error);
+    else if (state.success) toast.success("Section rewritten.");
+  }, [state]);
+
   return (
-    <form action={formAction} className="mt-2 flex items-center gap-3">
+    <form action={formAction} className="mt-2">
       <button
         type="submit"
         disabled={disabled || isPending}
-        className="rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-blue-500 disabled:opacity-50"
+        className="press rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:border-blue-500 disabled:opacity-50"
       >
-        {isPending ? `Generating with ${modelLabel}…` : `Generate with ${modelLabel}`}
+        <span className="inline-flex items-center gap-2">
+          {isPending && <span className="spinner" aria-hidden />}
+          {isPending ? `Generating with ${modelLabel}…` : `Generate with ${modelLabel}`}
+        </span>
       </button>
-      {state.error && <p className="text-xs text-red-400">{state.error}</p>}
-      {state.success && !state.error && <p className="text-xs text-blue-400">Section rewritten.</p>}
     </form>
   );
 }

@@ -36,19 +36,19 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-3xl">
-        <header className="mb-8 flex items-center justify-between">
+        <header className="fade-in-up mb-8 flex items-center justify-between">
           <Link href="/" className="text-lg font-extrabold uppercase tracking-tight">
             Francisity
           </Link>
           <form action={signOut}>
-            <button className="font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white">
+            <button className="press font-mono text-xs uppercase tracking-wide text-neutral-500 transition-colors hover:text-white">
               Sign out
             </button>
           </form>
         </header>
 
         {/* Plan + usage */}
-        <section className="mb-6 rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+        <section className="fade-in-up mb-6 rounded-xl border border-neutral-800 bg-neutral-950 p-5" style={{ animationDelay: "40ms" }}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="font-mono text-xs uppercase tracking-wide text-blue-500">Current plan</span>
@@ -83,21 +83,21 @@ export default async function DashboardPage() {
         </section>
 
         {/* New site */}
-        <section className="mb-6">
+        <section className="fade-in-up mb-6" style={{ animationDelay: "80ms" }}>
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">New site</h2>
           <NewSiteForm disabled={atLimit} />
         </section>
 
         {/* Sites list */}
-        <section>
+        <section className="fade-in-up" style={{ animationDelay: "120ms" }}>
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Your sites</h2>
           {sites && sites.length > 0 ? (
             <ul className="space-y-2">
-              {sites.map((site) => (
-                <li key={site.id}>
+              {sites.map((site, i) => (
+                <li key={site.id} className="fade-in-up" style={{ animationDelay: `${160 + i * 40}ms` }}>
                   <Link
                     href={`/dashboard/sites/${site.id}`}
-                    className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 transition hover:border-neutral-600"
+                    className="hover-lift press flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 transition-colors hover:border-neutral-600"
                   >
                     <div>
                       <p className="font-semibold">{site.name}</p>

@@ -7,7 +7,7 @@ import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
 import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
-import { rollbackToVersion } from "../../actions";
+import { RestoreVersionButton } from "./RestoreVersionButton";
 import { getModelInfo } from "@/lib/ai/models";
 import { isAnthropicConfigured } from "@/lib/ai/generate";
 
@@ -73,7 +73,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           ← Dashboard
         </Link>
 
-        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <header className="fade-in-up mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold">{site.name}</h1>
             {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
@@ -81,7 +81,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           {PLAN_LIMITS[plan].exportEnabled ? (
             <a
               href={`/api/sites/${site.id}/export`}
-              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:border-neutral-500"
+              className="press rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
             >
               Export to code
             </a>
@@ -94,7 +94,10 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         </header>
 
         {/* Analytics */}
-        <section className="mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+        <section
+          className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
+          style={{ animationDelay: "40ms" }}
+        >
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Analytics</h2>
           {hasTraffic ? (
             <div className="flex gap-8">
@@ -125,18 +128,16 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             </span>
           </div>
           <div className="space-y-4">
-            {content.map((section) => (
-              // Keyed on body too: a plain key={section.key} wouldn't remount the
-              // uncontrolled textarea below after a save or AI generation changes
-              // the body server-side, so the field would keep showing stale text.
-              <SectionEditor
-                key={`${section.key}:${section.body}`}
-                siteId={site.id}
-                section={section}
-                disabled={atRebuildLimit}
-                aiConfigured={isAnthropicConfigured}
-                modelLabel={modelInfo.label}
-              />
+            {content.map((section, i) => (
+              <div key={section.key} className="fade-in-up" style={{ animationDelay: `${80 + i * 50}ms` }}>
+                <SectionEditor
+                  siteId={site.id}
+                  section={section}
+                  disabled={atRebuildLimit}
+                  aiConfigured={isAnthropicConfigured}
+                  modelLabel={modelInfo.label}
+                />
+              </div>
             ))}
           </div>
           {atRebuildLimit && (
@@ -148,7 +149,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         </section>
 
         {/* AI model */}
-        <section className="mb-8">
+        <section className="fade-in-up mb-8" style={{ animationDelay: "120ms" }}>
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
             AI model for this site
           </h2>
@@ -162,7 +163,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         </section>
 
         {/* Version history */}
-        <section>
+        <section className="fade-in-up" style={{ animationDelay: "160ms" }}>
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Version history</h2>
           <ul className="space-y-2">
             {(versions ?? []).map((version, i) => (
@@ -179,16 +180,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
                   </p>
                   <p className="text-xs text-neutral-500">{formatDate(version.created_at)}</p>
                 </div>
-                {i !== 0 && (
-                  <form action={rollbackToVersion.bind(null, site.id, version.id)}>
-                    <button
-                      type="submit"
-                      className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:border-neutral-500"
-                    >
-                      Restore
-                    </button>
-                  </form>
-                )}
+                {i !== 0 && <RestoreVersionButton siteId={site.id} versionId={version.id} />}
               </li>
             ))}
           </ul>

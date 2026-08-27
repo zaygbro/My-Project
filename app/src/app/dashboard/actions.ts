@@ -13,6 +13,7 @@ import type { Database } from "@/lib/supabase/types";
 
 export interface CreateSiteState {
   error: string | null;
+  success?: boolean;
 }
 
 export async function createSite(
@@ -91,7 +92,7 @@ export async function createSite(
   });
 
   revalidatePath("/dashboard");
-  return { error: null };
+  return { error: null, success: true };
 }
 
 /** Shared by manual edits and AI-generated ones: writes the new content and a version snapshot. */
@@ -247,9 +248,20 @@ export async function generateSectionWithAI(
   return { error: null, success: true };
 }
 
-export async function updateSitePreferredModel(siteId: string, formData: FormData) {
+export interface UpdateModelState {
+  error: string | null;
+  success?: boolean;
+}
+
+export async function updateSitePreferredModel(
+  siteId: string,
+  _prevState: UpdateModelState,
+  formData: FormData
+): Promise<UpdateModelState> {
   const model = String(formData.get("model") ?? "");
-  if (!isAiModelId(model)) return;
+  if (!isAiModelId(model)) {
+    return { error: "Unknown model." };
+  }
 
   const supabase = await createClient();
   const {
@@ -257,16 +269,29 @@ export async function updateSitePreferredModel(siteId: string, formData: FormDat
   } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  await supabase
+  const { error } = await supabase
     .from("sites")
     .update({ preferred_model: model })
     .eq("id", siteId)
     .eq("user_id", user.id);
 
+  if (error) return { error: error.message };
+
   revalidatePath(`/dashboard/sites/${siteId}`);
+  return { error: null, success: true };
 }
 
-export async function rollbackToVersion(siteId: string, versionId: string) {
+export interface RollbackState {
+  error: string | null;
+  success?: boolean;
+}
+
+export async function rollbackToVersion(
+  siteId: string,
+  versionId: string,
+  _prevState: RollbackState,
+  _formData: FormData
+): Promise<RollbackState> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -279,7 +304,7 @@ export async function rollbackToVersion(siteId: string, versionId: string) {
     .eq("id", siteId)
     .eq("user_id", user.id)
     .single();
-  if (!site) return;
+  if (!site) return { error: "Site not found." };
 
   const { data: version } = await supabase
     .from("site_versions")
@@ -287,17 +312,24 @@ export async function rollbackToVersion(siteId: string, versionId: string) {
     .eq("id", versionId)
     .eq("site_id", siteId)
     .single();
-  if (!version) return;
+  if (!version) return { error: "Version not found." };
 
-  await supabase.from("sites").update({ content: version.content }).eq("id", siteId);
-  await supabase.from("site_versions").insert({
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ content: version.content })
+    .eq("id", siteId);
+  if (updateError) return { error: updateError.message };
+
+  const { error: versionError } = await supabase.from("site_versions").insert({
     site_id: siteId,
     content: version.content,
     changed_sections: [],
     kind: "rollback",
   });
+  if (versionError) return { error: versionError.message };
 
   revalidatePath(`/dashboard/sites/${siteId}`);
+  return { error: null, success: true };
 }
 
 export async function signOut() {

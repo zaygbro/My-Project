@@ -4,6 +4,11 @@
 :root {
   --background: #000000;
   --foreground: #ffffff;
+
+  /* Motion tokens — the one place these curves are defined; every
+     animation below references these rather than inventing its own. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @theme inline {
@@ -17,4 +22,109 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* ================= Motion utilities ================= */
+
+/* Press feedback for any clickable element — buttons, links styled as
+   buttons. Real feedback that the interface heard the click. */
+.press {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Hover affordance for clickable cards (site list rows, model picker
+   options). Gated to real hover so a tap doesn't fire a stuck hover
+   state on touch. */
+@media (hover: hover) and (pointer: fine) {
+  .hover-lift {
+    transition:
+      transform 180ms var(--ease-out),
+      border-color 180ms ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Focus/border transition for form fields. */
+.field-transition {
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* One-shot entrance for content that appears on page load or after a
+   server action revalidates the page (site list, section editors,
+   version history). Not for anything a user sees dozens of times a
+   day — reserved for occasional, per-page-visit reveals. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-up {
+  animation: fade-in-up 300ms var(--ease-out) both;
+}
+
+/* Small state-indication pop for a badge that mounts/unmounts as
+   context changes (e.g. "Recommended" moving between model cards). */
+.badge-pop {
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* In-progress spinner for async button states. Constant motion, so
+   linear is correct here (progress shouldn't ease). */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .hover-lift:hover,
+  .press:active {
+    transform: none;
+  }
+  .badge-pop {
+    transition: opacity 150ms ease;
+    @starting-style {
+      transform: none;
+    }
+  }
+  .spinner {
+    animation-duration: 1.4s;
+  }
 }

@@ -20,7 +20,7 @@ export function ModelPicker({
       {AI_MODELS.map((m) => (
         <label
           key={m.id}
-          className={`cursor-pointer rounded-lg border p-3 text-sm transition ${
+          className={`press hover-lift cursor-pointer rounded-lg border p-3 text-sm transition-colors duration-150 ${
             value === m.id ? "border-blue-500 bg-blue-950/30" : "border-neutral-800 bg-neutral-900"
           } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         >
@@ -36,7 +36,7 @@ export function ModelPicker({
           <div className="flex items-center justify-between gap-2">
             <span className="font-semibold">{m.label}</span>
             {recommendedId === m.id && (
-              <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              <span className="badge-pop rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                 Recommended
               </span>
             )}

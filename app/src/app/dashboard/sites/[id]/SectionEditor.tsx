@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { updateSiteSection, type UpdateSectionState } from "../../actions";
 import type { SiteSection } from "@/lib/supabase/types";
 import { GenerateWithAiButton } from "./GenerateWithAiButton";
@@ -23,6 +24,24 @@ export function SectionEditor({
   const action = updateSiteSection.bind(null, siteId, section.key);
   const [state, formAction, isPending] = useActionState(action, initialState);
 
+  // Controlled, synced from the prop: keeps the field live after an
+  // external change (AI generation, a rollback) without remounting this
+  // component and losing the useActionState result the toast effect
+  // below depends on. Synced during render (React's "adjust state when a
+  // prop changes" pattern), not in an effect — an effect here would
+  // commit the stale value for one paint before correcting it.
+  const [body, setBody] = useState(section.body);
+  const [prevPropBody, setPrevPropBody] = useState(section.body);
+  if (section.body !== prevPropBody) {
+    setPrevPropBody(section.body);
+    setBody(section.body);
+  }
+
+  useEffect(() => {
+    if (state.error) toast.error(state.error);
+    else if (state.success) toast.success("Section saved.");
+  }, [state]);
+
   return (
     <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
       <form action={formAction}>
@@ -36,19 +55,21 @@ export function SectionEditor({
           id={`section-${section.key}`}
           name="body"
           rows={4}
-          defaultValue={section.body}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
           disabled={disabled}
-          className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
+          className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
         />
-        <div className="mt-3 flex items-center justify-between gap-3">
-          {state.error && <p className="text-sm text-red-400">{state.error}</p>}
-          {state.success && !state.error && <p className="text-sm text-blue-400">Saved.</p>}
+        <div className="mt-3 flex items-center justify-end">
           <button
             type="submit"
             disabled={disabled || isPending}
-            className="ml-auto rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-600 disabled:opacity-50"
+            className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
           >
-            {isPending ? "Rebuilding…" : "Save & rebuild section"}
+            <span className="inline-flex items-center gap-2">
+              {isPending && <span className="spinner" aria-hidden />}
+              {isPending ? "Rebuilding…" : "Save & rebuild section"}
+            </span>
           </button>
         </div>
       </form>

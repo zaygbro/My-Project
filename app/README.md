@@ -170,3 +170,27 @@ drafting, and no whole-site generation from a brief — `createSite`
 still seeds the first section with the brief text as typed, not an AI
 draft of it. Don't add copy implying any of the above (Phase 3 items or
 the full council) exists until it does.
+
+## UI polish & motion
+
+- **Toasts** (Sonner, `<Toaster />` in `layout.tsx`) replaced the old
+  static inline "Saved."/error paragraphs across every form. The
+  pattern throughout: `useActionState` for the action result,
+  `toast.success`/`toast.error` fired from a `useEffect` watching that
+  result — never from inside the server action itself, and never a
+  `setState` call inside that effect (React Compiler's
+  `react-hooks/set-state-in-effect` lint rule catches that). Where a
+  component also needs to reset its own local state after an action
+  succeeds (`NewSiteForm`, the section editors' body field tracking an
+  external update), that reset happens conditionally *during render* —
+  React's "adjust state when a prop changes" pattern — not in an
+  effect.
+- **Motion tokens** live in `globals.css`: `--ease-out` / `--ease-in-out`
+  plus `.press` (button/link press feedback), `.hover-lift` (touch-safe
+  card hover), `.field-transition` (input focus), `.fade-in-up`
+  (one-shot entrance, staggered via inline `animationDelay` — used for
+  page sections and list items, never for something seen dozens of
+  times a day), `.badge-pop` (a mount/unmount pop for the "Recommended"
+  model badge), and `.spinner` (linear, for in-progress buttons). All
+  respect `prefers-reduced-motion`. Extend these tokens for new motion
+  rather than inventing new curves inline.
