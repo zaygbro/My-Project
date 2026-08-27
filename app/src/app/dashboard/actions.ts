@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { getMonthlyEditCount } from "@/lib/quota";
+import type { SiteSection } from "@/lib/supabase/types";
 
 export interface CreateSiteState {
   error: string | null;
@@ -43,24 +45,153 @@ export async function createSite(
 
     if ((count ?? 0) >= limit) {
       return {
-        error: `You're at the ${limit}-site limit on the ${plan} plan. Upgrade to add more.`,
+        error: `You're at the ${limit}-site limit on ${PLAN_LABELS[plan]}. Upgrade to add more.`,
       };
     }
   }
 
-  const { error } = await supabase.from("sites").insert({
-    user_id: user.id,
-    name,
-    brief: brief || null,
-    badge_enabled: PLAN_LIMITS[plan].badge,
-  });
+  const initialContent: SiteSection[] = [
+    {
+      key: "overview",
+      title: "Overview",
+      body: brief || `A new site called "${name}". Edit this section to get started.`,
+    },
+  ];
 
-  if (error) {
-    return { error: error.message };
+  const { data: site, error } = await supabase
+    .from("sites")
+    .insert({
+      user_id: user.id,
+      name,
+      brief: brief || null,
+      badge_enabled: PLAN_LIMITS[plan].badge,
+      content: initialContent,
+    })
+    .select("id")
+    .single();
+
+  if (error || !site) {
+    return { error: error?.message ?? "Couldn't create the site." };
   }
+
+  // Seed version history with the site's starting content so "roll back to
+  // when this was created" is always available.
+  await supabase.from("site_versions").insert({
+    site_id: site.id,
+    content: initialContent,
+    changed_sections: [],
+    kind: "create",
+  });
 
   revalidatePath("/dashboard");
   return { error: null };
+}
+
+export interface UpdateSectionState {
+  error: string | null;
+  success?: boolean;
+}
+
+export async function updateSiteSection(
+  siteId: string,
+  sectionKey: string,
+  _prevState: UpdateSectionState,
+  formData: FormData
+): Promise<UpdateSectionState> {
+  const body = String(formData.get("body") ?? "").trim();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  const { data: site } = await supabase
+    .from("sites")
+    .select("id, content")
+    .eq("id", siteId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!site) {
+    return { error: "Site not found." };
+  }
+
+  const { data: subscription } = await supabase
+    .from("subscriptions")
+    .select("plan")
+    .eq("user_id", user.id)
+    .single();
+
+  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
+
+  if (rebuildLimit !== null) {
+    const used = await getMonthlyEditCount(supabase, user.id);
+    if (used >= rebuildLimit) {
+      return {
+        error: `You've used all ${rebuildLimit} rebuilds included on ${PLAN_LABELS[plan]} this month. Upgrade for unlimited rebuilds.`,
+      };
+    }
+  }
+
+  const currentContent = site.content as SiteSection[];
+  if (!currentContent.some((s) => s.key === sectionKey)) {
+    return { error: "Unknown section." };
+  }
+
+  const newContent = currentContent.map((s) => (s.key === sectionKey ? { ...s, body } : s));
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ content: newContent })
+    .eq("id", siteId);
+  if (updateError) return { error: updateError.message };
+
+  const { error: versionError } = await supabase.from("site_versions").insert({
+    site_id: siteId,
+    content: newContent,
+    changed_sections: [sectionKey],
+    kind: "edit",
+  });
+  if (versionError) return { error: versionError.message };
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  return { error: null, success: true };
+}
+
+export async function rollbackToVersion(siteId: string, versionId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  const { data: site } = await supabase
+    .from("sites")
+    .select("id")
+    .eq("id", siteId)
+    .eq("user_id", user.id)
+    .single();
+  if (!site) return;
+
+  const { data: version } = await supabase
+    .from("site_versions")
+    .select("content")
+    .eq("id", versionId)
+    .eq("site_id", siteId)
+    .single();
+  if (!version) return;
+
+  await supabase.from("sites").update({ content: version.content }).eq("id", siteId);
+  await supabase.from("site_versions").insert({
+    site_id: siteId,
+    content: version.content,
+    changed_sections: [],
+    kind: "rollback",
+  });
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
 }
 
 export async function signOut() {

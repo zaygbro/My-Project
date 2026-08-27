@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { getMonthlyEditCount } from "@/lib/quota";
 import { NewSiteForm } from "./NewSiteForm";
 import { UpgradeButton, ManageBillingButton } from "./BillingButtons";
 import { signOut } from "./actions";
@@ -30,6 +31,8 @@ export default async function DashboardPage() {
   const atLimit = limits.siteLimit !== null && siteCount >= limits.siteLimit;
   const nearLimit = limits.siteLimit !== null && siteCount === limits.siteLimit - 1;
 
+  const rebuildsUsed = limits.rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
+
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-3xl">
@@ -54,6 +57,10 @@ export default async function DashboardPage() {
                 {limits.siteLimit === null
                   ? "Unlimited sites"
                   : `${siteCount} / ${limits.siteLimit} sites used`}
+                {" · "}
+                {limits.rebuildLimit === null
+                  ? "Unlimited rebuilds"
+                  : `${rebuildsUsed} / ${limits.rebuildLimit} rebuilds this month`}
                 {limits.badge && " · “Built with Francisity” badge on"}
               </p>
             </div>
@@ -87,19 +94,21 @@ export default async function DashboardPage() {
           {sites && sites.length > 0 ? (
             <ul className="space-y-2">
               {sites.map((site) => (
-                <li
-                  key={site.id}
-                  className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3"
-                >
-                  <div>
-                    <p className="font-semibold">{site.name}</p>
-                    {site.brief && <p className="text-sm text-neutral-500">{site.brief}</p>}
-                  </div>
-                  {site.badge_enabled && (
-                    <span className="rounded-full border border-neutral-700 px-2 py-1 font-mono text-[10px] uppercase text-neutral-500">
-                      Badge on
-                    </span>
-                  )}
+                <li key={site.id}>
+                  <Link
+                    href={`/dashboard/sites/${site.id}`}
+                    className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 transition hover:border-neutral-600"
+                  >
+                    <div>
+                      <p className="font-semibold">{site.name}</p>
+                      {site.brief && <p className="text-sm text-neutral-500">{site.brief}</p>}
+                    </div>
+                    {site.badge_enabled && (
+                      <span className="rounded-full border border-neutral-700 px-2 py-1 font-mono text-[10px] uppercase text-neutral-500">
+                        Badge on
+                      </span>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>

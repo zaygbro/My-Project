@@ -1,10 +1,17 @@
-// Hand-written to match supabase/migrations/0001_init.sql. If you change
-// the schema, update this alongside it (or swap to `supabase gen types`
-// once the Supabase CLI is wired into this project).
+// Hand-written to match supabase/migrations/0001_init.sql and
+// 0002_phase2.sql. If you change the schema, update this alongside it (or
+// swap to `supabase gen types` once the Supabase CLI is wired in).
 //
 // Each table needs `Relationships`, and the schema needs `Views` /
 // `Functions`, to satisfy supabase-js's GenericSchema constraint — without
 // them every row type silently collapses to `never`.
+
+/** One editable block of a site's content — a section-level rebuild targets one of these by `key`. */
+export interface SiteSection {
+  key: string;
+  title: string;
+  body: string;
+}
 
 export interface Database {
   public: {
@@ -72,7 +79,7 @@ export interface Database {
           subdomain: string | null;
           custom_domain: string | null;
           badge_enabled: boolean;
-          rebuild_count: number;
+          content: SiteSection[];
           created_at: string;
         };
         Insert: {
@@ -83,10 +90,50 @@ export interface Database {
           subdomain?: string | null;
           custom_domain?: string | null;
           badge_enabled?: boolean;
-          rebuild_count?: number;
+          content?: SiteSection[];
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["sites"]["Insert"]>;
+        Relationships: [];
+      };
+      site_versions: {
+        Row: {
+          id: string;
+          site_id: string;
+          content: SiteSection[];
+          changed_sections: string[];
+          kind: "create" | "edit" | "rollback";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          content: SiteSection[];
+          changed_sections?: string[];
+          kind?: "create" | "edit" | "rollback";
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["site_versions"]["Insert"]>;
+        Relationships: [];
+      };
+      site_events: {
+        Row: {
+          id: string;
+          site_id: string;
+          event_type: "view";
+          path: string | null;
+          referrer: string | null;
+          occurred_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          event_type?: "view";
+          path?: string | null;
+          referrer?: string | null;
+          occurred_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["site_events"]["Insert"]>;
         Relationships: [];
       };
     };

@@ -1,7 +1,8 @@
 # Francisity — Account & Billing App
 
-The Phase 1 MVP monetization app: sign-in, a dashboard, plan/site limits,
-and Stripe billing for the Spark / Pro / Studio tiers described on the
+The account/billing app: sign-in, a dashboard, plan/site limits, Stripe
+billing (Phase 1), and per-site content editing with version history and
+analytics (Phase 2), for the Spark / Pro / Studio tiers described on the
 marketing site (`../index.html`). It's a separate Next.js app so the
 static marketing site can keep deploying anywhere, cheaply, while this
 piece runs where it needs a server (Vercel, or any Node host).
@@ -18,10 +19,13 @@ pipeline will hook in.
    public key into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Copy the `service_role` key too, as
    `SUPABASE_SERVICE_ROLE_KEY` — keep this one server-only.
-3. **SQL Editor** — paste and run `supabase/migrations/0001_init.sql`.
-   It creates `profiles`, `subscriptions`, and `sites`, turns on Row
-   Level Security, and adds a trigger that gives every new user a
-   `profiles` row and a free-plan `subscriptions` row automatically.
+3. **SQL Editor** — paste and run `supabase/migrations/0001_init.sql`,
+   then `0002_phase2.sql`, in that order. The first creates `profiles`,
+   `subscriptions`, and `sites`, turns on Row Level Security, and adds a
+   trigger that gives every new user a `profiles` row and a free-plan
+   `subscriptions` row automatically. The second adds structured site
+   `content`, `site_versions` (version history/rollback), and
+   `site_events` (analytics).
 4. **Authentication → URL Configuration** — add
    `http://localhost:3000/auth/callback` (and your production URL's
    equivalent) to Redirect URLs.
@@ -67,9 +71,10 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
 
 ## How it fits together
 
-- **Auth**: Supabase magic-link (passwordless). `middleware.ts` refreshes
-  the session on every request and redirects signed-out visitors away
-  from `/dashboard`.
+- **Auth**: Supabase magic-link (passwordless). `src/proxy.ts` (Next 16's
+  renamed `middleware.ts`) refreshes the session on every request and
+  redirects signed-out visitors away from `/dashboard` and everything
+  under it.
 - **Plan limits**: `src/lib/plans.ts` is the single source of truth for
   site caps, rebuild caps, and badge visibility per plan — keep it in
   sync with the pricing copy on the marketing site.
@@ -84,6 +89,22 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
 - **Site limits**: enforced server-side in `dashboard/actions.ts`
   (`createSite`), not just in the UI — the free tier's cap can't be
   bypassed by calling the action directly.
+- **Site content & rebuilds**: each site has structured `content`
+  (an array of `{key, title, body}` sections — see `SiteSection` in
+  `lib/supabase/types.ts`). Editing a section via
+  `dashboard/sites/[id]/SectionEditor.tsx` calls the `updateSiteSection`
+  server action, which checks the plan's monthly rebuild quota (counted
+  from real `site_versions` rows, not a manually-incremented counter,
+  so there's no separate monthly-reset job to maintain) before writing.
+- **Version history & rollback**: every section edit — and every site's
+  creation — writes a full content snapshot to `site_versions`.
+  `rollbackToVersion` restores one as a new `'rollback'`-kind version
+  (non-destructive; rollbacks don't consume rebuild quota).
+- **Analytics**: `POST /api/track` is a public, unauthenticated endpoint
+  a published site calls to record a view into `site_events`. Nothing
+  calls it yet because there's no hosting pipeline serving published
+  sites — the dashboard's analytics panel reads real rows and shows an
+  honest empty state instead of inventing numbers.
 
 ## Connecting the marketing site
 
@@ -94,7 +115,9 @@ anchor.
 
 ## Deliberately not built yet
 
-Per the phased roadmap: team seats, analytics dashboards, version
-history/rollback, the style-pack marketplace, and pay-as-you-go add-ons
-(rush builds, extra sites) are Phase 2+ and not implemented. Don't add
-copy implying they exist until they do.
+Per the phased roadmap: team seats, the style-pack marketplace, and
+pay-as-you-go add-ons (rush builds, extra sites) are Phase 3+ and not
+implemented. The actual AI site-generation engine is also still out of
+scope everywhere — `createSite` and `updateSiteSection` write real rows
+and real version history, but nothing generates the content itself yet.
+Don't add copy implying any of that exists until it does.
