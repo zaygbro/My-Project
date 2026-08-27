@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
 import { SectionEditor } from "./SectionEditor";
@@ -68,9 +69,24 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           ← Dashboard
         </Link>
 
-        <header className="mb-8">
-          <h1 className="text-2xl font-extrabold">{site.name}</h1>
-          {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
+        <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-extrabold">{site.name}</h1>
+            {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
+          </div>
+          {PLAN_LIMITS[plan].exportEnabled ? (
+            <a
+              href={`/api/sites/${site.id}/export`}
+              className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition hover:border-neutral-500"
+            >
+              Export to code
+            </a>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-neutral-500">Export to code is a Pro feature</span>
+              <UpgradeButton plan="pro" period="monthly" label="Upgrade to Pro" />
+            </div>
+          )}
         </header>
 
         {/* Analytics */}

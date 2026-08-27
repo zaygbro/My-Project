@@ -8,12 +8,14 @@ export interface PlanLimits {
   rebuildLimit: number | null;
   /** Whether sites on this plan carry the "Built with Francisity" badge. */
   badge: boolean;
+  /** Whether this plan can export a site's content as a static HTML/CSS bundle. */
+  exportEnabled: boolean;
 }
 
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
-  spark: { siteLimit: 3, rebuildLimit: 5, badge: true },
-  pro: { siteLimit: null, rebuildLimit: null, badge: false },
-  studio: { siteLimit: null, rebuildLimit: null, badge: false },
+  spark: { siteLimit: 3, rebuildLimit: 5, badge: true, exportEnabled: false },
+  pro: { siteLimit: null, rebuildLimit: null, badge: false, exportEnabled: true },
+  studio: { siteLimit: null, rebuildLimit: null, badge: false, exportEnabled: true },
 };
 
 export const PLAN_LABELS: Record<PlanId, string> = {

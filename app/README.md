@@ -105,6 +105,13 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
   calls it yet because there's no hosting pipeline serving published
   sites — the dashboard's analytics panel reads real rows and shows an
   honest empty state instead of inventing numbers.
+- **Export to code**: `GET /api/sites/[id]/export` (Pro/Studio only,
+  via `PLAN_LIMITS[plan].exportEnabled`) renders a site's sections into
+  a plain static HTML/CSS pair (`lib/export.ts`, with real HTML
+  escaping) and streams it back as a `.zip`. It's a genuinely
+  dependency-free starting point, not a copy of the marketing site's
+  design — the "Export to code" button on a site's page is a plain
+  download link, no client JS needed.
 
 ## Connecting the marketing site
 
@@ -115,9 +122,17 @@ anchor.
 
 ## Deliberately not built yet
 
-Per the phased roadmap: team seats, the style-pack marketplace, and
-pay-as-you-go add-ons (rush builds, extra sites) are Phase 3+ and not
-implemented. The actual AI site-generation engine is also still out of
-scope everywhere — `createSite` and `updateSiteSection` write real rows
-and real version history, but nothing generates the content itself yet.
-Don't add copy implying any of that exists until it does.
+Per the phased roadmap, the rest of Phase 3 is intentionally still
+out: **team seats** (would mean migrating site/subscription ownership
+from user to workspace — the most invasive change on the list),
+**pay-per-extra-site** (a real one-time Stripe purchase, straightforward
+but not yet wired up), and the **style-pack marketplace** (needs Stripe
+Connect for real creator payouts — a much bigger integration, and the
+revenue split is a business decision, not an engineering one). **Rush
+build** specifically can't be built honestly yet at all: there's no
+generation queue for it to skip.
+
+The actual AI site-generation engine is also still out of scope
+everywhere — `createSite` and `updateSiteSection` write real rows and
+real version history, but nothing generates the content itself yet.
+Don't add copy implying any of the above exists until it does.
