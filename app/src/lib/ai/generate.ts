@@ -52,3 +52,78 @@ export async function generateSectionDraft(input: GenerateSectionInput): Promise
   }
   return text;
 }
+
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatAboutSectionInput {
+  model: AiModelId;
+  siteName: string;
+  siteBrief: string | null;
+  sectionTitle: string;
+  currentBody: string;
+  history: ChatTurn[];
+  message: string;
+}
+
+export interface ChatAboutSectionResult {
+  reply: string;
+  body: string;
+}
+
+function chatSystemPrompt(input: ChatAboutSectionInput): string {
+  return `You are Francisity's AI editor for one section of a website. You're having a back-and-forth
+conversation with the site's owner about this section's copy — they ask for a change or give feedback,
+you make it. Never write generic placeholder text.
+
+Site name: ${input.siteName}
+Site brief: ${input.siteBrief ?? "(none given)"}
+Section: ${input.sectionTitle}
+Current section body: ${input.currentBody}
+
+Respond with ONLY a JSON object, no markdown code fences, no other text, in exactly this shape:
+{"reply": "<one short sentence to the owner describing what you changed, no exclamation marks>", "body": "<the full new section body after applying their request, no heading, no markdown formatting, no quotes around it>"}
+
+If their message doesn't call for a text change (e.g. a question), keep "body" identical to the current
+section body above and answer their question in "reply".`;
+}
+
+export async function chatAboutSection(input: ChatAboutSectionInput): Promise<ChatAboutSectionResult> {
+  const modelInfo = getModelInfo(input.model);
+
+  const response = await client.messages.create({
+    model: input.model,
+    max_tokens: 800,
+    system: chatSystemPrompt(input),
+    ...(modelInfo.supportsEffort ? { output_config: { effort: "medium" as const } } : {}),
+    messages: [...input.history, { role: "user" as const, content: input.message }],
+  });
+
+  if (response.stop_reason === "refusal") {
+    throw new Error("The model declined to respond — try rewording your message.");
+  }
+
+  const textBlock = response.content.find(
+    (block): block is Anthropic.TextBlock => block.type === "text"
+  );
+  const raw = textBlock?.text.trim();
+  if (!raw) {
+    throw new Error("The model didn't return any text.");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error("The model didn't return a well-formed response — try again.");
+  }
+
+  const record = parsed as Record<string, unknown>;
+  if (typeof record.reply !== "string" || typeof record.body !== "string") {
+    throw new Error("The model's response was missing a reply or body.");
+  }
+
+  return { reply: record.reply, body: record.body };
+}

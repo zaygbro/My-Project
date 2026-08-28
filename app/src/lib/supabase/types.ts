@@ -118,6 +118,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["site_versions"]["Insert"]>;
         Relationships: [];
       };
+      site_messages: {
+        Row: {
+          id: string;
+          site_id: string;
+          section_key: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          section_key: string;
+          role: "user" | "assistant";
+          content: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["site_messages"]["Insert"]>;
+        Relationships: [];
+      };
       site_events: {
         Row: {
           id: string;

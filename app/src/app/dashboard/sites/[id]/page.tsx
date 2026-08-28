@@ -9,7 +9,7 @@ import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { getModelInfo } from "@/lib/ai/models";
-import { isAnthropicConfigured } from "@/lib/ai/generate";
+import { isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -40,7 +40,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   if (!site) notFound();
 
-  const [{ data: subscription }, { data: versions }, { count: totalViews }, { count: recentViews }] =
+  const [{ data: subscription }, { data: versions }, { count: totalViews }, { count: recentViews }, { data: messages }] =
     await Promise.all([
       supabase.from("subscriptions").select("plan").eq("user_id", user.id).single(),
       supabase
@@ -55,7 +55,19 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         .select("id", { count: "exact", head: true })
         .eq("site_id", id)
         .gte("occurred_at", sevenDaysAgoISO()),
+      supabase
+        .from("site_messages")
+        .select("section_key, role, content")
+        .eq("site_id", id)
+        .order("created_at", { ascending: true }),
     ]);
+
+  const messagesBySection = new Map<string, ChatTurn[]>();
+  for (const m of messages ?? []) {
+    const turns = messagesBySection.get(m.section_key) ?? [];
+    turns.push({ role: m.role, content: m.content });
+    messagesBySection.set(m.section_key, turns);
+  }
 
   const plan = (subscription?.plan ?? "spark") as PlanId;
   const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
@@ -136,6 +148,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
                   disabled={atRebuildLimit}
                   aiConfigured={isAnthropicConfigured}
                   modelLabel={modelInfo.label}
+                  initialMessages={messagesBySection.get(section.key) ?? []}
                 />
               </div>
             ))}

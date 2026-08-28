@@ -7,7 +7,7 @@ import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
 import { isAiModelId, recommendModel, type AiModelId } from "@/lib/ai/models";
-import { generateSectionDraft, isAnthropicConfigured } from "@/lib/ai/generate";
+import { chatAboutSection, isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
@@ -186,17 +186,25 @@ export async function updateSiteSection(
   return { error: null, success: true };
 }
 
-export interface GenerateSectionState {
+export interface SendMessageState {
   error: string | null;
   success?: boolean;
+  reply?: string;
 }
 
-export async function generateSectionWithAI(
+/** One turn of the per-section AI chat: persists both sides of the exchange
+ * and, unless the reply was purely conversational, writes the new body
+ * through the same path a manual save uses (real version snapshot, same
+ * rebuild quota — there's no separate "free chat editing" loophole). */
+export async function sendSectionMessage(
   siteId: string,
   sectionKey: string,
-  _prevState: GenerateSectionState,
-  _formData: FormData
-): Promise<GenerateSectionState> {
+  _prevState: SendMessageState,
+  formData: FormData
+): Promise<SendMessageState> {
+  const message = String(formData.get("message") ?? "").trim();
+  if (!message) return { error: "Message can't be empty." };
+
   if (!isAnthropicConfigured) {
     return { error: "AI generation isn't configured yet — set ANTHROPIC_API_KEY." };
   }
@@ -229,23 +237,52 @@ export async function generateSectionWithAI(
   const section = currentContent.find((s) => s.key === sectionKey);
   if (!section) return { error: "Unknown section." };
 
-  let draft: string;
+  const { data: historyRows } = await supabase
+    .from("site_messages")
+    .select("role, content")
+    .eq("site_id", siteId)
+    .eq("section_key", sectionKey)
+    .order("created_at", { ascending: true });
+  const history: ChatTurn[] = (historyRows ?? []).map((row) => ({ role: row.role, content: row.content }));
+
+  const { error: userMessageError } = await supabase.from("site_messages").insert({
+    site_id: siteId,
+    section_key: sectionKey,
+    role: "user",
+    content: message,
+  });
+  if (userMessageError) return { error: userMessageError.message };
+
+  let result: { reply: string; body: string };
   try {
-    draft = await generateSectionDraft({
+    result = await chatAboutSection({
       model: site.preferred_model,
       siteName: site.name,
       siteBrief: site.brief,
       sectionTitle: section.title,
+      currentBody: section.body,
+      history,
+      message,
     });
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "AI generation failed." };
+    return { error: err instanceof Error ? err.message : "AI response failed." };
   }
 
-  const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, draft);
-  if (writeError) return { error: writeError };
+  const { error: assistantMessageError } = await supabase.from("site_messages").insert({
+    site_id: siteId,
+    section_key: sectionKey,
+    role: "assistant",
+    content: result.reply,
+  });
+  if (assistantMessageError) return { error: assistantMessageError.message };
+
+  if (result.body !== section.body) {
+    const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, result.body);
+    if (writeError) return { error: writeError };
+  }
 
   revalidatePath(`/dashboard/sites/${siteId}`);
-  return { error: null, success: true };
+  return { error: null, success: true, reply: result.reply };
 }
 
 export interface UpdateModelState {

@@ -4,7 +4,8 @@ import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateSiteSection, type UpdateSectionState } from "../../actions";
 import type { SiteSection } from "@/lib/supabase/types";
-import { GenerateWithAiButton } from "./GenerateWithAiButton";
+import { SectionChat } from "./SectionChat";
+import type { ChatTurn } from "@/lib/ai/generate";
 
 const initialState: UpdateSectionState = { error: null };
 
@@ -14,12 +15,14 @@ export function SectionEditor({
   disabled,
   aiConfigured,
   modelLabel,
+  initialMessages,
 }: {
   siteId: string;
   section: SiteSection;
   disabled: boolean;
   aiConfigured: boolean;
   modelLabel: string;
+  initialMessages: ChatTurn[];
 }) {
   const action = updateSiteSection.bind(null, siteId, section.key);
   const [state, formAction, isPending] = useActionState(action, initialState);
@@ -75,11 +78,12 @@ export function SectionEditor({
       </form>
 
       {aiConfigured ? (
-        <GenerateWithAiButton
+        <SectionChat
           siteId={siteId}
           sectionKey={section.key}
           modelLabel={modelLabel}
           disabled={disabled}
+          initialMessages={initialMessages}
         />
       ) : (
         <p className="mt-2 text-xs text-neutral-600">AI generation isn&rsquo;t configured yet.</p>
