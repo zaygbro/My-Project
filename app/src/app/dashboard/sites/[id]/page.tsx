@@ -79,13 +79,12 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
   const modelInfo = getModelInfo(site.preferred_model);
 
   return (
-    <main className="min-h-screen bg-black px-6 py-10 text-white">
-      <div className="mx-auto max-w-3xl">
-        <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white">
-          ← Dashboard
-        </Link>
+    <div>
+      <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white">
+        ← Dashboard
+      </Link>
 
-        <header className="fade-in-up mb-8 flex flex-wrap items-start justify-between gap-4">
+      <header className="fade-in-up mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold">{site.name}</h1>
             {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
@@ -198,7 +197,6 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             ))}
           </ul>
         </section>
-      </div>
-    </main>
+    </div>
   );
 }
