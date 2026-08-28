@@ -33,6 +33,9 @@ export default async function DashboardPage() {
 
   const rebuildsUsed = limits.rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
 
+  const emailLocalPart = user.email?.split("@")[0] ?? "";
+  const displayName = emailLocalPart ? emailLocalPart.charAt(0).toUpperCase() + emailLocalPart.slice(1) : "there";
+
   return (
     <main className="min-h-screen bg-black px-6 py-10 text-white">
       <div className="mx-auto max-w-3xl">
@@ -84,7 +87,9 @@ export default async function DashboardPage() {
 
         {/* New site */}
         <section className="fade-in-up mb-6" style={{ animationDelay: "80ms" }}>
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">New site</h2>
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
+            New site, {displayName}
+          </h2>
           <NewSiteForm disabled={atLimit} />
         </section>
 
