@@ -147,7 +147,7 @@ export default function TryPage() {
 
   if (mode === "create") {
     return (
-      <main className="flex min-h-screen flex-col items-center bg-black px-6 py-16 text-white">
+      <main className="entry-glow flex min-h-screen flex-col items-center bg-black px-6 py-16 text-white">
         <div className="fade-in-up w-full max-w-md">
           <Link href="/" className="mb-2 block text-center text-lg font-extrabold uppercase tracking-tight">
             Francisity
@@ -170,7 +170,7 @@ export default function TryPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Kyoto Coffee Roastery"
-                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
               />
             </div>
             <div>
@@ -183,7 +183,7 @@ export default function TryPage() {
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 placeholder="A modern landing page for a minimalist coffee roastery in Kyoto…"
-                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
               />
             </div>
             <div>
@@ -239,7 +239,7 @@ export default function TryPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="field-transition w-48 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+                  className="field-transition w-48 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
                 />
                 <button
                   type="submit"
@@ -263,7 +263,7 @@ export default function TryPage() {
               rows={5}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500"
+              className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
             />
             <div className="mt-3 flex items-center justify-end">
               <button

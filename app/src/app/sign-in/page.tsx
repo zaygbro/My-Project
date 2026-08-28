@@ -30,7 +30,7 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-black px-6 text-white">
+    <main className="entry-glow flex min-h-screen items-center justify-center bg-black px-6 text-white">
       <div className="fade-in-up w-full max-w-sm">
         <Link href="/" className="mb-10 block text-center text-lg font-extrabold uppercase tracking-tight">
           Francisity
@@ -55,7 +55,7 @@ export default function SignInPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500"
+              className="field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
             />
             <button
               type="submit"

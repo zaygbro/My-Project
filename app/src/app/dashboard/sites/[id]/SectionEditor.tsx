@@ -58,7 +58,7 @@ export function SectionEditor({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           disabled={disabled}
-          className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:opacity-50"
+          className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50"
         />
         <div className="mt-3 flex items-center justify-end">
           <button

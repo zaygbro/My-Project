@@ -102,11 +102,11 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           {hasTraffic ? (
             <div className="flex gap-8">
               <div>
-                <p className="text-2xl font-extrabold">{totalViews}</p>
+                <p className="text-2xl font-extrabold tabular-nums">{totalViews}</p>
                 <p className="text-xs text-neutral-500">All-time views</p>
               </div>
               <div>
-                <p className="text-2xl font-extrabold">{recentViews}</p>
+                <p className="text-2xl font-extrabold tabular-nums">{recentViews}</p>
                 <p className="text-xs text-neutral-500">Last 7 days</p>
               </div>
             </div>

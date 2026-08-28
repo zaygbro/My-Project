@@ -11,7 +11,7 @@ export default async function RootPage() {
   if (user) redirect("/dashboard");
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-black px-6 text-center text-white">
+    <main className="entry-glow flex min-h-screen flex-col items-center justify-center bg-black px-6 text-center text-white">
       <div className="fade-in-up max-w-lg">
         <p className="mb-2 text-lg font-extrabold uppercase tracking-tight">Francisity</p>
         <h1 className="text-3xl font-bold sm:text-4xl">Build a site. Try it free — no account needed yet.</h1>
