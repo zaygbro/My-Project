@@ -47,11 +47,11 @@ of it.
 In the Stripe Dashboard (test mode is fine to start):
 
 1. **Product catalog → Add product** — "Francisity Pro". Add two
-   recurring prices: monthly ($29) and yearly ($290 — this is the "2
+   recurring prices: monthly ($12) and yearly ($120 — this is the "2
    months free" annual price from the pricing page). Copy each price's
    ID (`price_...`) into `STRIPE_PRICE_PRO_MONTHLY` /
    `STRIPE_PRICE_PRO_ANNUAL`.
-2. Repeat for "Francisity Studio" — monthly $99, yearly $990 — into
+2. Repeat for "Francisity Studio" — monthly $39, yearly $390 — into
    `STRIPE_PRICE_STUDIO_MONTHLY` / `STRIPE_PRICE_STUDIO_ANNUAL`.
 3. **Developers → API keys** — copy the secret key into
    `STRIPE_SECRET_KEY`.
