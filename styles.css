@@ -395,8 +395,11 @@ section{ padding: 110px 0; }
 .price-card{
   position:relative; padding: 32px 28px; border-radius: var(--r-lg); background: var(--surface);
   border: 1px solid var(--border); display:flex; flex-direction:column;
+  transition: transform .2s var(--ease-out), box-shadow .2s var(--ease-out), border-color .2s var(--ease-out);
 }
+.price-card:hover{ transform: translateY(-2px); box-shadow: 0 14px 32px -20px var(--accent-soft); border-color: var(--text-faint); }
 .price-card.featured{ border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 20px 60px -20px var(--accent-soft); }
+.price-card.featured:hover{ transform: translateY(-2px); box-shadow: 0 0 0 1px var(--accent), 0 24px 64px -18px var(--accent-soft); border-color: var(--accent); }
 .price-badge{
   position:absolute; top: -12px; left: 28px; background: var(--accent); color:#fff; font-size: 0.68rem;
   font-weight:700; padding: 5px 12px; border-radius: 999px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;
@@ -410,9 +413,15 @@ section{ padding: 110px 0; }
 .price-features li::before{ content:"✓"; position:absolute; left:0; color: var(--accent); font-weight:700; }
 
 /* ================= CTA ================= */
-.cta{ text-align:center; }
+.cta{ position: relative; overflow: hidden; text-align:center; }
+.cta::before{
+  content:""; position:absolute; top: 50%; left:50%; transform: translate(-50%,-50%);
+  width: 700px; height: 340px; border-radius: 50%; pointer-events:none; z-index:0;
+  background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 72%);
+  filter: blur(56px);
+}
 .cta-inner{
-  max-width: 620px; margin: 0 auto; padding: 0 var(--gutter);
+  position: relative; z-index: 1; max-width: 620px; margin: 0 auto; padding: 0 var(--gutter);
 }
 .cta-inner h2{ font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0 auto 14px; }
 .cta-inner > p{ margin: 0 auto; font-size: 1rem; }
@@ -438,9 +447,31 @@ section{ padding: 110px 0; }
 .footer-bottom{ max-width: var(--wrap); margin: 0 auto; padding: 22px var(--gutter) 32px; border-top: 1px solid var(--border-soft); font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-faint); }
 
 /* ---------- Reveal ---------- */
-.reveal{ opacity: 0; transform: translateY(16px); transition: opacity .6s ease, transform .6s ease; }
+.reveal{ opacity: 0; transform: translateY(16px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
 .reveal.visible{ opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+
+/* Designed stagger for card grids that reveal together — 60ms cascade
+   instead of everything appearing at once. */
+.showcase-card:nth-child(1){ transition-delay: 0ms; }
+.showcase-card:nth-child(2){ transition-delay: 60ms; }
+.showcase-card:nth-child(3){ transition-delay: 120ms; }
+.showcase-card:nth-child(4){ transition-delay: 60ms; }
+.showcase-card:nth-child(5){ transition-delay: 120ms; }
+.showcase-card:nth-child(6){ transition-delay: 180ms; }
+.step-card:nth-child(1){ transition-delay: 0ms; }
+.step-card:nth-child(2){ transition-delay: 60ms; }
+.step-card:nth-child(3){ transition-delay: 120ms; }
+.step-card:nth-child(4){ transition-delay: 180ms; }
+.note:nth-child(1){ transition-delay: 0ms; }
+.note:nth-child(2){ transition-delay: 60ms; }
+.note:nth-child(3){ transition-delay: 120ms; }
+.price-card:nth-child(1){ transition-delay: 0ms; }
+.price-card:nth-child(2){ transition-delay: 60ms; }
+.price-card:nth-child(3){ transition-delay: 120ms; }
+@media (prefers-reduced-motion: reduce){
+  .showcase-card, .step-card, .note, .price-card{ transition-delay: 0ms !important; }
+}
 
 /* ================= STATIC PAGE (privacy/terms/status) ================= */
 .page-hero{ padding: 70px 0 40px; border-bottom: 1px solid var(--border-soft); }
