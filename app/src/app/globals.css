@@ -34,6 +34,17 @@ body {
   border-radius: 4px;
 }
 
+/* The prompt bar's own border already turns blue on focus (see
+   NewSiteForm's focus-within:border-blue-500) — the default ring above
+   would double up as a second rectangle floating inside the rounded pill,
+   so suppress it here. This is a plain rule (not a Tailwind utility)
+   because it must outrank the unlayered :focus-visible rule above, which a
+   layered focus-visible:outline-none utility can't do regardless of the
+   specificity or order it's written in. */
+#brief:focus-visible {
+  outline: none;
+}
+
 /* Ambient glow behind an unauthenticated "entry" screen — sign-in, the
    anonymous trial builder — echoing the marketing hero's treatment so
    both halves of the product read as one system. */

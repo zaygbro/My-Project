@@ -43,6 +43,18 @@ function deriveNameFromBrief(brief: string): string {
   const match = cleaned.match(LEADING_FILLER);
   let subject = match ? cleaned.slice(match[0].length) : cleaned;
   const adjective = match?.[5];
+
+  // A misspelled "site" word (e.g. "wesbite") won't match the noun slot
+  // above, so the filler regex gives up right after the article and leaves
+  // a leftover "<word> for " on the front of subject — catch that here
+  // rather than maintaining a typo dictionary. Skip it when that leftover
+  // word is capitalized, since that's more likely the real subject than a
+  // mangled "website".
+  const leftoverFor = subject.match(/^(\S+)\s+for\s+(.+)/i);
+  if (leftoverFor && !/^[A-Z]/.test(leftoverFor[1])) {
+    subject = leftoverFor[2];
+  }
+
   subject = subject.replace(/^(a|an|the)\s+/i, "");
   if (!subject) subject = cleaned;
 

@@ -101,7 +101,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe the site you want to build…"
+            placeholder="Describe your site…"
             className="max-h-32 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-base outline-none disabled:opacity-50"
           />
           <button
