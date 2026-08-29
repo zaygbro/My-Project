@@ -17,12 +17,19 @@ export interface CreateSiteState {
   success?: boolean;
 }
 
+// "an" must come before "a" in this alternation — regex alternatives are
+// tried left-to-right and the first match wins, so listing "a" first would
+// match just the "a" prefix of "an" (e.g. "an app" -> stray leading "n").
 const LEADING_FILLER =
-  /^(please\s+)?(build|create|make|design|generate|i\s+want|i\s+need|i.d\s+like)\s+(me\s+)?(a|an|the)?\s*(modern|simple|minimalist|elegant|professional|clean|beautiful|sleek|bold|playful|new|small)?\s*(website|site|landing\s*page|page|portfolio|storefront|store|app)?\s*(for|about|to\s+showcase|to\s+promote)?\s*/i;
+  /^(please\s+)?(build|create|make|design|generate|i\s+want|i\s+need|i.d\s+like)\s+(me\s+)?(an|a|the)?\s*(modern|simple|minimalist|elegant|professional|clean|beautiful|sleek|bold|playful|new|small)?\s*(website|site|landing\s*page|page|portfolio|storefront|store|app)?\s*(for|about|to\s+showcase|to\s+promote)?\s*/i;
 const NAMED_PATTERN = /\b(?:called|named)\s+((?:[A-Z][\w'&-]*\s*)+)/;
+const QUOTED_PATTERN = /"([^"]{1,60})"/;
 
 function titleCase(s: string): string {
-  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+  // Capitalize only after start-of-string or a non-letter/non-apostrophe
+  // boundary — a plain \b\w boundary would also fire right after an
+  // apostrophe and turn "Joe's" into "Joe'S".
+  return s.replace(/(^|[^A-Za-z'])([a-z])/g, (_, boundary: string, letter: string) => boundary + letter.toUpperCase());
 }
 
 /** There's no separate "site name" field in the create form — Francisity
@@ -30,27 +37,39 @@ function titleCase(s: string): string {
  * doc from its first line: strip the "build a modern website for" scaffolding
  * to get at the actual subject ("build a website for Starbucks" -> "Starbucks",
  * "build a modern website for a coffee shop" -> "Modern Coffee Shop"), or pick
- * up an explicit "called X"/"named X" business name when the brief gives one.
- * Deterministic and free (no AI call) rather than asking a model to name a
- * site that hasn't been written yet. */
+ * up an explicit "called X"/"named X" business name, or a quoted name, when
+ * the brief gives one. Deterministic and free (no AI call) rather than
+ * asking a model to name a site that hasn't been written yet. */
 function deriveNameFromBrief(brief: string): string {
   const cleaned = brief.trim().replace(/\s+/g, " ");
   if (!cleaned) return "Untitled site";
+
+  // A quoted name is the strongest signal ("build a site called \"Best Site
+  // Ever\"" — NAMED_PATTERN alone would stall on the opening quote). Guard
+  // on a capital first letter so a decorative quote around an ordinary word
+  // ("bread that's truly \"artisan\"") doesn't hijack the whole name.
+  const quoted = cleaned.match(QUOTED_PATTERN);
+  if (quoted && /^[A-Z]/.test(quoted[1].trim())) return titleCase(quoted[1].trim());
 
   const namedMatch = cleaned.match(NAMED_PATTERN);
   if (namedMatch) return titleCase(namedMatch[1].trim());
 
   const match = cleaned.match(LEADING_FILLER);
+  // The whole brief was command scaffolding with no real subject at all
+  // ("build a website") — better to say so than title-case the scaffolding.
+  if (match && match[0].length === cleaned.length) return "Untitled site";
+
   let subject = match ? cleaned.slice(match[0].length) : cleaned;
   const adjective = match?.[5];
 
-  // A misspelled "site" word (e.g. "wesbite") won't match the noun slot
-  // above, so the filler regex gives up right after the article and leaves
-  // a leftover "<word> for " on the front of subject — catch that here
-  // rather than maintaining a typo dictionary. Skip it when that leftover
-  // word is capitalized, since that's more likely the real subject than a
-  // mangled "website".
-  const leftoverFor = subject.match(/^(\S+)\s+for\s+(.+)/i);
+  // An unrecognized word (a typo like "wesbite", or a compound like
+  // "ecommerce store") before "for" won't match the noun slot above, so the
+  // filler regex gives up early and leaves "<word(s)> for " on the front of
+  // subject — catch that structurally here rather than maintaining a
+  // dictionary of every noun and typo. Skip it when that leftover phrase is
+  // capitalized, since that's more likely the real subject than a mangled
+  // site-type word.
+  const leftoverFor = subject.match(/^(?:(?:a|an|the)\s+)?((?:\S+\s+){0,2}\S+)\s+for\s+(.+)/i);
   if (leftoverFor && !/^[A-Z]/.test(leftoverFor[1])) {
     subject = leftoverFor[2];
   }

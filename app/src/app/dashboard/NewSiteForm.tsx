@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { toast } from "sonner";
 import { createSite, type CreateSiteState } from "./actions";
 import { ModelPicker } from "./ModelPicker";
@@ -19,12 +19,81 @@ const EXAMPLE_PROMPTS = [
   "A one-page site for a corporate law firm's practice areas",
 ];
 
-// Rotates daily rather than per-render — picking with Math.random() on
-// every render would pick different examples during the server render vs.
-// the client hydration pass and throw a hydration mismatch.
-function todaysExamples(count: number): string[] {
-  const start = new Date().getDate() % EXAMPLE_PROMPTS.length;
-  return Array.from({ length: count }, (_, i) => EXAMPLE_PROMPTS[(start + i) % EXAMPLE_PROMPTS.length]);
+const DEFAULT_PLACEHOLDER = "Describe your site…";
+const TYPE_MS = 35;
+const DELETE_MS = 20;
+const PAUSE_MS = 1800;
+
+// A typewriter-style rotating placeholder — types out an example brief,
+// pauses, deletes it, and moves to the next. Timer-driven, so it's a real
+// side effect (belongs in an effect) rather than state derived from props.
+//
+// The pill is only ~200px wide on a phone (most of its width goes to the
+// "+" button, model chip, and submit button), nowhere near enough to type
+// a full example without it wrapping and getting clipped by the single-row
+// box. Rather than guess a breakpoint, measure the field's actual rendered
+// width against the widest example in its real font and skip the animation
+// (falling back to a short static placeholder) when it wouldn't fit.
+function useTypewriterPlaceholder(
+  examples: string[],
+  enabled: boolean,
+  inputRef: RefObject<HTMLTextAreaElement | null>
+): string {
+  const [text, setText] = useState(DEFAULT_PLACEHOLDER);
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const el = inputRef.current;
+    if (!el) return;
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const cs = getComputedStyle(el);
+    ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const widest = Math.max(...examples.map((e) => ctx.measureText(e).width));
+    if (widest > el.clientWidth) return;
+
+    let exampleIndex = 0;
+    let charIndex = 0;
+    let phase: "typing" | "pausing" | "deleting" = "typing";
+    let timeoutId: number;
+
+    function tick() {
+      const current = examples[exampleIndex];
+      if (phase === "typing") {
+        charIndex += 1;
+        setText(current.slice(0, charIndex));
+        if (charIndex >= current.length) {
+          phase = "pausing";
+          timeoutId = window.setTimeout(tick, PAUSE_MS);
+        } else {
+          timeoutId = window.setTimeout(tick, TYPE_MS);
+        }
+        return;
+      }
+      if (phase === "pausing") {
+        // The pause already happened as the delay that led to this call —
+        // move straight into deleting rather than pausing a second time.
+        phase = "deleting";
+        timeoutId = window.setTimeout(tick, DELETE_MS);
+        return;
+      }
+      charIndex -= 1;
+      setText(current.slice(0, charIndex));
+      if (charIndex <= 0) {
+        exampleIndex = (exampleIndex + 1) % examples.length;
+        phase = "typing";
+      }
+      timeoutId = window.setTimeout(tick, DELETE_MS);
+    }
+
+    timeoutId = window.setTimeout(tick, TYPE_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [examples, enabled, inputRef]);
+
+  return text;
 }
 
 export function NewSiteForm({ disabled }: { disabled: boolean }) {
@@ -37,7 +106,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
 
   const recommended = useMemo(() => recommendModel(brief), [brief]);
   const selectedModel = manualModel ?? recommended;
-  const examples = useMemo(() => todaysExamples(3), []);
+  const placeholder = useTypewriterPlaceholder(EXAMPLE_PROMPTS, !disabled, textareaRef);
 
   // Reset the locally-tracked fields when a new action result arrives —
   // done during render (not an effect) per React's "adjust state when a
@@ -69,11 +138,6 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
     }
   }
 
-  function fillExample(example: string) {
-    setBrief(example);
-    textareaRef.current?.focus();
-  }
-
   return (
     <div className="space-y-3">
       <form ref={formRef} action={formAction}>
@@ -101,7 +165,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Describe your site…"
+            placeholder={placeholder}
             className="max-h-32 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-1.5 text-base outline-none disabled:opacity-50"
           />
           <button
@@ -148,20 +212,6 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
           </div>
         )}
       </form>
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        {examples.map((example) => (
-          <button
-            key={example}
-            type="button"
-            onClick={() => fillExample(example)}
-            disabled={disabled}
-            className="press rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs text-neutral-400 transition-colors hover:border-blue-800 hover:text-white disabled:opacity-50"
-          >
-            {example.length > 44 ? `${example.slice(0, 41)}…` : example}
-          </button>
-        ))}
-      </div>
 
       {disabled && (
         <p className="text-center text-xs text-neutral-500">
