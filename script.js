@@ -20,6 +20,28 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.15 });
 revealEls.forEach(el => revealObserver.observe(el));
 
+// ---------- Council mechanism (engine status -> merge -> reconciled preview) ----------
+const councilMechanism = document.getElementById('councilMechanism');
+const councilReplay = document.getElementById('councilReplay');
+if (councilMechanism) {
+  const councilObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        councilMechanism.classList.add('council-run');
+        councilObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.35 });
+  councilObserver.observe(councilMechanism);
+
+  councilReplay?.addEventListener('click', () => {
+    councilMechanism.classList.remove('council-run');
+    // Force reflow so re-adding the class restarts the CSS animations.
+    void councilMechanism.offsetWidth;
+    councilMechanism.classList.add('council-run');
+  });
+}
+
 // ---------- Reference brief chips ----------
 const briefInput = document.getElementById('briefInput');
 document.querySelectorAll('.chip').forEach(chip => {
