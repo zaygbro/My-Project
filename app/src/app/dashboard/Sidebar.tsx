@@ -19,7 +19,17 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   );
 }
 
-export function Sidebar({ email, sites }: { email: string; sites: { id: string; name: string }[] }) {
+export function Sidebar({
+  email,
+  sites,
+  isDev,
+  viewingAsRegular,
+}: {
+  email: string;
+  sites: { id: string; name: string }[];
+  isDev: boolean;
+  viewingAsRegular: boolean;
+}) {
   const pathname = usePathname();
 
   return (
@@ -62,6 +72,11 @@ export function Sidebar({ email, sites }: { email: string; sites: { id: string; 
       </nav>
 
       <div className="border-t border-neutral-800 pt-3">
+        {isDev && (
+          <span className="mb-1.5 ml-3 inline-block rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-blue-400">
+            {viewingAsRegular ? "Dev · viewing as regular" : "Dev"}
+          </span>
+        )}
         <p className="truncate px-3 text-xs text-neutral-500">{email}</p>
         <form action={signOut}>
           <button className="press mt-1 w-full rounded-lg px-3 py-2 text-left font-mono text-xs uppercase tracking-wide text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-white">

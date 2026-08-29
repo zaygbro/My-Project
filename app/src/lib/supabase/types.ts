@@ -21,11 +21,13 @@ export interface Database {
           id: string;
           email: string;
           created_at: string;
+          is_dev: boolean;
         };
         Insert: {
           id: string;
           email: string;
           created_at?: string;
+          is_dev?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
         Relationships: [];

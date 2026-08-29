@@ -10,6 +10,7 @@ import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { getModelInfo } from "@/lib/ai/models";
 import { isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
+import { getEffectivePlanForUser } from "@/lib/dev-mode";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -69,7 +70,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
     messagesBySection.set(m.section_key, turns);
   }
 
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
   const rebuildsUsed = rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
   const atRebuildLimit = rebuildLimit !== null && rebuildsUsed >= rebuildLimit;

@@ -3,6 +3,7 @@ import JSZip from "jszip";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { renderSiteToStaticFiles } from "@/lib/export";
+import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import type { SiteSection } from "@/lib/supabase/types";
 
 function slugify(name: string): string {
@@ -42,7 +43,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/sites/[id]/expo
     .eq("user_id", user.id)
     .single();
 
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   if (!PLAN_LIMITS[plan].exportEnabled) {
     return NextResponse.json(
       { error: "Exporting to code is a Pro/Studio feature — upgrade to download this site." },

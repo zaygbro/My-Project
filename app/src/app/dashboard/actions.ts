@@ -8,6 +8,7 @@ import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
 import { isAiModelId, recommendModel, type AiModelId } from "@/lib/ai/models";
 import { chatAboutSection, isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
+import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
@@ -41,7 +42,7 @@ export async function createSite(
     .eq("user_id", user.id)
     .single();
 
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const limit = PLAN_LIMITS[plan].siteLimit;
 
   if (limit !== null) {
@@ -169,7 +170,7 @@ export async function updateSiteSection(
     .select("plan")
     .eq("user_id", user.id)
     .single();
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
 
   const quotaError = await checkRebuildQuota(supabase, user.id, plan);
   if (quotaError) return { error: quotaError };
@@ -228,7 +229,7 @@ export async function sendSectionMessage(
     .select("plan")
     .eq("user_id", user.id)
     .single();
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
 
   const quotaError = await checkRebuildQuota(supabase, user.id, plan);
   if (quotaError) return { error: quotaError };

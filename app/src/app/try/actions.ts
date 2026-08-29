@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import type { SiteSection } from "@/lib/supabase/types";
 import { isAiModelId, recommendModel } from "@/lib/ai/models";
+import { getEffectivePlanForUser } from "@/lib/dev-mode";
 
 export interface ClaimAnonSiteResult {
   error: string | null;
@@ -33,7 +34,7 @@ export async function claimAnonymousSite(payload: {
     .eq("user_id", user.id)
     .single();
 
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const limit = PLAN_LIMITS[plan].siteLimit;
 
   if (limit !== null) {

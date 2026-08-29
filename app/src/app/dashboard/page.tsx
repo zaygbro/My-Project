@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import { NewSiteForm } from "./NewSiteForm";
 
 export default async function DashboardPage() {
@@ -22,7 +23,7 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: false }),
   ]);
 
-  const plan = (subscription?.plan ?? "spark") as PlanId;
+  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const limits = PLAN_LIMITS[plan];
   const siteCount = count ?? 0;
   const atLimit = limits.siteLimit !== null && siteCount >= limits.siteLimit;
