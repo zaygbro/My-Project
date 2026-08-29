@@ -26,7 +26,8 @@ export default function TryPage() {
   const [body, setBody] = useState("");
 
   const [email, setEmail] = useState("");
-  const [signupStatus, setSignupStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [code, setCode] = useState("");
+  const [signupStatus, setSignupStatus] = useState<"idle" | "sending" | "sent" | "verifying">("idle");
 
   // On load: if someone just signed up (real session) and has a local trial
   // site sitting in this browser, save it for real and hand them off to the
@@ -118,20 +119,32 @@ export default function TryPage() {
     toast.success("Saved in this browser — sign up to keep it for good.");
   }
 
-  async function handleSignup(e: FormEvent) {
+  async function handleSendCode(e: FormEvent) {
     e.preventDefault();
     setSignupStatus("sending");
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/try` },
-    });
+    const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
       setSignupStatus("idle");
       toast.error(error.message);
       return;
     }
     setSignupStatus("sent");
+  }
+
+  async function handleVerifyCode(e: FormEvent) {
+    e.preventDefault();
+    setSignupStatus("verifying");
+    const supabase = createClient();
+    const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+    if (error) {
+      setSignupStatus("sent");
+      toast.error(error.message);
+      return;
+    }
+    // Full reload so the mount-time effect above sees the new session and
+    // runs the claim flow against the anon site already sitting in localStorage.
+    window.location.reload();
   }
 
   if (mode === "loading" || mode === "claiming") {
@@ -222,13 +235,34 @@ export default function TryPage() {
         </div>
 
         <div className="rounded-xl border border-blue-900 bg-blue-950/20 p-4">
-          {signupStatus === "sent" ? (
-            <p className="text-sm text-neutral-300">
-              Check <strong className="text-white">{email}</strong> for a link — click it in this same browser and
-              your site will be saved automatically.
-            </p>
+          {signupStatus === "sent" || signupStatus === "verifying" ? (
+            <form onSubmit={handleVerifyCode} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <p className="flex-1 text-sm text-neutral-300">
+                Enter the code sent to <strong className="text-white">{email}</strong> to save this site.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  autoFocus
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="123456"
+                  className="field-transition w-32 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-center text-sm tracking-[0.2em] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                />
+                <button
+                  type="submit"
+                  disabled={signupStatus === "verifying"}
+                  className="press whitespace-nowrap rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+                >
+                  {signupStatus === "verifying" ? "Verifying…" : "Verify"}
+                </button>
+              </div>
+            </form>
           ) : (
-            <form onSubmit={handleSignup} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <form onSubmit={handleSendCode} className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <p className="flex-1 text-sm text-neutral-300">
                 This site only lives in your browser right now. Sign up free to save it permanently.
               </p>
