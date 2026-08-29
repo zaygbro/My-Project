@@ -122,7 +122,11 @@ export async function createSite(
     {
       key: "overview",
       title: "Overview",
-      body: brief || `A new site called "${name}". Edit this section to get started.`,
+      // When AI chat isn't configured there's no reply box to point at —
+      // fall back to showing the raw brief instead of a dead-end message.
+      body: isAnthropicConfigured
+        ? `Nothing written yet — reply below and I'll draft this section for ${name}.`
+        : brief || `A new site called "${name}".`,
     },
   ];
 
@@ -151,6 +155,19 @@ export async function createSite(
     changed_sections: [],
     kind: "create",
   });
+
+  // Open with a clarifying question rather than silently turning the raw
+  // brief into "copy" — templated, not a model call, so creating a site
+  // never waits on the AI. chatAboutSection asks further questions itself
+  // once the owner replies, if it still doesn't know enough to write well.
+  if (isAnthropicConfigured) {
+    await supabase.from("site_messages").insert({
+      site_id: site.id,
+      section_key: "overview",
+      role: "assistant",
+      content: `I'd love to write this well — tell me more about ${name}: what do you offer, who's it for, and what feeling should the page give visitors?`,
+    });
+  }
 
   revalidatePath("/dashboard");
   return { error: null, success: true };
@@ -196,48 +213,6 @@ async function checkRebuildQuota(
     return `You've used all ${rebuildLimit} rebuilds included on ${PLAN_LABELS[plan]} this month. Upgrade for unlimited rebuilds.`;
   }
   return null;
-}
-
-export interface UpdateSectionState {
-  error: string | null;
-  success?: boolean;
-}
-
-export async function updateSiteSection(
-  siteId: string,
-  sectionKey: string,
-  _prevState: UpdateSectionState,
-  formData: FormData
-): Promise<UpdateSectionState> {
-  const body = String(formData.get("body") ?? "").trim();
-
-  const supabase = await createClient();
-  const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
-
-  const { data: site } = await supabase
-    .from("sites")
-    .select("id, content")
-    .eq("id", siteId)
-    .eq("user_id", user.id)
-    .single();
-  if (!site) return { error: "Site not found." };
-
-  const plan = await getEffectivePlanForUser(user.id);
-
-  const quotaError = await checkRebuildQuota(supabase, user.id, plan);
-  if (quotaError) return { error: quotaError };
-
-  const currentContent = site.content as SiteSection[];
-  if (!currentContent.some((s) => s.key === sectionKey)) {
-    return { error: "Unknown section." };
-  }
-
-  const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, body);
-  if (writeError) return { error: writeError };
-
-  revalidatePath(`/dashboard/sites/${siteId}`);
-  return { error: null, success: true };
 }
 
 export interface SendMessageState {

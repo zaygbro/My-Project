@@ -61,11 +61,19 @@ export function SectionChat({
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-neutral-800 bg-black">
-      {messages.length > 0 && (
-        <div ref={listRef} className="max-h-64 space-y-2 overflow-y-auto p-3">
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+    <div className="mt-4 rounded-lg border border-neutral-800 bg-black">
+      <div ref={listRef} className="max-h-96 space-y-3 overflow-y-auto p-3">
+        {messages.length === 0 ? (
+          <p className="p-2 text-sm text-neutral-600">
+            Tell {modelLabel} what this section is for — it&rsquo;ll ask if it needs to know more before
+            writing anything.
+          </p>
+        ) : (
+          messages.map((m, i) => (
+            <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
+              <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-neutral-600">
+                {m.role === "user" ? "You" : modelLabel}
+              </span>
               <p
                 className={`fade-in-up max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                   m.role === "user"
@@ -76,17 +84,20 @@ export function SectionChat({
                 {m.content}
               </p>
             </div>
-          ))}
-          {isPending && (
-            <div className="flex justify-start">
-              <p className="fade-in-up inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-500">
-                <span className="spinner" aria-hidden />
-                {modelLabel} is thinking…
-              </p>
-            </div>
-          )}
-        </div>
-      )}
+          ))
+        )}
+        {isPending && (
+          <div className="flex flex-col items-start">
+            <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-neutral-600">
+              {modelLabel}
+            </span>
+            <p className="fade-in-up inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-500">
+              <span className="spinner" aria-hidden />
+              Thinking…
+            </p>
+          </div>
+        )}
+      </div>
       <form
         ref={formRef}
         action={formAction}
@@ -96,7 +107,7 @@ export function SectionChat({
         <input
           name="message"
           required
-          placeholder={`Ask ${modelLabel} to change this section…`}
+          placeholder={`Reply to ${modelLabel}…`}
           disabled={disabled || isPending}
           className="field-transition flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50"
         />
