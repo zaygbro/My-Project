@@ -17,18 +17,55 @@ export interface CreateSiteState {
   success?: boolean;
 }
 
+const LEADING_FILLER =
+  /^(please\s+)?(build|create|make|design|generate|i\s+want|i\s+need|i.d\s+like)\s+(me\s+)?(a|an|the)?\s*(modern|simple|minimalist|elegant|professional|clean|beautiful|sleek|bold|playful|new|small)?\s*(website|site|landing\s*page|page|portfolio|storefront|store|app)?\s*(for|about|to\s+showcase|to\s+promote)?\s*/i;
+const NAMED_PATTERN = /\b(?:called|named)\s+((?:[A-Z][\w'&-]*\s*)+)/;
+
+function titleCase(s: string): string {
+  return s.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** There's no separate "site name" field in the create form — Francisity
+ * derives one from the brief itself, the same way a person would title a
+ * doc from its first line: strip the "build a modern website for" scaffolding
+ * to get at the actual subject ("build a website for Starbucks" -> "Starbucks",
+ * "build a modern website for a coffee shop" -> "Modern Coffee Shop"), or pick
+ * up an explicit "called X"/"named X" business name when the brief gives one.
+ * Deterministic and free (no AI call) rather than asking a model to name a
+ * site that hasn't been written yet. */
+function deriveNameFromBrief(brief: string): string {
+  const cleaned = brief.trim().replace(/\s+/g, " ");
+  if (!cleaned) return "Untitled site";
+
+  const namedMatch = cleaned.match(NAMED_PATTERN);
+  if (namedMatch) return titleCase(namedMatch[1].trim());
+
+  const match = cleaned.match(LEADING_FILLER);
+  let subject = match ? cleaned.slice(match[0].length) : cleaned;
+  const adjective = match?.[5];
+  subject = subject.replace(/^(a|an|the)\s+/i, "");
+  if (!subject) subject = cleaned;
+
+  const startsCapitalized = /^[A-Z]/.test(subject);
+  if (adjective && !startsCapitalized) subject = `${adjective} ${subject}`;
+
+  const words = subject.split(" ").slice(0, 6).join(" ");
+  const titled = titleCase(words);
+  return titled.length > 60 ? `${titled.slice(0, 57)}…` : titled;
+}
+
 export async function createSite(
   _prevState: CreateSiteState,
   formData: FormData
 ): Promise<CreateSiteState> {
-  const name = String(formData.get("name") ?? "").trim();
   const brief = String(formData.get("brief") ?? "").trim();
   const requestedModel = String(formData.get("model") ?? "");
   const model: AiModelId = isAiModelId(requestedModel) ? requestedModel : recommendModel(brief);
 
-  if (!name) {
-    return { error: "Give your site a name." };
+  if (!brief) {
+    return { error: "Describe the site you want to build." };
   }
+  const name = deriveNameFromBrief(brief);
 
   const supabase = await createClient();
   const {
