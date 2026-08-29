@@ -25,6 +25,15 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* The browser default focus ring is nearly invisible on a black
+   background — matches the marketing site's :focus-visible treatment so
+   keyboard focus is actually legible everywhere in the app. */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Ambient glow behind an unauthenticated "entry" screen — sign-in, the
    anonymous trial builder — echoing the marketing hero's treatment so
    both halves of the product read as one system. */
@@ -46,6 +55,43 @@ body {
   filter: blur(60px);
 }
 .entry-glow > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Richer, layered version for the dashboard shell — a space people spend
+   real time in, not a one-off entry screen, so it earns a fuller
+   treatment: two overlapping blobs instead of one. Same blue, same
+   restraint — no new colors, no motion. */
+.dashboard-glow {
+  position: relative;
+  overflow: hidden;
+}
+.dashboard-glow::before,
+.dashboard-glow::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+}
+.dashboard-glow::before {
+  top: -260px;
+  left: 30%;
+  width: 820px;
+  height: 480px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.22), transparent 70%);
+  filter: blur(70px);
+}
+.dashboard-glow::after {
+  top: -120px;
+  left: 70%;
+  width: 480px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12), transparent 72%);
+  filter: blur(56px);
+}
+.dashboard-glow > * {
   position: relative;
   z-index: 1;
 }

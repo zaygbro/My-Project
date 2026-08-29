@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import { NewSiteForm } from "./NewSiteForm";
+import { SitesGrid } from "./SitesGrid";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
     supabase.from("subscriptions").select("plan").eq("user_id", user.id).single(),
     supabase
       .from("sites")
-      .select("*", { count: "exact" })
+      .select("id, name, brief, badge_enabled", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
   ]);
@@ -32,51 +33,48 @@ export default async function DashboardPage() {
   const displayName = emailLocalPart ? emailLocalPart.charAt(0).toUpperCase() + emailLocalPart.slice(1) : "there";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* New site */}
-      <section className="fade-in-up">
-        <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
-          New site, {displayName}
-        </h2>
-        <NewSiteForm disabled={atLimit} />
-        {atLimit && (
-          <p className="mt-3 text-sm text-blue-400">
-            You&rsquo;re at the {limits.siteLimit}-site limit on {PLAN_LABELS[plan]}.{" "}
-            <Link href="/dashboard/settings" className="underline hover:text-blue-300">
-              Upgrade in Settings
-            </Link>{" "}
-            to create more.
-          </p>
-        )}
+      <section className="fade-in-up relative pt-6">
+        <svg
+          viewBox="0 0 600 160"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 -top-4 mx-auto h-40 w-full max-w-2xl opacity-60"
+        >
+          <g stroke="#3B82F6" fill="none" strokeWidth="1">
+            <path d="M60 20 L300 120" strokeOpacity="0.35" />
+            <path d="M180 10 L300 120" strokeOpacity="0.5" />
+            <path d="M420 10 L300 120" strokeOpacity="0.5" />
+            <path d="M540 20 L300 120" strokeOpacity="0.35" />
+          </g>
+          <g fill="#3B82F6">
+            <circle cx="60" cy="20" r="3" fillOpacity="0.6" />
+            <circle cx="180" cy="10" r="3" fillOpacity="0.8" />
+            <circle cx="420" cy="10" r="3" fillOpacity="0.8" />
+            <circle cx="540" cy="20" r="3" fillOpacity="0.6" />
+            <circle cx="300" cy="120" r="4.5" />
+          </g>
+        </svg>
+        <h1 className="relative text-center text-3xl font-extrabold sm:text-4xl">
+          Let&rsquo;s build something, {displayName}
+        </h1>
+        <div className="relative mx-auto mt-8 max-w-2xl">
+          <NewSiteForm disabled={atLimit} />
+          {atLimit && (
+            <p className="mt-3 text-center text-sm text-blue-400">
+              You&rsquo;re at the {limits.siteLimit}-site limit on {PLAN_LABELS[plan]}.{" "}
+              <Link href="/dashboard/settings" className="underline hover:text-blue-300">
+                Upgrade in Settings
+              </Link>{" "}
+              to create more.
+            </p>
+          )}
+        </div>
       </section>
 
-      {/* Sites list */}
+      {/* Sites grid */}
       <section className="fade-in-up" style={{ animationDelay: "80ms" }}>
-        <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Your sites</h2>
-        {sites && sites.length > 0 ? (
-          <ul className="space-y-2">
-            {sites.map((site, i) => (
-              <li key={site.id} className="fade-in-up" style={{ animationDelay: `${120 + i * 40}ms` }}>
-                <Link
-                  href={`/dashboard/sites/${site.id}`}
-                  className="hover-lift press flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3 transition-colors hover:border-neutral-600"
-                >
-                  <div>
-                    <p className="font-semibold">{site.name}</p>
-                    {site.brief && <p className="text-sm text-neutral-500">{site.brief}</p>}
-                  </div>
-                  {site.badge_enabled && (
-                    <span className="rounded-full border border-neutral-700 px-2 py-1 font-mono text-[10px] uppercase text-neutral-500">
-                      Badge on
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-neutral-500">No sites yet — create your first one above.</p>
-        )}
+        <SitesGrid sites={sites ?? []} />
       </section>
     </div>
   );
