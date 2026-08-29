@@ -82,13 +82,17 @@ button{ font-family: inherit; }
 .btn-ghost:hover{ border-color: var(--text-dim); }
 .btn-block{ width:100%; }
 
+#navSentinel{ position: absolute; top: 0; height: 1px; width: 1px; pointer-events: none; }
+
 /* ---------- Nav ---------- */
 .nav{
   position: sticky; top:0; z-index: 50;
   background: rgba(0,0,0,0.85);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-soft);
+  transition: box-shadow .2s ease;
 }
+.nav.nav-scrolled{ box-shadow: 0 8px 24px -14px rgba(0,0,0,0.6); }
 .nav-inner{
   max-width: var(--wrap); margin: 0 auto; padding: 18px var(--gutter);
   display:flex; align-items:center; justify-content:space-between; gap: 24px;

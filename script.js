@@ -97,8 +97,15 @@ waitlistForm?.addEventListener('submit', (e) => {
 });
 
 // ---------- Sticky nav shadow ----------
+// A scroll listener toggling an inline style on every tick forces a style
+// recalc + repaint of the sticky nav per scroll event. A sentinel + observer
+// gets the same "have we scrolled past the top" signal for free, off the
+// scroll thread entirely.
 const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 10) nav.style.boxShadow = '0 8px 24px -14px rgba(0,0,0,0.6)';
-  else nav.style.boxShadow = 'none';
-});
+const navSentinel = document.getElementById('navSentinel');
+if (nav && navSentinel) {
+  const navShadowObserver = new IntersectionObserver((entries) => {
+    nav.classList.toggle('nav-scrolled', !entries[0].isIntersecting);
+  });
+  navShadowObserver.observe(navSentinel);
+}
