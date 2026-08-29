@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 export interface SiteSummary {
@@ -40,6 +40,15 @@ function hashToIndex(id: string, mod: number): number {
 
 export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
   const [query, setQuery] = useState("");
+
+  // Landing here via the sidebar's Search link/Cmd+K (from another page,
+  // where there's no #site-search element yet to focus directly) should
+  // still end with real keyboard focus in the box, not just a scroll.
+  useEffect(() => {
+    if (window.location.hash === "#site-search") {
+      document.getElementById("site-search")?.focus();
+    }
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

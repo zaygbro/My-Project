@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./actions";
 
 function NavLink({
@@ -45,6 +45,7 @@ export function Sidebar({
   showUpgradeNudge: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const recentSites = sites.slice(0, 5);
   const [open, setOpen] = useState(false);
 
@@ -67,6 +68,21 @@ export function Sidebar({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  // Real Cmd/Ctrl+K: focus the search box if it's already on screen,
+  // otherwise navigate to it — same destination the Search nav link uses.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        const input = document.getElementById("site-search") as HTMLInputElement | null;
+        if (input) input.focus();
+        else router.push("/dashboard#site-search");
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
 
   return (
     <>
@@ -98,8 +114,11 @@ export function Sidebar({
         <Link
           href="/dashboard"
           onClick={() => setOpen(false)}
-          className="mb-5 block px-3 text-base font-extrabold uppercase tracking-tight"
+          className="press hover-lift mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-neutral-900"
         >
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
+            /
+          </span>
           Francisity
         </Link>
 
@@ -115,7 +134,10 @@ export function Sidebar({
             <circle cx="11" cy="11" r="7" />
             <path d="m21 21-4.3-4.3" strokeLinecap="round" />
           </svg>
-          Search
+          <span className="flex-1">Search</span>
+          <kbd className="rounded border border-neutral-800 bg-neutral-900 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500">
+            Ctrl K
+          </kbd>
         </NavLink>
       </nav>
 
@@ -168,10 +190,17 @@ export function Sidebar({
         <Link
           href="/dashboard/settings"
           onClick={() => setOpen(false)}
-          className="press hover-lift mb-3 block rounded-xl border border-blue-900 bg-blue-950/20 p-3 transition-colors hover:border-blue-700"
+          className="press hover-lift mb-3 flex items-start gap-2.5 rounded-xl border border-blue-900 bg-blue-950/20 p-3 transition-colors hover:border-blue-700"
         >
-          <p className="text-xs font-semibold text-white">Upgrade to Pro</p>
-          <p className="mt-0.5 text-[11px] text-neutral-400">Unlimited sites, rebuilds &amp; export</p>
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
+            </svg>
+          </span>
+          <span>
+            <p className="text-xs font-semibold text-white">Upgrade to Pro</p>
+            <p className="mt-0.5 text-[11px] text-neutral-400">Unlimited sites, rebuilds &amp; export</p>
+          </span>
         </Link>
       )}
 
@@ -181,7 +210,12 @@ export function Sidebar({
             {viewingAsRegular ? "Dev · viewing as regular" : "Dev"}
           </span>
         )}
-        <p className="truncate px-3 text-xs text-neutral-500">{email}</p>
+        <div className="flex items-center gap-2 px-3">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-950/60 font-mono text-xs font-bold text-blue-400">
+            {email.charAt(0).toUpperCase()}
+          </span>
+          <p className="truncate text-xs text-neutral-500">{email}</p>
+        </div>
         <form action={signOut}>
           <button className="press mt-1 w-full rounded-lg px-3 py-2 text-left font-mono text-xs uppercase tracking-wide text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-white">
             Sign out

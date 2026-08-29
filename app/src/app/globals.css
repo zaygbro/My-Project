@@ -66,6 +66,11 @@ body {
 .dashboard-glow {
   position: relative;
   overflow: hidden;
+  /* A restrained on-brand wash — blue into black, not a rainbow — so the
+     dashboard reads as a fuller "aurora-lite" backdrop like Lovable's
+     without borrowing its actual multi-hue gradient (the whole point was
+     to differ there: this stays dark and technical, not consumer-bright). */
+  background: linear-gradient(160deg, #0a0e1a 0%, #050507 38%, #000000 75%);
 }
 .dashboard-glow::before,
 .dashboard-glow::after {
@@ -80,7 +85,7 @@ body {
   left: 30%;
   width: 820px;
   height: 480px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 70%);
   filter: blur(70px);
 }
 .dashboard-glow::after {
@@ -88,7 +93,7 @@ body {
   left: 70%;
   width: 480px;
   height: 340px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.12), transparent 72%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 72%);
   filter: blur(56px);
 }
 .dashboard-glow > * {
