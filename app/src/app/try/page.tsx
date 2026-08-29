@@ -162,7 +162,13 @@ export default function TryPage() {
     return (
       <main className="entry-glow flex min-h-screen flex-col items-center bg-black px-6 py-16 text-white">
         <div className="fade-in-up w-full max-w-md">
-          <Link href="/" className="mb-2 block text-center text-lg font-extrabold uppercase tracking-tight">
+          <Link
+            href="/"
+            className="press mb-2 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
+              /
+            </span>
             Francisity
           </Link>
           <p className="mb-8 text-center text-sm text-neutral-400">
