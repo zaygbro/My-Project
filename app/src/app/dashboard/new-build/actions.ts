@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { generateProject, isGenerationConfigured } from "@/lib/generation/generate";
+import { editSection, generateProject, isGenerationConfigured } from "@/lib/generation/generate";
 import { isAiModelId, type AiModelId } from "@/lib/ai/models";
 import type { ProjectState, StructuredBrief } from "@/lib/generation/types";
 
@@ -72,4 +72,25 @@ export async function runGeneration(
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Generation failed." };
   }
+}
+
+/** Called directly from a client component (not via a <form>), since it
+ * needs to pass the full current ProjectState, not just form fields. */
+export async function editSectionAction(
+  state: ProjectState,
+  pageSlug: string,
+  sectionKey: string,
+  instruction: string
+): Promise<ProjectState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/sign-in");
+
+  if (!isGenerationConfigured) {
+    throw new Error("AI generation isn't configured yet — set ANTHROPIC_API_KEY.");
+  }
+
+  return editSection(state, pageSlug, sectionKey, instruction);
 }

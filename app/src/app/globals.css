@@ -200,3 +200,33 @@ body {
     animation-duration: 1.4s;
   }
 }
+
+/* ================= Generation preview (checkpoint 3) =================
+   Renders a generated project using ITS OWN design tokens, not the app's
+   fixed black/blue theme — every generated project should look distinct,
+   per build-prompt point 4 (non-generic output). Custom properties are set
+   inline per-project; these rules only consume them. */
+.preview-frame {
+  background: var(--preview-bg);
+  color: var(--preview-text);
+  font-family: var(--preview-font-body), sans-serif;
+  border-radius: var(--preview-radius);
+}
+.preview-frame h1,
+.preview-frame h2,
+.preview-frame h3 {
+  font-family: var(--preview-font-display), sans-serif;
+}
+.preview-surface {
+  background: var(--preview-surface);
+  border-radius: var(--preview-radius);
+}
+.preview-muted {
+  color: var(--preview-text-muted);
+}
+.preview-accent {
+  color: var(--preview-accent);
+}
+.preview-accent-bg {
+  background: var(--preview-accent);
+}

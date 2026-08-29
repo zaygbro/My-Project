@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { runGeneration, type RunGenerationState } from "./actions";
+import { ProjectPreview } from "./ProjectPreview";
 import { ModelPicker } from "../ModelPicker";
 import { recommendModel, getModelInfo, type AiModelId } from "@/lib/ai/models";
 import type { ChangeLogEntry } from "@/lib/generation/types";
@@ -12,12 +13,14 @@ const initialState: RunGenerationState = { error: null };
 function ChangeLogRow({ entry }: { entry: ChangeLogEntry }) {
   const kindLabel: Record<ChangeLogEntry["kind"], string> = {
     generate: "Generate",
+    edit: "Edit",
     fix: "Fix pass",
     validate: "Validate",
     escalate: "Escalated",
   };
   const kindColor: Record<ChangeLogEntry["kind"], string> = {
     generate: "text-blue-400",
+    edit: "text-blue-400",
     fix: "text-blue-400",
     validate: "text-neutral-400",
     escalate: "text-red-400",
@@ -70,10 +73,18 @@ export function BriefIntakeForm() {
   // Every field here is controlled and deliberately never cleared on a
   // successful generation — this is a "tweak the brief and regenerate"
   // tool, not a one-shot form, so the brief should persist across runs.
+  //
+  // liveResult is the single source of truth once a project exists —
+  // ProjectPreview is a controlled component that reports edits back into
+  // it, so the change-log panel below always reflects edits too, not just
+  // the original generation. It resets to the fresh result whenever a new
+  // generation actually completes (state.result changes identity).
   const [prevState, setPrevState] = useState(state);
+  const [liveResult, setLiveResult] = useState(state.result);
   if (state !== prevState) {
     setPrevState(state);
     if (state.error) toast.error(state.error);
+    if (state.result) setLiveResult(state.result);
   }
 
   return (
@@ -214,52 +225,45 @@ export function BriefIntakeForm() {
         </button>
       </form>
 
-      {state.result && (
+      {liveResult && (
         <div className="fade-in-up space-y-4 rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">Generation state</h2>
             <span
               className={`rounded-full px-3 py-1 font-mono text-xs font-bold uppercase ${
-                state.result.status === "validated"
-                  ? "bg-blue-950/40 text-blue-400"
-                  : "bg-red-950/40 text-red-400"
+                liveResult.status === "validated" ? "bg-blue-950/40 text-blue-400" : "bg-red-950/40 text-red-400"
               }`}
             >
-              {state.result.status}
+              {liveResult.status}
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-400">
             <span>
-              Pages: <span className="text-white">{state.result.pages.map((p) => p.slug).join(", ") || "none"}</span>
+              Pages: <span className="text-white">{liveResult.pages.map((p) => p.slug).join(", ") || "none"}</span>
             </span>
             <span>
-              Cost so far: <span className="font-mono text-white">${state.result.totalCostUsd.toFixed(4)}</span>
+              Cost so far: <span className="font-mono text-white">${liveResult.totalCostUsd.toFixed(4)}</span>
             </span>
           </div>
 
-          {state.result.tokens && (
-            <div className="flex flex-wrap items-center gap-2">
-              {Object.entries(state.result.tokens.colors).map(([name, hex]) => (
-                <div key={name} className="flex items-center gap-1.5 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1">
-                  <span className="h-3 w-3 rounded-full border border-neutral-700" style={{ backgroundColor: hex }} />
-                  <span className="font-mono text-[10px] text-neutral-500">{name}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {state.result.status === "failed" && (
+          {liveResult.status === "validated" ? (
+            <ProjectPreview
+              key={liveResult.changeLog[0]?.timestamp ?? "none"}
+              state={liveResult}
+              onChange={setLiveResult}
+            />
+          ) : (
             <p className="rounded-lg border border-red-900 bg-red-950/20 px-3 py-2 text-sm text-red-300">
-              This generation failed validation twice in a row and stopped rather than retrying silently — see
-              the log below for exactly what&rsquo;s wrong.
+              This generation failed validation twice in a row and stopped rather than retrying silently — there
+              is nothing safe to preview yet. See the log below for exactly what&rsquo;s wrong, then try again.
             </p>
           )}
 
           <div>
             <h3 className="mb-2 text-xs font-mono uppercase tracking-wide text-neutral-600">Change log</h3>
             <ul>
-              {state.result.changeLog.map((entry, i) => (
+              {liveResult.changeLog.map((entry, i) => (
                 <ChangeLogRow key={i} entry={entry} />
               ))}
             </ul>

@@ -2,6 +2,8 @@
 // project state" (build-prompt point 1) — every generation and fix pass
 // reads and writes this, instead of relying on chat history alone.
 
+import type { AiModelId } from "../ai/models";
+
 export interface StructuredBrief {
   industry: string;
   tone: string;
@@ -49,7 +51,7 @@ export interface TokenUsage {
 
 export interface ChangeLogEntry {
   timestamp: string;
-  kind: "generate" | "fix" | "validate" | "escalate";
+  kind: "generate" | "edit" | "fix" | "validate" | "escalate";
   summary: string;
   issues?: ValidationIssue[];
   usage?: TokenUsage;
@@ -57,6 +59,7 @@ export interface ChangeLogEntry {
 
 export interface ProjectState {
   brief: StructuredBrief;
+  model: AiModelId;
   tokens: DesignTokens | null;
   pages: GeneratedPage[];
   changeLog: ChangeLogEntry[];

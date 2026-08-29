@@ -74,14 +74,21 @@ async function callModel(model: AiModelId, userMessage: string): Promise<{ outpu
   return { output: parsed, usage };
 }
 
-export async function generateProject(brief: StructuredBrief, model: AiModelId = "claude-haiku-4-5"): Promise<ProjectState> {
-  const changeLog: ChangeLogEntry[] = [];
-  let totalCostUsd = 0;
-
-  const { output, usage } = await callModel(model, briefToPrompt(brief));
-  totalCostUsd += usage.costUsd;
-  changeLog.push({ timestamp: new Date().toISOString(), kind: "generate", summary: "Initial generation", usage });
-
+/**
+ * Shared by initial generation and every edit: validate the FULL project,
+ * and if that fails, one fix pass fed the full state plus the specific
+ * issues (never a diff), validated again. Two failures in a row and it
+ * stops rather than retrying silently — this is the literal build-prompt
+ * point 1 rule, applied identically whether the first attempt came from a
+ * brand-new brief or a user's edit request.
+ */
+async function validateAndRecover(
+  brief: StructuredBrief,
+  output: GenerationOutput,
+  model: AiModelId,
+  changeLog: ChangeLogEntry[]
+): Promise<{ output: GenerationOutput; status: "validated" | "failed"; costUsd: number }> {
+  let costUsd = 0;
   let issues = validateProject(brief, output);
   changeLog.push({
     timestamp: new Date().toISOString(),
@@ -89,15 +96,9 @@ export async function generateProject(brief: StructuredBrief, model: AiModelId =
     summary: issues.length === 0 ? "Passed validation" : `Found ${issues.length} issue(s)`,
     issues,
   });
+  if (issues.length === 0) return { output, status: "validated", costUsd };
 
-  if (issues.length === 0) {
-    return { brief, tokens: output.tokens, pages: output.pages, changeLog, status: "validated", totalCostUsd };
-  }
-
-  // One fix pass, given the FULL current state plus the specific issues —
-  // never just "here's the one error, patch it" (that's exactly the pattern
-  // that lets a fix silently reintroduce something else that was fine).
-  const fixPrompt = `The project you generated has validation issues. Here is the FULL current project state:
+  const fixPrompt = `The project has validation issues. Here is the FULL current project state:
 ${JSON.stringify(output, null, 2)}
 
 Validation issues found:
@@ -106,7 +107,7 @@ ${issues.map((i) => `- [${i.code}] ${i.message}`).join("\n")}
 Return the FULL corrected project (same JSON shape as before) with every issue resolved. Do not just patch the flagged spot — make sure the whole project is still internally consistent after your fix.`;
 
   const fixResult = await callModel(model, fixPrompt);
-  totalCostUsd += fixResult.usage.costUsd;
+  costUsd += fixResult.usage.costUsd;
   changeLog.push({
     timestamp: new Date().toISOString(),
     kind: "fix",
@@ -122,17 +123,7 @@ Return the FULL corrected project (same JSON shape as before) with every issue r
     summary: issues.length === 0 ? "Passed validation after fix" : `Still has ${issues.length} issue(s) after fix`,
     issues,
   });
-
-  if (issues.length === 0) {
-    return {
-      brief,
-      tokens: fixResult.output.tokens,
-      pages: fixResult.output.pages,
-      changeLog,
-      status: "validated",
-      totalCostUsd,
-    };
-  }
+  if (issues.length === 0) return { output: fixResult.output, status: "validated", costUsd };
 
   // Failed validation twice in a row: stop and surface it, rather than
   // silently retrying and burning cost (build-prompt point 1, explicit).
@@ -142,13 +133,72 @@ Return the FULL corrected project (same JSON shape as before) with every issue r
     summary: "Failed validation twice in a row — stopping instead of retrying silently.",
     issues,
   });
+  return { output: fixResult.output, status: "failed", costUsd };
+}
+
+export async function generateProject(brief: StructuredBrief, model: AiModelId = "claude-haiku-4-5"): Promise<ProjectState> {
+  const changeLog: ChangeLogEntry[] = [];
+
+  const { output, usage } = await callModel(model, briefToPrompt(brief));
+  changeLog.push({ timestamp: new Date().toISOString(), kind: "generate", summary: "Initial generation", usage });
+
+  const recovered = await validateAndRecover(brief, output, model, changeLog);
 
   return {
     brief,
-    tokens: fixResult.output.tokens,
-    pages: fixResult.output.pages,
+    model,
+    tokens: recovered.output.tokens,
+    pages: recovered.output.pages,
     changeLog,
-    status: "failed",
-    totalCostUsd,
+    status: recovered.status,
+    totalCostUsd: usage.costUsd + recovered.costUsd,
+  };
+}
+
+/**
+ * A single section-level edit. Reuses the exact same validate/fix/escalate
+ * machinery as initial generation. Critically: if the edit ends up
+ * "failed", the returned state's pages/tokens are the PRIOR validated
+ * content, not the broken attempt — a failed edit can never overwrite a
+ * working preview with something unvalidated (build-prompt point 3: never
+ * let "looks done" imply "works"). The attempt itself, and exactly why it
+ * failed, is still fully visible in the change log.
+ */
+export async function editSection(
+  state: ProjectState,
+  pageSlug: string,
+  sectionKey: string,
+  instruction: string
+): Promise<ProjectState> {
+  if (!state.tokens) throw new Error("Cannot edit a project that hasn't been validated yet.");
+  const changeLog = [...state.changeLog];
+  const currentOutput: GenerationOutput = { tokens: state.tokens, pages: state.pages };
+
+  const editPrompt = `Current full project state:
+${JSON.stringify(currentOutput, null, 2)}
+
+Requested change — page "${pageSlug}", section "${sectionKey}": ${instruction}
+
+Apply ONLY this change. Keep every other page and section exactly as-is unless the request genuinely requires a related update (e.g. a shared design token). Return the FULL updated project in the same JSON shape as before.`;
+
+  const { output, usage } = await callModel(state.model, editPrompt);
+  changeLog.push({
+    timestamp: new Date().toISOString(),
+    kind: "edit",
+    summary: `Edit requested on "${sectionKey}" (${pageSlug}): "${instruction}"`,
+    usage,
+  });
+
+  const recovered = await validateAndRecover(state.brief, output, state.model, changeLog);
+  const isGood = recovered.status === "validated";
+
+  return {
+    brief: state.brief,
+    model: state.model,
+    tokens: isGood ? recovered.output.tokens : state.tokens,
+    pages: isGood ? recovered.output.pages : state.pages,
+    changeLog,
+    status: recovered.status,
+    totalCostUsd: state.totalCostUsd + usage.costUsd + recovered.costUsd,
   };
 }
