@@ -113,9 +113,13 @@ export async function chatAboutSection(input: ChatAboutSectionInput): Promise<Ch
     throw new Error("The model didn't return any text.");
   }
 
+  // Smaller models sometimes wrap the JSON in a markdown code fence despite
+  // being told not to — strip it before parsing rather than failing on it.
+  const unfenced = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw);
+    parsed = JSON.parse(unfenced);
   } catch {
     throw new Error("The model didn't return a well-formed response — try again.");
   }
