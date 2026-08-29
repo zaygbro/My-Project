@@ -22,7 +22,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="fade-in-up space-y-8">
-      <h1 className="text-2xl font-extrabold">Settings</h1>
+      <h1 className="text-2xl font-extrabold tracking-tight">Settings</h1>
 
       <section className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
         <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Account</h2>
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-wide text-blue-500">Current plan</span>
-            <h2 className="text-2xl font-extrabold">{PLAN_LABELS[plan]}</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight">{PLAN_LABELS[plan]}</h2>
             <p className="mt-1 text-sm text-neutral-400">
               {limits.siteLimit === null ? "Unlimited sites" : `${siteCount ?? 0} / ${limits.siteLimit} sites used`}
               {" · "}

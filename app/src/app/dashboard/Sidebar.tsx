@@ -88,14 +88,24 @@ export function Sidebar({
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Open menu"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Toggle menu"
         aria-expanded={open}
         className="press fixed top-4 left-4 z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-950/90 backdrop-blur-sm md:hidden"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" />
-        </svg>
+        {/* Morphs hamburger -> X on open rather than sitting static while the
+            drawer it controls changes state underneath it. */}
+        <span className="relative block h-3.5 w-4" aria-hidden>
+          <span
+            className={`absolute left-0 top-0 h-[1.5px] w-4 bg-current transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? "translate-y-[6.5px] rotate-45" : ""}`}
+          />
+          <span
+            className={`absolute left-0 top-[6.5px] h-[1.5px] w-4 bg-current transition-opacity duration-200 ease-out motion-reduce:transition-none ${open ? "opacity-0" : "opacity-100"}`}
+          />
+          <span
+            className={`absolute left-0 bottom-0 h-[1.5px] w-4 bg-current transition-transform duration-200 ease-out motion-reduce:transition-none ${open ? "-translate-y-[6.5px] -rotate-45" : ""}`}
+          />
+        </span>
       </button>
 
       {open && (
