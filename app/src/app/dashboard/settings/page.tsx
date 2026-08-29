@@ -1,24 +1,21 @@
-import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
-import { getEffectivePlanForUser, isViewingAsRegular } from "@/lib/dev-mode";
+import { getEffectivePlanForUser, isDevUser, isViewingAsRegular } from "@/lib/dev-mode";
 import { UpgradeButton, ManageBillingButton } from "../BillingButtons";
 import { DevModeToggle } from "./DevModeToggle";
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
-  const [{ data: subscription }, { count: siteCount }, { data: profile }] = await Promise.all([
-    supabase.from("subscriptions").select("*").eq("user_id", user.id).single(),
+  const supabase = await createClient();
+  const [{ count: siteCount }, isDev, plan] = await Promise.all([
     supabase.from("sites").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("profiles").select("is_dev").eq("id", user.id).single(),
+    isDevUser(user.id),
+    getEffectivePlanForUser(user.id),
   ]);
 
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const limits = PLAN_LIMITS[plan];
   const rebuildsUsed = limits.rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
   const viewingAsRegular = await isViewingAsRegular();
@@ -32,7 +29,7 @@ export default async function SettingsPage() {
         <p className="text-sm">{user.email}</p>
       </section>
 
-      {profile?.is_dev && (
+      {isDev && (
         <section className="rounded-xl border border-blue-900 bg-blue-950/20 p-5">
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-blue-400">Developer</h2>
           <p className="mb-3 text-sm text-neutral-400">

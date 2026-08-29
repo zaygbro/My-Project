@@ -1,36 +1,32 @@
-import { createClient } from "@/lib/supabase/server";
-import { getEffectivePlanForUser, isViewingAsRegular } from "@/lib/dev-mode";
-import type { PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { getEffectivePlanForUser, isDevUser, isViewingAsRegular } from "@/lib/dev-mode";
 import { Sidebar } from "./Sidebar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   // Middleware already redirects signed-out visitors away from /dashboard;
   // this is just a type-safe fallback.
   if (!user) return null;
 
-  const [{ data: sites }, { data: profile }, { data: subscription }] = await Promise.all([
+  const supabase = await createClient();
+  const [{ data: sites }, isDev, plan] = await Promise.all([
     supabase
       .from("sites")
       .select("id, name")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase.from("profiles").select("is_dev").eq("id", user.id).single(),
-    supabase.from("subscriptions").select("plan").eq("user_id", user.id).single(),
+    isDevUser(user.id),
+    getEffectivePlanForUser(user.id),
   ]);
-  const viewingAsRegular = profile?.is_dev ? await isViewingAsRegular() : false;
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const viewingAsRegular = isDev ? await isViewingAsRegular() : false;
 
   return (
     <div className="flex min-h-screen bg-black text-white">
       <Sidebar
         email={user.email ?? ""}
         sites={sites ?? []}
-        isDev={profile?.is_dev ?? false}
+        isDev={isDev}
         viewingAsRegular={viewingAsRegular}
         showUpgradeNudge={plan === "spark"}
       />

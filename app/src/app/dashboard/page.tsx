@@ -1,30 +1,27 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import { NewSiteForm } from "./NewSiteForm";
 import { SitesGrid } from "./SitesGrid";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   // Middleware already redirects signed-out visitors away from /dashboard;
   // this is just a type-safe fallback.
   if (!user) return null;
 
-  const [{ data: subscription }, { data: sites, count }] = await Promise.all([
-    supabase.from("subscriptions").select("plan").eq("user_id", user.id).single(),
+  const supabase = await createClient();
+  const [{ data: sites, count }, plan] = await Promise.all([
     supabase
       .from("sites")
       .select("id, name, brief, badge_enabled", { count: "exact" })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
+    getEffectivePlanForUser(user.id),
   ]);
 
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const limits = PLAN_LIMITS[plan];
   const siteCount = count ?? 0;
   const atLimit = limits.siteLimit !== null && siteCount >= limits.siteLimit;

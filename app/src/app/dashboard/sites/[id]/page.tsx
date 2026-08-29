@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
@@ -26,12 +26,10 @@ function sevenDaysAgoISO(): string {
 export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/[id]">) {
   const { id } = await props.params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return null;
 
+  const supabase = await createClient();
   const { data: site } = await supabase
     .from("sites")
     .select("*")
@@ -41,9 +39,9 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   if (!site) notFound();
 
-  const [{ data: subscription }, { data: versions }, { count: totalViews }, { count: recentViews }, { data: messages }] =
+  const [plan, { data: versions }, { count: totalViews }, { count: recentViews }, { data: messages }] =
     await Promise.all([
-      supabase.from("subscriptions").select("plan").eq("user_id", user.id).single(),
+      getEffectivePlanForUser(user.id),
       supabase
         .from("site_versions")
         .select("*")
@@ -70,7 +68,6 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
     messagesBySection.set(m.section_key, turns);
   }
 
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
   const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
   const rebuildsUsed = rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
   const atRebuildLimit = rebuildLimit !== null && rebuildsUsed >= rebuildLimit;

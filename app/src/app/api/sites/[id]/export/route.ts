@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import JSZip from "jszip";
-import { createClient } from "@/lib/supabase/server";
-import { PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { PLAN_LIMITS } from "@/lib/plans";
 import { renderSiteToStaticFiles } from "@/lib/export";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import type { SiteSection } from "@/lib/supabase/types";
@@ -19,9 +19,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/sites/[id]/expo
   const { id } = await ctx.params;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
@@ -37,13 +35,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/sites/[id]/expo
     return NextResponse.json({ error: "Site not found." }, { status: 404 });
   }
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("user_id", user.id)
-    .single();
-
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const plan = await getEffectivePlanForUser(user.id);
   if (!PLAN_LIMITS[plan].exportEnabled) {
     return NextResponse.json(
       { error: "Exporting to code is a Pro/Studio feature — upgrade to download this site." },

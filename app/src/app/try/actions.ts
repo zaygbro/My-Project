@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
+import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import type { SiteSection } from "@/lib/supabase/types";
 import { isAiModelId, recommendModel } from "@/lib/ai/models";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
@@ -23,18 +23,10 @@ export async function claimAnonymousSite(payload: {
   if (!name) return { error: "Missing site name." };
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) return { error: "Sign in required." };
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("user_id", user.id)
-    .single();
-
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const plan = await getEffectivePlanForUser(user.id);
   const limit = PLAN_LIMITS[plan].siteLimit;
 
   if (limit !== null) {

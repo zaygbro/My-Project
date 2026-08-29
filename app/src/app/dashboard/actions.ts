@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { SiteSection } from "@/lib/supabase/types";
@@ -99,18 +99,10 @@ export async function createSite(
   const name = deriveNameFromBrief(brief);
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("user_id", user.id)
-    .single();
-
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const plan = await getEffectivePlanForUser(user.id);
   const limit = PLAN_LIMITS[plan].siteLimit;
 
   if (limit !== null) {
@@ -220,9 +212,7 @@ export async function updateSiteSection(
   const body = String(formData.get("body") ?? "").trim();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   const { data: site } = await supabase
@@ -233,12 +223,7 @@ export async function updateSiteSection(
     .single();
   if (!site) return { error: "Site not found." };
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("user_id", user.id)
-    .single();
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const plan = await getEffectivePlanForUser(user.id);
 
   const quotaError = await checkRebuildQuota(supabase, user.id, plan);
   if (quotaError) return { error: quotaError };
@@ -279,9 +264,7 @@ export async function sendSectionMessage(
   }
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   const { data: site } = await supabase
@@ -292,12 +275,7 @@ export async function sendSectionMessage(
     .single();
   if (!site) return { error: "Site not found." };
 
-  const { data: subscription } = await supabase
-    .from("subscriptions")
-    .select("plan")
-    .eq("user_id", user.id)
-    .single();
-  const plan = await getEffectivePlanForUser(supabase, user.id, (subscription?.plan ?? "spark") as PlanId);
+  const plan = await getEffectivePlanForUser(user.id);
 
   const quotaError = await checkRebuildQuota(supabase, user.id, plan);
   if (quotaError) return { error: quotaError };
