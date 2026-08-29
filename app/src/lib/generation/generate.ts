@@ -9,7 +9,9 @@ import { AI_MODELS, type AiModelId } from "../ai/models";
 import { validateProject } from "./validate";
 import type { ChangeLogEntry, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const apiKey = process.env.ANTHROPIC_API_KEY;
+export const isGenerationConfigured = Boolean(apiKey);
+const client = new Anthropic({ apiKey: apiKey ?? "sk-ant-placeholder" });
 
 function priceUsage(model: AiModelId, inputTokens: number, outputTokens: number): TokenUsage {
   const info = AI_MODELS.find((m) => m.id === model);
