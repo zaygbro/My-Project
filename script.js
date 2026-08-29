@@ -2,10 +2,16 @@
 const navBurger = document.getElementById('navBurger');
 const navMobile = document.getElementById('navMobile');
 navBurger?.addEventListener('click', () => {
-  navMobile.classList.toggle('open');
+  const open = navMobile.classList.toggle('open');
+  navBurger.classList.toggle('open', open);
+  navBurger.setAttribute('aria-expanded', String(open));
 });
 navMobile?.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => navMobile.classList.remove('open'));
+  a.addEventListener('click', () => {
+    navMobile.classList.remove('open');
+    navBurger.classList.remove('open');
+    navBurger.setAttribute('aria-expanded', 'false');
+  });
 });
 
 // ---------- Reveal on scroll ----------

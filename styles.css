@@ -48,7 +48,11 @@ body{
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
-h1,h2,h3,h4{ font-family: var(--font-display); margin: 0; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+/* Tracking is size-specific, not one flat value for every heading — tight
+   at display sizes, easing toward neutral as text gets smaller, per
+   Apple's typography guidance (letters read too far apart at large sizes,
+   too cramped at small ones with a single fixed value). */
+h1,h2,h3,h4{ font-family: var(--font-display); margin: 0; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
 p{ margin: 0; color: var(--text-dim); max-width: 60ch; }
 a{ color: inherit; text-decoration: none; }
 ul{ list-style: none; margin: 0; padding: 0; }
@@ -123,19 +127,45 @@ button{ font-family: inherit; }
   color: var(--text-dim); transition: color .15s ease;
 }
 .nav-links a:hover{ color: var(--text); }
-.nav-burger{ display:none; flex-direction:column; gap:4px; background:none; border:none; cursor:pointer; padding:8px; }
-.nav-burger span{ width:20px; height:1.5px; background: var(--text); transition: transform .3s cubic-bezier(0.32,0.72,0,1), opacity .3s cubic-bezier(0.32,0.72,0,1); }
+/* Hamburger-to-X morph: absolutely positioned so the three lines can rotate
+   and translate to a perfect X rather than just vanishing. */
+.nav-burger{ position: relative; display:none; width: 36px; height: 36px; background:none; border:none; cursor:pointer; padding:8px; }
+.nav-burger span{
+  position: absolute; left: 8px; width: 20px; height: 1.5px; background: var(--text);
+  transition: transform .3s cubic-bezier(0.32,0.72,0,1), opacity .3s cubic-bezier(0.32,0.72,0,1), top .3s cubic-bezier(0.32,0.72,0,1);
+}
+.nav-burger span:nth-child(1){ top: 12px; }
+.nav-burger span:nth-child(2){ top: 18px; }
+.nav-burger span:nth-child(3){ top: 24px; }
+.nav-burger.open span:nth-child(1){ top: 18px; transform: rotate(45deg); }
+.nav-burger.open span:nth-child(2){ opacity: 0; }
+.nav-burger.open span:nth-child(3){ top: 18px; transform: rotate(-45deg); }
+@media (prefers-reduced-motion: reduce){
+  .nav-burger span{ transition: opacity .15s ease; }
+}
+/* A glass surface should materialize in, not just cut from display:none to
+   flex — positioned absolute (out of flow either way, no layout shift) and
+   animated as blur+scale+opacity settling in together, like a real panel
+   arriving rather than a plain visibility toggle. */
 .nav-mobile{
-  display:none; flex-direction:column; gap:18px;
+  position: absolute; top: 100%; left: var(--gutter); right: var(--gutter);
+  display:flex; flex-direction:column; gap:18px;
   max-width: 900px; margin: 10px auto 0; padding: 22px 26px 26px;
   background: rgba(10,10,13,0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 28px;
+  opacity: 0; transform: scale(0.96) translateY(-8px); filter: blur(6px);
+  pointer-events: none;
+  transition: opacity .3s cubic-bezier(0.32,0.72,0,1), transform .3s cubic-bezier(0.32,0.72,0,1),
+    filter .3s cubic-bezier(0.32,0.72,0,1);
 }
 .nav-mobile a:not(.btn){ color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; }
-.nav-mobile.open{ display:flex; }
+.nav-mobile.open{ opacity: 1; transform: scale(1) translateY(0); filter: blur(0); pointer-events: auto; }
+@media (prefers-reduced-motion: reduce){
+  .nav-mobile{ transform: none; filter: none; transition: opacity .15s ease; }
+}
 
 /* ================= HERO ================= */
 .hero{ position: relative; overflow: hidden; padding: 90px 0 64px; }
@@ -233,7 +263,7 @@ section{ padding: 150px 0; }
   letter-spacing: 0.02em; margin-bottom: 18px;
 }
 .section-marker.center{ text-align: center; }
-.section-head h2{ font-size: clamp(1.8rem, 4vw, 2.5rem); max-width: 20ch; }
+.section-head h2{ font-size: clamp(1.8rem, 4vw, 2.5rem); max-width: 20ch; letter-spacing: -0.02em; }
 .section-head p.lede{ margin-top: 16px; font-size: 1rem; max-width: 54ch; }
 
 /* ================= SHOWCASE ================= */
@@ -251,7 +281,7 @@ section{ padding: 150px 0; }
 .showcase-thumb svg{ width: 100%; height: auto; }
 .showcase-meta{ padding: 4px 20px 22px; }
 .showcase-index{ font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-faint); margin-bottom: 8px; }
-.showcase-meta h3{ font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.showcase-meta h3{ font-size: 1rem; font-weight: 700; letter-spacing: 0; margin-bottom: 4px; }
 .showcase-meta p{ font-size: 0.85rem; }
 
 /* ================= ENGINE ================= */
@@ -259,7 +289,7 @@ section{ padding: 150px 0; }
 .engine-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border-soft); border: 1px solid var(--border-soft); border-radius: var(--r-lg) var(--r-lg) 0 0; overflow: hidden; }
 .engine-card{ background: var(--surface); padding: 28px 24px 22px; display:flex; flex-direction:column; }
 .engine-index{ font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent); margin-bottom: 18px; }
-.engine-card h3{ font-size: 1.05rem; margin-bottom: 10px; }
+.engine-card h3{ font-size: 1.05rem; letter-spacing: 0; margin-bottom: 10px; }
 .engine-card p{ font-size: 0.88rem; flex: 1; }
 
 .engine-status{ margin-top: 20px; }
@@ -384,7 +414,7 @@ section{ padding: 150px 0; }
 }
 .step-card:hover{ transform: translateY(-2px); box-shadow: 0 14px 32px -20px var(--accent-soft); border-color: var(--text-faint); }
 .step-num{ font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); margin-bottom: 16px; }
-.step-card h3{ font-size: 1.02rem; margin-bottom: 8px; }
+.step-card h3{ font-size: 1.02rem; letter-spacing: 0; margin-bottom: 8px; }
 .step-card p{ font-size: 0.88rem; }
 
 /* ================= NOTES ================= */
@@ -453,7 +483,7 @@ section{ padding: 150px 0; }
   position:absolute; top: -12px; left: 28px; background: var(--accent); color:#fff; font-size: 0.68rem;
   font-weight:700; padding: 5px 12px; border-radius: 999px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;
 }
-.price-card h3{ font-size: 1.15rem; margin-bottom: 8px; }
+.price-card h3{ font-size: 1.15rem; letter-spacing: 0; margin-bottom: 8px; }
 .price-desc{ font-size: 0.86rem; margin-bottom: 22px; min-height: 40px; }
 .price-amount{ font-family: var(--font-display); font-variant-numeric: tabular-nums; font-size: 2.3rem; font-weight: 700; margin-bottom: 24px; color: var(--text); }
 .price-amount span{ font-size: 0.95rem; color: var(--text-faint); font-weight: 500; }
