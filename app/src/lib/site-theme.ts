@@ -76,7 +76,7 @@ export function buildSiteCss(tokens: SafeTokens): string {
   --radius: ${tokens.radius};
   --font-display: "${tokens.displayFont}", Georgia, serif;
   --font-body: "${tokens.bodyFont}", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --max-width: 760px;
+  --max-width: 720px;
 }
 
 * { box-sizing: border-box; }
@@ -85,13 +85,21 @@ export function buildSiteCss(tokens: SafeTokens): string {
    own globals.css paints the body black with a noise texture for the
    dashboard, and a published site must win that regardless of which
    stylesheet the framework happens to inject first. The \`background\`
-   shorthand is what clears that inherited noise image. */
+   shorthand is what clears that inherited noise image.
+
+   overflow-x:hidden is what makes the 100vw full-bleed trick below safe —
+   without it, 100vw (which includes the scrollbar gutter) can force a few
+   pixels of horizontal scroll on desktop. */
+html {
+  overflow-x: hidden;
+}
 html body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 .site-header, .site-main, .site-footer {
@@ -106,8 +114,8 @@ html body {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding-top: 32px;
-  padding-bottom: 8px;
+  padding-top: 36px;
+  padding-bottom: 12px;
 }
 
 .site-brand {
@@ -121,30 +129,49 @@ html body {
 .site-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88rem;
 }
 
-.site-nav a { color: var(--text-muted); text-decoration: none; }
-.site-nav a:hover { color: var(--accent); }
-.site-nav [aria-current="page"] { color: var(--accent); font-weight: 500; }
+.site-nav a, .site-nav [aria-current="page"] {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
 
+.site-nav a { color: var(--text-muted); }
+.site-nav a:hover { color: var(--text); }
+.site-nav [aria-current="page"] { color: var(--bg); background: var(--accent); font-weight: 600; }
+
+/* The page's literal title ("Home", "Contact") is a navigational label, not
+   a headline — it reads as a small kicker above the real one, which lives
+   in the first section's own heading (see .site-section:first-of-type
+   below). This is a deliberate structural choice, not a fallback: it holds
+   even when the title IS a good headline, since a kicker over a big
+   headline is a normal, legible editorial pattern either way. */
 .site-main h1 {
-  font-family: var(--font-display);
-  font-size: 2.25rem;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  margin: 32px 0 8px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 30px 0 0;
 }
 
 .site-section {
-  padding: 32px 0;
-  border-top: 1px solid var(--surface);
+  position: relative;
+  padding: 28px 0;
 }
 
 .site-section h2 {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-weight: 700;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   margin: 0 0 12px;
 }
 
@@ -152,6 +179,51 @@ html body {
   color: var(--text-muted);
   margin: 0;
   white-space: pre-wrap;
+  max-width: 62ch;
+}
+
+/* The hero: the first section carries the real headline and gets the most
+   air on the page. No card, no border — it's meant to read as the page
+   opening, not as one item in a list. */
+.site-section:first-of-type {
+  padding-top: 4px;
+  padding-bottom: 44px;
+}
+.site-section:first-of-type h2 {
+  font-size: clamp(2rem, 5.2vw, 3.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin: 6px 0 18px;
+}
+.site-section:first-of-type p {
+  font-size: 1.1rem;
+  line-height: 1.65;
+  max-width: 58ch;
+}
+
+/* Every section after the hero: a slim accent rule replaces the old flat
+   top hairline (it reads as a deliberate mark, not a leftover divider),
+   and alternating full-bleed tint bands give the page rhythm without
+   resorting to per-section imagery or a gradient wash. */
+.site-section:not(:first-of-type) {
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
+}
+.site-section:not(:first-of-type):nth-of-type(even) {
+  border-left-color: transparent;
+}
+.site-section:not(:first-of-type):nth-of-type(even)::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background: var(--surface);
+  z-index: -1;
 }
 
 .site-footer {
@@ -163,7 +235,7 @@ html body {
 .site-footer a { color: var(--accent); }
 
 @media (max-width: 600px) {
-  .site-main h1 { font-size: 1.75rem; }
+  .site-section:first-of-type h2 { font-size: 1.85rem; }
 }
 
 /* ---------- Motion ----------
