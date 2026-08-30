@@ -112,6 +112,55 @@ body {
   z-index: 1;
 }
 
+/* Floating ambient orbs — soft blue balls that drift slowly behind the
+   dashboard content. Same restrained blue as .dashboard-glow's static
+   blobs, just given slow, continuous motion instead of sitting still.
+   Rendered as the first child INSIDE .dashboard-glow (not a page-level
+   sibling) so it paints within that element's own box, between its
+   opaque background and its real (z-index:1) content — a fixed/sibling
+   overlay would just get painted over by .dashboard-glow's own opaque
+   background. Equal specificity to `.dashboard-glow > *` below, so
+   declaration order (this rule comes after) is what lets position/z-index
+   here win without needing an extra selector. pointer-events:none keeps
+   it from ever intercepting clicks or scroll. */
+.ambient-orbs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--orb-color, rgba(59, 130, 246, 0.6)), rgba(59, 130, 246, 0) 70%);
+  filter: blur(32px);
+  animation: ambient-drift linear infinite;
+  will-change: transform;
+}
+@keyframes ambient-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(3vw, -4vh) scale(1.08);
+  }
+  50% {
+    transform: translate(-2vw, -1.5vh) scale(0.94);
+  }
+  75% {
+    transform: translate(-3.5vw, 3vh) scale(1.04);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}
+
 /* ================= Motion utilities ================= */
 
 /* Press feedback for any clickable element — buttons, links styled as

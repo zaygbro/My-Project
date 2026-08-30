@@ -64,8 +64,8 @@ export function SiteChat({
   }
 
   return (
-    <div className="rounded-xl border border-neutral-800 bg-black">
-      <div ref={listRef} className="max-h-[26rem] space-y-3 overflow-y-auto p-4">
+    <div className="flex h-full flex-col rounded-xl border border-neutral-800 bg-black">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <p className="p-2 text-sm text-neutral-600">
             Ask {modelLabel} to change anything on this site — a section&rsquo;s copy, a whole page&rsquo;s
@@ -106,7 +106,7 @@ export function SiteChat({
         ref={formRef}
         action={formAction}
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 border-t border-neutral-800 p-3"
+        className="flex shrink-0 items-center gap-2 border-t border-neutral-800 p-3"
       >
         <input
           name="message"

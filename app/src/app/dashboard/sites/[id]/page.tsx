@@ -192,9 +192,12 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             just with a chat that can change anything instead of a log of
             what's already happened. The layout doesn't change once a build
             finishes; only what's in the left pane does. */}
-        <div className="fade-in-up mb-8 grid gap-6 lg:grid-cols-[380px_1fr]" style={{ animationDelay: "20ms" }}>
-          <div>
-            <div className="mb-3 flex items-center justify-between">
+        <div
+          className="fade-in-up mb-8 grid gap-6 lg:h-[75vh] lg:min-h-[560px] lg:grid-cols-[300px_1fr]"
+          style={{ animationDelay: "20ms" }}
+        >
+          <div className="flex flex-col lg:min-h-0">
+            <div className="mb-3 flex shrink-0 items-center justify-between">
               <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
                 {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
               </h2>
@@ -203,12 +206,14 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
               </span>
             </div>
             {isGenerationConfigured ? (
-              <SiteChat
-                siteId={site.id}
-                modelLabel={modelInfo.label}
-                disabled={atRebuildLimit}
-                initialMessages={chatMessages}
-              />
+              <div className="lg:min-h-0 lg:flex-1">
+                <SiteChat
+                  siteId={site.id}
+                  modelLabel={modelInfo.label}
+                  disabled={atRebuildLimit}
+                  initialMessages={chatMessages}
+                />
+              </div>
             ) : (
               <p className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-sm text-neutral-500">
                 AI generation isn&rsquo;t configured yet — set{" "}
@@ -217,16 +222,23 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
               </p>
             )}
             {atRebuildLimit && (
-              <p className="mt-3 text-sm text-blue-400">
+              <p className="mt-3 shrink-0 text-sm text-blue-400">
                 You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for
                 unlimited rebuilds.
               </p>
             )}
           </div>
 
-          <div>
-            <p className="mb-3 font-mono text-xs uppercase tracking-wide text-neutral-500">Preview</p>
-            <LivePreview pages={pages} tokens={tokens} openInNewTabHref={`/preview/${site.id}`} />
+          <div className="flex flex-col lg:min-h-0">
+            <p className="mb-3 shrink-0 font-mono text-xs uppercase tracking-wide text-neutral-500">Preview</p>
+            <div className="lg:min-h-0 lg:flex-1">
+              <LivePreview
+                pages={pages}
+                tokens={tokens}
+                openInNewTabHref={`/preview/${site.id}`}
+                scrollClassName="max-h-[70vh] overflow-y-auto lg:max-h-none lg:flex-1"
+              />
+            </div>
           </div>
         </div>
 

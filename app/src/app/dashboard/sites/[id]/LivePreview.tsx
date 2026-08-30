@@ -64,15 +64,18 @@ export function LivePreview({
   } as CSSProperties;
 
   return (
-    <div>
+    <div className="flex h-full flex-col">
       <link
         rel="stylesheet"
         href={`https://fonts.googleapis.com/css2?family=${encodeURIComponent(
           tokens.fonts.display
         )}:wght@700&family=${encodeURIComponent(tokens.fonts.body)}:wght@400;500&display=swap`}
       />
-      <div className="preview-frame overflow-hidden rounded-2xl border border-neutral-800" style={frameStyle}>
-        <div className="flex items-center justify-between gap-2 border-b border-black/10 bg-black/5 px-3 py-2">
+      <div
+        className="preview-frame flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-neutral-800"
+        style={frameStyle}
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-black/5 px-3 py-2">
           <div className="flex items-center gap-1.5" aria-hidden="true">
             <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
             <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
@@ -94,7 +97,7 @@ export function LivePreview({
           )}
         </div>
         {pages.length > 1 && (
-          <div className="flex gap-1 overflow-x-auto border-b border-black/10 bg-black/5 p-2">
+          <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-black/10 bg-black/5 p-2">
             {pages.map((page, i) => (
               <button
                 key={`${page.slug}-${i}`}
@@ -109,7 +112,7 @@ export function LivePreview({
             ))}
           </div>
         )}
-        <div className={`${scrollClassName} space-y-4 p-6`}>
+        <div className={`min-h-0 ${scrollClassName} space-y-4 p-6`}>
           {activePage.sections.length === 0 ? (
             <p className="preview-muted text-sm">This page&rsquo;s copy hasn&rsquo;t been drafted yet.</p>
           ) : (

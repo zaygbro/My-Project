@@ -1,6 +1,7 @@
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { getEffectivePlanForUser, isDevUser, isViewingAsRegular } from "@/lib/dev-mode";
 import { Sidebar } from "./Sidebar";
+import { AmbientOrbs } from "@/components/AmbientOrbs";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -31,6 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         showUpgradeNudge={plan === "spark"}
       />
       <main className="dashboard-glow min-w-0 flex-1 overflow-y-auto px-6 pt-16 pb-10 sm:px-10 md:pt-10">
+        <AmbientOrbs />
         <div className="mx-auto max-w-4xl">{children}</div>
       </main>
     </div>
