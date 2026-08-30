@@ -59,7 +59,7 @@ export function DeleteSiteButton({
             stop(e);
             setArmed(false);
           }}
-          className="press rounded-full px-2 py-1 text-[11px] text-neutral-400 transition-colors hover:text-white disabled:opacity-60"
+          className="press rounded-full px-2 py-1 text-[11px] text-ink-dim transition-colors hover:text-white disabled:opacity-60"
         >
           Cancel
         </button>

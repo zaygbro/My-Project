@@ -19,9 +19,9 @@ export default async function PromotePage() {
   return (
     <div className="fade-in-up space-y-6">
       <div>
-        <p className="font-mono text-xs uppercase tracking-wide text-blue-500">Promote</p>
+        <p className="font-mono text-xs uppercase tracking-wide text-accent">Promote</p>
         <h1 className="font-display mt-1 text-2xl font-extrabold tracking-tight">Video ads</h1>
-        <p className="mt-1 max-w-2xl text-sm text-neutral-500">
+        <p className="mt-1 max-w-2xl text-sm text-ink-faint">
           Francisity writes the ad from your site&rsquo;s real copy — the script, the prompt to render it
           with, the caption, and how to post it. Rendering the video itself happens in your video tool;
           Francisity doesn&rsquo;t generate video.
@@ -29,16 +29,16 @@ export default async function PromotePage() {
       </div>
 
       {!isPromoteConfigured ? (
-        <p className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-sm text-neutral-500">
-          AI isn&rsquo;t configured yet — set <code className="font-mono text-neutral-400">ANTHROPIC_API_KEY</code>{" "}
+        <p className="rounded-2xl border border-hairline bg-surface p-5 text-sm text-ink-faint">
+          AI isn&rsquo;t configured yet — set <code className="font-mono text-ink-dim">ANTHROPIC_API_KEY</code>{" "}
           to write ads.
         </p>
       ) : !sites || sites.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-          <p className="text-sm text-neutral-400">You don&rsquo;t have a finished site to advertise yet.</p>
+        <div className="rounded-2xl border border-hairline bg-surface p-5">
+          <p className="text-sm text-ink-dim">You don&rsquo;t have a finished site to advertise yet.</p>
           <Link
             href="/dashboard"
-            className="press mt-3 inline-block rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600"
+            className="press mt-3 inline-block rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover"
           >
             Build a site
           </Link>

@@ -15,16 +15,16 @@ type Intent = "signin" | "signup";
 type Sent = null | "code" | "confirm" | "reset";
 
 const FIELD =
-  "field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30";
-const LABEL = "block text-xs font-mono uppercase tracking-wide text-neutral-500";
+  "field-transition w-full rounded-xl border border-hairline bg-surface-2 px-4 py-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft";
+const LABEL = "block text-xs font-mono uppercase tracking-wide text-ink-faint";
 const SUBMIT =
-  "press w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60";
+  "press w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60";
 
 export default function SignInPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <main className="flex min-h-screen items-center justify-center bg-background text-white">
           <span className="spinner" aria-hidden />
         </main>
       }
@@ -172,7 +172,7 @@ function SignInInner() {
   }
 
   return (
-    <main className="entry-glow flex min-h-screen items-center justify-center bg-black px-6 py-12 text-white">
+    <main className="entry-glow flex min-h-screen items-center justify-center bg-background px-6 py-12 text-white">
       <div className="fade-in-up w-full max-w-sm">
         <Link
           href="/"
@@ -182,14 +182,14 @@ function SignInInner() {
           Francisity
         </Link>
 
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-8">
+        <div className="rounded-2xl border border-hairline bg-surface p-8">
           {sent === "code" ? (
             <form onSubmit={handleVerifyCode} className="space-y-4">
-              <div className="mb-2 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden />
+              <div className="mb-2 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
                 Code sent
               </div>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-ink-dim">
                 Enter the code we sent to <strong className="text-white">{email}</strong>
               </p>
               <label htmlFor="code" className={LABEL}>
@@ -205,7 +205,7 @@ function SignInInner() {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="123456"
-                className="field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-center text-lg tracking-[0.3em] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                className="field-transition w-full rounded-xl border border-hairline bg-surface-2 px-4 py-3 text-center text-lg tracking-[0.3em] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
               <button type="submit" disabled={busy} className={SUBMIT}>
                 <span className="inline-flex items-center justify-center gap-2">
@@ -216,18 +216,18 @@ function SignInInner() {
               <button
                 type="button"
                 onClick={reset}
-                className="w-full text-center text-xs text-neutral-500 hover:text-neutral-300"
+                className="w-full text-center text-xs text-ink-faint hover:text-white"
               >
                 Use a different email
               </button>
             </form>
           ) : sent === "confirm" || sent === "reset" ? (
             <div className="space-y-4 text-center">
-              <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden />
+              <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
                 Check your email
               </div>
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-ink-dim">
                 {sent === "confirm" ? (
                   <>
                     We&rsquo;ve sent a confirmation link to{" "}
@@ -244,7 +244,7 @@ function SignInInner() {
               <button
                 type="button"
                 onClick={reset}
-                className="w-full text-center text-xs text-neutral-500 hover:text-neutral-300"
+                className="w-full text-center text-xs text-ink-faint hover:text-white"
               >
                 Back to sign in
               </button>
@@ -256,7 +256,7 @@ function SignInInner() {
               <div
                 role="group"
                 aria-label="Sign-in method"
-                className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-neutral-800 bg-neutral-900/60 p-1"
+                className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-hairline bg-surface-2/60 p-1"
               >
                 {(["password", "code"] as const).map((m) => (
                   <button
@@ -266,8 +266,8 @@ function SignInInner() {
                     aria-pressed={method === m}
                     className={`press rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                       method === m
-                        ? "bg-neutral-800 text-white"
-                        : "text-neutral-500 hover:text-neutral-300"
+                        ? "bg-hairline text-white"
+                        : "text-ink-faint hover:text-white"
                     }`}
                   >
                     {m === "password" ? "Password" : "Email code"}
@@ -313,7 +313,7 @@ function SignInInner() {
                           type="button"
                           onClick={handleForgotPassword}
                           disabled={busy}
-                          className="text-[11px] text-neutral-500 underline underline-offset-2 hover:text-neutral-300 disabled:opacity-60"
+                          className="text-[11px] text-ink-faint underline underline-offset-2 hover:text-white disabled:opacity-60"
                         >
                           Forgot password?
                         </button>
@@ -332,7 +332,7 @@ function SignInInner() {
                       className={FIELD}
                     />
                     {intent === "signup" && (
-                      <p className="text-[11px] text-neutral-600">At least 8 characters.</p>
+                      <p className="text-[11px] text-ink-faint">At least 8 characters.</p>
                     )}
                   </div>
                 )}
@@ -356,19 +356,19 @@ function SignInInner() {
               </form>
 
               {method === "password" ? (
-                <p className="mt-4 text-center text-xs text-neutral-500">
+                <p className="mt-4 text-center text-xs text-ink-faint">
                   {intent === "signin" ? "No account yet?" : "Already have an account?"}{" "}
                   <button
                     type="button"
                     onClick={() => setIntent(intent === "signin" ? "signup" : "signin")}
-                    className="text-blue-400 underline underline-offset-2 hover:text-blue-300"
+                    className="text-accent underline underline-offset-2 hover:text-accent-hover"
                   >
                     {intent === "signin" ? "Create one" : "Sign in"}
                   </button>
                 </p>
               ) : (
-                <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-neutral-700" aria-hidden />
+                <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+                  <span className="h-1.5 w-1.5 rounded-full bg-ink-faint" aria-hidden />
                   One-time code by email — no password needed
                 </div>
               )}

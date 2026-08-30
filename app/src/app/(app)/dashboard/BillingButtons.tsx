@@ -37,7 +37,7 @@ export function UpgradeButton({
         setLoading(false);
       }}
       disabled={loading}
-      className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
+      className="press rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-50"
     >
       <span className="inline-flex items-center gap-2">
         {loading && <span className="spinner" aria-hidden />}
@@ -64,7 +64,7 @@ export function ManageBillingButton() {
         }
       }}
       disabled={loading}
-      className="press rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-neutral-500 disabled:opacity-50"
+      className="press rounded-full border border-hairline bg-surface px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-ink-dim disabled:opacity-50"
     >
       <span className="inline-flex items-center gap-2">
         {loading && <span className="spinner" aria-hidden />}

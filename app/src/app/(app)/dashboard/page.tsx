@@ -58,9 +58,9 @@ export default async function DashboardPage() {
         <div className="relative mx-auto mt-8 max-w-2xl">
           <NewSiteForm disabled={atLimit} />
           {atLimit && (
-            <p className="mt-3 text-center text-sm text-blue-400">
+            <p className="mt-3 text-center text-sm text-accent">
               You&rsquo;re at the {limits.siteLimit}-site limit on {PLAN_LABELS[plan]}.{" "}
-              <Link href="/dashboard/settings" className="underline hover:text-blue-300">
+              <Link href="/dashboard/settings" className="underline hover:text-accent-hover">
                 Upgrade in Settings
               </Link>{" "}
               to create more.

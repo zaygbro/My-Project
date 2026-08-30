@@ -9,7 +9,7 @@ import { validatePassword } from "@/lib/password";
 import { Logo } from "@/components/Logo";
 
 const FIELD =
-  "field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30";
+  "field-transition w-full rounded-xl border border-hairline bg-surface-2 px-4 py-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft";
 
 /**
  * Where a password-recovery link lands, after /auth/callback has exchanged
@@ -71,40 +71,40 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="entry-glow flex min-h-screen items-center justify-center bg-black px-6 py-12 text-white">
+    <main className="entry-glow flex min-h-screen items-center justify-center bg-background px-6 py-12 text-white">
       <div className="fade-in-up w-full max-w-sm">
         <Link
           href="/"
-          className="press mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
+          className="press font-display mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
         >
           <Logo size={24} />
           Francisity
         </Link>
 
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-8">
+        <div className="rounded-2xl border border-hairline bg-surface p-8">
           {checking ? (
-            <p className="inline-flex items-center gap-2 text-sm text-neutral-400">
+            <p className="inline-flex items-center gap-2 text-sm text-ink-dim">
               <span className="spinner" aria-hidden />
               Checking your link…
             </p>
           ) : !authorized ? (
             <div className="space-y-4 text-center">
-              <p className="text-sm text-neutral-400">
+              <p className="text-sm text-ink-dim">
                 This reset link has expired or has already been used. Request a new one and it&rsquo;ll work
                 straight away.
               </p>
               <Link
                 href="/sign-in"
-                className="press inline-block w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600"
+                className="press inline-block w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-white hover:bg-accent-hover"
               >
                 Back to sign in
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <h1 className="text-lg font-bold tracking-tight">Set a new password</h1>
+              <h1 className="font-display text-lg font-bold tracking-tight">Set a new password</h1>
               <div className="space-y-1.5">
-                <label htmlFor="password" className="block text-xs font-mono uppercase tracking-wide text-neutral-500">
+                <label htmlFor="password" className="block text-xs font-mono uppercase tracking-wide text-ink-faint">
                   New password
                 </label>
                 <input
@@ -118,10 +118,10 @@ export default function ResetPasswordPage() {
                   placeholder="••••••••"
                   className={FIELD}
                 />
-                <p className="text-[11px] text-neutral-600">At least 8 characters.</p>
+                <p className="text-[11px] text-ink-faint">At least 8 characters.</p>
               </div>
               <div className="space-y-1.5">
-                <label htmlFor="confirm" className="block text-xs font-mono uppercase tracking-wide text-neutral-500">
+                <label htmlFor="confirm" className="block text-xs font-mono uppercase tracking-wide text-ink-faint">
                   Confirm password
                 </label>
                 <input
@@ -138,7 +138,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={busy}
-                className="press w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+                className="press w-full rounded-full bg-accent px-4 py-3 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
               >
                 <span className="inline-flex items-center justify-center gap-2">
                   {busy && <span className="spinner" aria-hidden />}

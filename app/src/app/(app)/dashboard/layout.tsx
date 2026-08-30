@@ -23,7 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const viewingAsRegular = isDev ? await isViewingAsRegular() : false;
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen bg-background text-white">
       <Sidebar
         email={user.email ?? ""}
         sites={sites ?? []}

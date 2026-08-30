@@ -23,8 +23,8 @@ function NavLink({
       onClick={onNavigate}
       className={`press hover-lift flex items-center gap-2.5 truncate rounded-lg px-3 py-2 text-sm transition-colors ${
         active
-          ? "bg-blue-950/40 font-semibold text-white"
-          : "text-neutral-400 hover:bg-neutral-900 hover:text-white"
+          ? "bg-accent-soft font-semibold text-white"
+          : "text-ink-dim hover:bg-surface-2 hover:text-white"
       }`}
     >
       {children}
@@ -92,7 +92,7 @@ export function Sidebar({
         onClick={() => setOpen((v) => !v)}
         aria-label="Toggle menu"
         aria-expanded={open}
-        className="press fixed top-4 left-4 z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-950/90 backdrop-blur-sm md:hidden"
+        className="press fixed top-4 left-4 z-50 flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-surface/90 backdrop-blur-sm md:hidden"
       >
         {/* Morphs hamburger -> X on open rather than sitting static while the
             drawer it controls changes state underneath it. */}
@@ -118,14 +118,14 @@ export function Sidebar({
       )}
 
       <aside
-        className={`fade-in-up fixed inset-y-0 left-0 z-40 flex h-screen w-64 shrink-0 flex-col border-r border-neutral-800 bg-neutral-950 px-3 py-5 transition-transform duration-200 ease-out motion-reduce:transition-none md:sticky md:top-0 md:translate-x-0 ${
+        className={`fade-in-up fixed inset-y-0 left-0 z-40 flex h-screen w-64 shrink-0 flex-col border-r border-hairline bg-surface px-3 py-5 transition-transform duration-200 ease-out motion-reduce:transition-none md:sticky md:top-0 md:translate-x-0 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <Link
           href="/dashboard"
           onClick={() => setOpen(false)}
-          className="press hover-lift font-display mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-neutral-900"
+          className="press hover-lift font-display mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-surface-2"
         >
           <Logo size={24} />
           Francisity
@@ -144,7 +144,7 @@ export function Sidebar({
             <path d="m21 21-4.3-4.3" strokeLinecap="round" />
           </svg>
           <span className="flex-1">Search</span>
-          <kbd className="rounded border border-neutral-800 bg-neutral-900 px-1.5 py-0.5 font-mono text-[10px] text-neutral-500">
+          <kbd className="rounded border border-hairline bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-ink-faint">
             Ctrl K
           </kbd>
         </NavLink>
@@ -154,7 +154,7 @@ export function Sidebar({
         {recentSites.length > 0 && (
           <div>
             <div className="mb-1 flex items-center justify-between px-3">
-              <p className="font-mono text-[10px] uppercase tracking-wide text-neutral-600">Recent sites</p>
+              <p className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">Recent sites</p>
             </div>
             <div className="space-y-0.5">
               {recentSites.map((site) => (
@@ -172,7 +172,7 @@ export function Sidebar({
               <Link
                 href="/dashboard#site-search"
                 onClick={() => setOpen(false)}
-                className="press mt-1 block truncate rounded-lg px-3 py-2 text-xs text-neutral-600 transition-colors hover:text-neutral-300"
+                className="press mt-1 block truncate rounded-lg px-3 py-2 text-xs text-ink-faint transition-colors hover:text-white"
               >
                 View all {sites.length} sites →
               </Link>
@@ -191,6 +191,19 @@ export function Sidebar({
               <path d="m15 11 6-3.5v9L15 13z" strokeLinejoin="round" />
             </svg>
             Video ads
+          </NavLink>
+          <NavLink
+            href="/dashboard/skills"
+            active={pathname.startsWith("/dashboard/skills")}
+            onNavigate={() => setOpen(false)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+            Skills
           </NavLink>
           {isDev && (
             <NavLink
@@ -223,34 +236,34 @@ export function Sidebar({
         <Link
           href="/dashboard/settings"
           onClick={() => setOpen(false)}
-          className="press hover-lift mb-3 flex items-start gap-2.5 rounded-xl border border-blue-900 bg-blue-950/20 p-3 transition-colors hover:border-blue-700"
+          className="press hover-lift mb-3 flex items-start gap-2.5 rounded-xl border border-accent/40 bg-accent-soft p-3 transition-colors hover:border-accent"
         >
-          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-400">
+          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
               <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8z" />
             </svg>
           </span>
           <span>
             <p className="text-xs font-semibold text-white">Upgrade to Pro</p>
-            <p className="mt-0.5 text-[11px] text-neutral-400">Unlimited sites, rebuilds &amp; export</p>
+            <p className="mt-0.5 text-[11px] text-ink-dim">Unlimited sites, rebuilds &amp; export</p>
           </span>
         </Link>
       )}
 
-      <div className="border-t border-neutral-800 pt-3">
+      <div className="border-t border-hairline pt-3">
         {isDev && (
-          <span className="mb-1.5 ml-3 inline-block rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-blue-400">
+          <span className="mb-1.5 ml-3 inline-block rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-accent">
             {viewingAsRegular ? "Dev · viewing as regular" : "Dev"}
           </span>
         )}
         <div className="flex items-center gap-2 px-3">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-950/60 font-mono text-xs font-bold text-blue-400">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-soft font-mono text-xs font-bold text-accent">
             {email.charAt(0).toUpperCase()}
           </span>
-          <p className="truncate text-xs text-neutral-500">{email}</p>
+          <p className="truncate text-xs text-ink-faint">{email}</p>
         </div>
         <form action={signOut}>
-          <button className="press mt-1 w-full rounded-lg px-3 py-2 text-left font-mono text-xs uppercase tracking-wide text-neutral-500 transition-colors hover:bg-neutral-900 hover:text-white">
+          <button className="press mt-1 w-full rounded-lg px-3 py-2 text-left font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:bg-surface-2 hover:text-white">
             Sign out
           </button>
         </form>

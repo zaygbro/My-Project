@@ -166,14 +166,14 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
   return (
     <div className="space-y-3">
       <form ref={formRef} action={formAction}>
-        <div className="field-transition flex items-center gap-1 rounded-full border border-blue-900/50 bg-neutral-950 py-2 pl-2 pr-2 shadow-2xl shadow-blue-500/10 focus-within:border-blue-500">
+        <div className="field-transition flex items-center gap-1 rounded-full border border-hairline bg-surface py-2 pl-2 pr-2 focus-within:border-accent focus-within:ring-[3px] focus-within:ring-accent-soft">
           <button
             type="button"
             onClick={() => setModelOpen((v) => !v)}
             aria-label="Build options"
             aria-expanded={modelOpen}
             disabled={disabled}
-            className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-900 hover:text-white disabled:opacity-50"
+            className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-dim transition-colors hover:bg-surface-2 hover:text-white disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
@@ -197,7 +197,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
             type="button"
             onClick={() => setModelOpen((v) => !v)}
             disabled={disabled}
-            className="press flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-neutral-300 transition-colors hover:bg-neutral-900 hover:text-white disabled:opacity-50"
+            className="press flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-dim transition-colors hover:bg-surface-2 hover:text-white disabled:opacity-50"
           >
             <span className="hidden sm:inline">{getModelInfo(selectedModel).label}</span>
             <span aria-hidden className={`transition-transform ${modelOpen ? "rotate-180" : ""}`}>
@@ -208,7 +208,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
             type="submit"
             disabled={disabled || isPending || !brief.trim()}
             aria-label="Build"
-            className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white transition-colors hover:bg-blue-600 disabled:opacity-40"
+            className="press flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-white transition-colors hover:bg-accent-hover disabled:opacity-40"
           >
             {isPending ? (
               <span className="spinner" aria-hidden />
@@ -221,8 +221,8 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
         </div>
 
         {modelOpen && (
-          <div className="fade-in-up mt-3 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
-            <p className="mb-2 font-mono text-xs uppercase tracking-wide text-neutral-500">Model</p>
+          <div className="fade-in-up mt-3 rounded-xl border border-hairline bg-surface p-3">
+            <p className="mb-2 font-mono text-xs uppercase tracking-wide text-ink-faint">Model</p>
             <ModelPicker
               name="model"
               value={selectedModel}
@@ -230,7 +230,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
               recommendedId={recommended}
               disabled={disabled}
             />
-            <p className="mt-2 text-xs text-neutral-600">
+            <p className="mt-2 text-xs text-ink-faint">
               Recommendation updates as you write the brief — longer, more detailed briefs get a more
               capable default. You can always change this later.
             </p>
@@ -239,7 +239,7 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
       </form>
 
       {disabled && (
-        <p className="text-center text-xs text-neutral-500">
+        <p className="text-center text-xs text-ink-faint">
           You&rsquo;ve reached your plan&rsquo;s site limit — upgrade in Settings to create more.
         </p>
       )}

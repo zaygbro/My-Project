@@ -64,10 +64,10 @@ export function SiteChat({
   }
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-neutral-800 bg-black">
+    <div className="flex h-full flex-col rounded-2xl border border-hairline bg-background">
       <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 ? (
-          <p className="p-2 text-sm text-neutral-600">
+          <p className="p-2 text-sm text-ink-faint">
             Ask {modelLabel} to change anything on this site — a section&rsquo;s copy, a whole page&rsquo;s
             tone, or something new entirely. It&rsquo;ll ask if it needs to know more before writing
             anything.
@@ -75,14 +75,14 @@ export function SiteChat({
         ) : (
           messages.map((m, i) => (
             <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
-              <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-neutral-600">
+              <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
                 {m.role === "user" ? "You" : modelLabel}
               </span>
               <p
                 className={`fade-in-up max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
                   m.role === "user"
-                    ? "bg-blue-500 text-white"
-                    : "border border-neutral-800 bg-neutral-900 text-neutral-200"
+                    ? "bg-accent text-white"
+                    : "border border-hairline bg-surface-2 text-white"
                 }`}
               >
                 {m.content}
@@ -92,10 +92,10 @@ export function SiteChat({
         )}
         {isPending && (
           <div className="flex flex-col items-start">
-            <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-neutral-600">
+            <span className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
               {modelLabel}
             </span>
-            <p className="fade-in-up inline-flex items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-500">
+            <p className="fade-in-up inline-flex items-center gap-2 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm text-ink-faint">
               <span className="spinner" aria-hidden />
               Thinking…
             </p>
@@ -106,19 +106,19 @@ export function SiteChat({
         ref={formRef}
         action={formAction}
         onSubmit={handleSubmit}
-        className="flex shrink-0 items-center gap-2 border-t border-neutral-800 p-3"
+        className="flex shrink-0 items-center gap-2 border-t border-hairline p-3"
       >
         <input
           name="message"
           required
           placeholder={`Ask ${modelLabel} to change anything on this site…`}
           disabled={disabled || isPending}
-          className="field-transition flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50"
+          className="field-transition flex-1 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={disabled || isPending}
-          className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
+          className="press rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-50"
         >
           Send
         </button>

@@ -44,16 +44,16 @@ export function PublishPanel({
   }, [unpublishState]);
 
   return (
-    <section className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+    <section className="fade-in-up mb-8 rounded-2xl border border-hairline bg-surface p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">Publish</h2>
+        <h2 className="text-sm font-mono uppercase tracking-wide text-ink-faint">Publish</h2>
         {isPublished ? (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-green-900 bg-green-950/30 px-2.5 py-0.5 font-mono text-[10px] uppercase text-green-400">
             <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden />
             Live
           </span>
         ) : (
-          <span className="rounded-full border border-neutral-700 px-2.5 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
+          <span className="rounded-full border border-hairline px-2.5 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
             Draft
           </span>
         )}
@@ -65,7 +65,7 @@ export function PublishPanel({
             href={publishedUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-400 underline underline-offset-2 hover:text-blue-300"
+            className="text-accent underline underline-offset-2 hover:text-accent-hover"
           >
             {publishedUrl}
           </a>
@@ -76,7 +76,7 @@ export function PublishPanel({
           isn't live until it's published again — say so rather than letting
           someone assume their change already shipped. */}
       {isPublished && hasUnpublishedChanges && (
-        <p className="mb-3 rounded-lg border border-blue-900 bg-blue-950/20 px-3 py-2 text-sm text-blue-300">
+        <p className="mb-3 rounded-lg border border-accent/40 bg-accent-soft px-3 py-2 text-sm text-white">
           You&rsquo;ve edited this site since it was published. Visitors still see the last published
           version — publish again to push your changes live.
         </p>
@@ -86,7 +86,7 @@ export function PublishPanel({
         <div className="min-w-0 flex-1">
           <label
             htmlFor="subdomain"
-            className="mb-1 block text-xs font-mono uppercase tracking-wide text-neutral-500"
+            className="mb-1 block text-xs font-mono uppercase tracking-wide text-ink-faint"
           >
             Address
           </label>
@@ -99,9 +99,9 @@ export function PublishPanel({
               onChange={(e) => setAddress(e.target.value)}
               spellCheck={false}
               autoCapitalize="none"
-              className="field-transition min-w-0 flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+              className="field-transition min-w-0 flex-1 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
             />
-            <span className="shrink-0 font-mono text-xs text-neutral-600">
+            <span className="shrink-0 font-mono text-xs text-ink-faint">
               {rootDomain ? `.${rootDomain}` : "/s/…"}
             </span>
           </div>
@@ -109,22 +109,22 @@ export function PublishPanel({
         <button
           type="submit"
           disabled={isPublishing}
-          className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+          className="press rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
         >
           {isPublishing ? "Publishing…" : isPublished ? "Publish changes" : "Publish"}
         </button>
       </form>
 
-      <p className="mt-2 text-xs text-neutral-600">
+      <p className="mt-2 text-xs text-ink-faint">
         Lowercase letters, numbers and hyphens. Your address is unique across Francisity.
       </p>
 
       {isPublished && (
-        <form action={unpublishAction} className="mt-3 border-t border-neutral-900 pt-3">
+        <form action={unpublishAction} className="mt-3 border-t border-hairline-soft pt-3">
           <button
             type="submit"
             disabled={isUnpublishing}
-            className="press text-xs text-neutral-500 underline underline-offset-2 transition-colors hover:text-neutral-300 disabled:opacity-60"
+            className="press text-xs text-ink-faint underline underline-offset-2 transition-colors hover:text-white disabled:opacity-60"
           >
             {isUnpublishing ? "Taking offline…" : "Take offline"}
           </button>

@@ -17,7 +17,7 @@ export default function TryPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <main className="flex min-h-screen items-center justify-center bg-background text-white">
           <span className="spinner" aria-hidden />
         </main>
       }
@@ -168,8 +168,8 @@ function TryPageInner() {
 
   if (mode === "loading" || mode === "claiming") {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-black text-white">
-        <p className="inline-flex items-center gap-2 text-sm text-neutral-400">
+      <main className="flex min-h-screen items-center justify-center bg-background text-white">
+        <p className="inline-flex items-center gap-2 text-sm text-ink-dim">
           <span className="spinner" aria-hidden />
           {mode === "claiming" ? "Saving your site to your new account…" : "Loading…"}
         </p>
@@ -179,24 +179,24 @@ function TryPageInner() {
 
   if (mode === "create") {
     return (
-      <main className="entry-glow flex min-h-screen flex-col items-center bg-black px-6 py-16 text-white">
+      <main className="entry-glow flex min-h-screen flex-col items-center bg-background px-6 py-16 text-white">
         <div className="fade-in-up w-full max-w-md">
           <Link
             href="/"
-            className="press mb-2 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
+            className="press font-display mb-2 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
           >
             <Logo size={24} />
             Francisity
           </Link>
-          <p className="mb-8 text-center text-sm text-neutral-400">
+          <p className="mb-8 text-center text-sm text-ink-dim">
             Try it free, right now — no account needed. Sign up later only if you want to keep it.
           </p>
           <form
             onSubmit={handleCreate}
-            className="space-y-4 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
+            className="space-y-4 rounded-2xl border border-hairline bg-surface p-5"
           >
             <div>
-              <label htmlFor="name" className="mb-1 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+              <label htmlFor="name" className="mb-1 block text-xs font-mono uppercase tracking-wide text-ink-faint">
                 Site name
               </label>
               <input
@@ -206,11 +206,11 @@ function TryPageInner() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Kyoto Coffee Roastery"
-                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                className="field-transition w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
             </div>
             <div>
-              <label htmlFor="brief" className="mb-1 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+              <label htmlFor="brief" className="mb-1 block text-xs font-mono uppercase tracking-wide text-ink-faint">
                 Brief (optional)
               </label>
               <textarea
@@ -219,21 +219,21 @@ function TryPageInner() {
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 placeholder="A modern landing page for a minimalist coffee roastery in Kyoto…"
-                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                className="field-transition w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
             </div>
             <div>
-              <label className="mb-2 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+              <label className="mb-2 block text-xs font-mono uppercase tracking-wide text-ink-faint">
                 AI model for section drafts
               </label>
               <ModelPicker name="model" value={selectedModel} onChange={setManualModel} recommendedId={recommended} />
-              <p className="mt-2 text-xs text-neutral-600">
+              <p className="mt-2 text-xs text-ink-faint">
                 You can try this now; actually generating with it needs an account.
               </p>
             </div>
             <button
               type="submit"
-              className="press w-full rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600"
+              className="press w-full rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover"
             >
               Start building
             </button>
@@ -245,22 +245,22 @@ function TryPageInner() {
 
   // mode === "editor"
   return (
-    <main className="min-h-screen bg-black px-6 py-10 text-white">
+    <main className="min-h-screen bg-background px-6 py-10 text-white">
       <div className="fade-in-up mx-auto max-w-2xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-mono uppercase tracking-wide text-neutral-500">Trial site (not saved yet)</p>
+            <p className="text-xs font-mono uppercase tracking-wide text-ink-faint">Trial site (not saved yet)</p>
             <h1 className="font-display text-2xl font-bold">{anonSite?.name}</h1>
           </div>
-          <Link href="/" className="text-xs text-neutral-500 hover:text-neutral-300">
+          <Link href="/" className="text-xs text-ink-faint hover:text-white">
             Francisity
           </Link>
         </div>
 
-        <div className="rounded-xl border border-blue-900 bg-blue-950/20 p-4">
+        <div className="rounded-2xl border border-accent/40 bg-accent-soft p-4">
           {signupStatus === "sent" || signupStatus === "verifying" ? (
             <form onSubmit={handleVerifyCode} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <p className="flex-1 text-sm text-neutral-300">
+              <p className="flex-1 text-sm text-white">
                 Enter the code sent to <strong className="text-white">{email}</strong> to save this site.
               </p>
               <div className="flex gap-2">
@@ -273,12 +273,12 @@ function TryPageInner() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   placeholder="123456"
-                  className="field-transition w-32 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-center text-sm tracking-[0.2em] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                  className="field-transition w-32 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-center text-sm tracking-[0.2em] outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
                 />
                 <button
                   type="submit"
                   disabled={signupStatus === "verifying"}
-                  className="press whitespace-nowrap rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+                  className="press whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
                 >
                   {signupStatus === "verifying" ? "Verifying…" : "Verify"}
                 </button>
@@ -286,7 +286,7 @@ function TryPageInner() {
             </form>
           ) : (
             <form onSubmit={handleSendCode} className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <p className="flex-1 text-sm text-neutral-300">
+              <p className="flex-1 text-sm text-white">
                 This site only lives in your browser right now. Sign up free to save it permanently.
               </p>
               <div className="flex gap-2">
@@ -296,12 +296,12 @@ function TryPageInner() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="field-transition w-48 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                  className="field-transition w-48 rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
                 />
                 <button
                   type="submit"
                   disabled={signupStatus === "sending"}
-                  className="press whitespace-nowrap rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+                  className="press whitespace-nowrap rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
                 >
                   {signupStatus === "sending" ? "Sending…" : "Save my site"}
                 </button>
@@ -310,9 +310,9 @@ function TryPageInner() {
           )}
         </div>
 
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+        <div className="rounded-2xl border border-hairline bg-surface p-5">
           <form onSubmit={handleSaveSection}>
-            <label htmlFor="section-overview" className="mb-2 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+            <label htmlFor="section-overview" className="mb-2 block text-xs font-mono uppercase tracking-wide text-ink-faint">
               Overview
             </label>
             <textarea
@@ -320,18 +320,18 @@ function TryPageInner() {
               rows={5}
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+              className="field-transition w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
             />
             <div className="mt-3 flex items-center justify-end">
               <button
                 type="submit"
-                className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600"
+                className="press rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover"
               >
                 Save section
               </button>
             </div>
           </form>
-          <p className="mt-2 text-xs text-neutral-600">Sign up above to unlock AI-generated drafts.</p>
+          <p className="mt-2 text-xs text-ink-faint">Sign up above to unlock AI-generated drafts.</p>
         </div>
       </div>
     </main>

@@ -24,15 +24,15 @@ export default async function SettingsPage() {
     <div className="fade-in-up space-y-8">
       <h1 className="font-display text-2xl font-extrabold tracking-tight">Settings</h1>
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-        <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Account</h2>
+      <section className="rounded-2xl border border-hairline bg-surface p-5">
+        <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">Account</h2>
         <p className="text-sm">{user.email}</p>
       </section>
 
       {isDev && (
-        <section className="rounded-xl border border-blue-900 bg-blue-950/20 p-5">
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-blue-400">Developer</h2>
-          <p className="mb-3 text-sm text-neutral-400">
+        <section className="rounded-2xl border border-accent/40 bg-accent-soft p-5">
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-accent">Developer</h2>
+          <p className="mb-3 text-sm text-ink-dim">
             Your account bypasses plan limits. Toggle this to see the app as a regular {PLAN_LABELS.spark} user would,
             for testing.
           </p>
@@ -40,12 +40,12 @@ export default async function SettingsPage() {
         </section>
       )}
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+      <section className="rounded-2xl border border-hairline bg-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <span className="font-mono text-xs uppercase tracking-wide text-blue-500">Current plan</span>
+            <span className="font-mono text-xs uppercase tracking-wide text-accent">Current plan</span>
             <h2 className="font-display text-2xl font-extrabold tracking-tight">{PLAN_LABELS[plan]}</h2>
-            <p className="mt-1 text-sm text-neutral-400">
+            <p className="mt-1 text-sm text-ink-dim">
               {limits.siteLimit === null ? "Unlimited sites" : `${siteCount ?? 0} / ${limits.siteLimit} sites used`}
               {" · "}
               {limits.rebuildLimit === null

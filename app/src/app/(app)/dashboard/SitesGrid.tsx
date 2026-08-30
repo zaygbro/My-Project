@@ -96,8 +96,8 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
-          Your sites <span className="text-neutral-700">({sites.length})</span>
+        <h2 className="text-sm font-mono uppercase tracking-wide text-ink-faint">
+          Your sites <span className="text-ink-faint">({sites.length})</span>
         </h2>
         {sites.length > 0 && (
           <input
@@ -106,15 +106,15 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search sites…"
-            className="field-transition w-48 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+            className="field-transition w-48 rounded-lg border border-hairline bg-surface-2 px-3 py-1.5 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           />
         )}
       </div>
 
       {sites.length === 0 ? (
-        <p className="text-sm text-neutral-500">No sites yet — create your first one above.</p>
+        <p className="text-sm text-ink-dim">No sites yet — create your first one above.</p>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-neutral-500">No sites match &ldquo;{query}&rdquo;.</p>
+        <p className="text-sm text-ink-dim">No sites match &ldquo;{query}&rdquo;.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((site, i) => (
@@ -127,10 +127,10 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
               </div>
               <Link
                 href={`/dashboard/sites/${site.id}`}
-                className="hover-lift press fade-in-up flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 transition-colors hover:border-neutral-600"
+                className="hover-lift press fade-in-up flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface transition-colors hover:border-ink-faint"
                 style={{ animationDelay: `${i * 40}ms` }}
               >
-                <div className="flex items-center justify-center border-b border-neutral-800 bg-neutral-900/50 p-4">
+                <div className="flex items-center justify-center border-b border-hairline bg-surface-2/50 p-4">
                   <svg viewBox="0 0 100 88" fill="none" className="h-20 w-full" aria-hidden>
                     {THUMBS[hashToIndex(site.id, THUMBS.length)]}
                   </svg>
@@ -141,7 +141,7 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
                     {/* A site can be mid-build when you navigate back here, so
                         say so rather than showing a card that looks finished. */}
                     {site.generation_status === "pending" || site.generation_status === "generating" ? (
-                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase text-blue-400">
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 font-mono text-[10px] uppercase text-accent">
                         <span className="spinner" aria-hidden />
                         Building
                       </span>
@@ -151,13 +151,13 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
                       </span>
                     ) : (
                       site.badge_enabled && (
-                        <span className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
+                        <span className="shrink-0 rounded-full border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
                           Badge on
                         </span>
                       )
                     )}
                   </div>
-                  {site.brief && <p className="line-clamp-2 text-sm text-neutral-500">{site.brief}</p>}
+                  {site.brief && <p className="line-clamp-2 text-sm text-ink-dim">{site.brief}</p>}
                 </div>
               </Link>
             </div>

@@ -154,7 +154,7 @@ export function BuildProgress({
 
   return (
     <div className="fade-in-up grid gap-6 lg:grid-cols-[380px_1fr]">
-      <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6">
+      <div className="rounded-2xl border border-hairline bg-surface p-6">
       <div className="flex items-center gap-3">
         {running && <span className="spinner" aria-hidden />}
         <div>
@@ -167,7 +167,7 @@ export function BuildProgress({
                   ? "This build is in an unknown state"
                   : "Done"}
           </h2>
-          <p className="mt-0.5 text-sm text-neutral-500">
+          <p className="mt-0.5 text-sm text-ink-faint">
             {running
               ? "Four engines run over your brief, then everything is validated before it reaches you."
               : status === "failed"
@@ -195,10 +195,10 @@ export function BuildProgress({
                 aria-hidden
                 className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[9px] font-bold ${
                   state === "done"
-                    ? "border-blue-500 bg-blue-500 text-white"
+                    ? "border-accent bg-accent text-white"
                     : state === "active"
-                      ? "border-blue-500 text-blue-400"
-                      : "border-neutral-700 text-neutral-700"
+                      ? "border-accent text-accent"
+                      : "border-hairline text-ink-faint"
                 }`}
               >
                 {state === "done" ? "✓" : state === "skipped" ? "–" : ""}
@@ -206,15 +206,15 @@ export function BuildProgress({
               <div className="min-w-0">
                 <p
                   className={`text-sm font-semibold ${
-                    state === "pending" ? "text-neutral-600" : "text-neutral-200"
+                    state === "pending" ? "text-ink-faint" : "text-white"
                   }`}
                 >
                   {stage.label}
                   {state === "skipped" && (
-                    <span className="ml-2 font-normal text-neutral-600">not needed</span>
+                    <span className="ml-2 font-normal text-ink-faint">not needed</span>
                   )}
                 </p>
-                <p className="text-xs text-neutral-500">{stage.detail}</p>
+                <p className="text-xs text-ink-faint">{stage.detail}</p>
               </div>
             </li>
           );
@@ -222,21 +222,21 @@ export function BuildProgress({
       </ol>
 
       {changeLog.length > 0 && (
-        <div className="mt-6 border-t border-neutral-900 pt-4">
-          <p className="mb-2 font-mono text-xs uppercase tracking-wide text-neutral-600">Build log</p>
+        <div className="mt-6 border-t border-hairline-soft pt-4">
+          <p className="mb-2 font-mono text-xs uppercase tracking-wide text-ink-faint">Build log</p>
           <ul className="space-y-1.5">
             {changeLog.map((entry, i) => (
               <li key={i} className="fade-in-up text-xs">
                 <span
                   className={`font-mono uppercase ${
-                    entry.kind === "escalate" ? "text-red-400" : "text-blue-400"
+                    entry.kind === "escalate" ? "text-red-400" : "text-accent"
                   }`}
                 >
                   {entry.kind}
                 </span>
-                <span className="ml-2 text-neutral-400">{entry.summary}</span>
+                <span className="ml-2 text-ink-dim">{entry.summary}</span>
                 {entry.issues?.map((issue, j) => (
-                  <span key={j} className="mt-0.5 block pl-4 font-mono text-[11px] text-neutral-600">
+                  <span key={j} className="mt-0.5 block pl-4 font-mono text-[11px] text-ink-faint">
                     {issue.code}: {issue.message}
                   </span>
                 ))}
@@ -244,7 +244,7 @@ export function BuildProgress({
             ))}
           </ul>
           {spent > 0 && (
-            <p className="mt-3 font-mono text-xs text-neutral-600">Spent so far: ${spent.toFixed(4)}</p>
+            <p className="mt-3 font-mono text-xs text-ink-faint">Spent so far: ${spent.toFixed(4)}</p>
           )}
         </div>
       )}
@@ -252,10 +252,10 @@ export function BuildProgress({
       {(status === "failed" || stalled || unknownState) && (
         <div
           className={`mt-6 rounded-lg border p-4 ${
-            status === "failed" ? "border-red-900 bg-red-950/20" : "border-neutral-800 bg-neutral-900/40"
+            status === "failed" ? "border-red-900 bg-red-950/20" : "border-hairline bg-surface-2/40"
           }`}
         >
-          <p className={`text-sm ${status === "failed" ? "text-red-300" : "text-neutral-400"}`}>
+          <p className={`text-sm ${status === "failed" ? "text-red-300" : "text-ink-dim"}`}>
             {status === "failed"
               ? (error ?? "Generation failed.")
               : unknownState
@@ -277,7 +277,7 @@ export function BuildProgress({
                 applySnapshot(snapshot);
               })
             }
-            className="press mt-3 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+            className="press mt-3 rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
           >
             {isRetrying ? "Retrying…" : status === "failed" ? "Try again" : unknownState ? "Start build" : "Start over"}
           </button>
@@ -289,7 +289,7 @@ export function BuildProgress({
           it — real pages and copy the moment a model call returns them, not
           a mockup that appears only once everything is done. */}
       <div>
-        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-neutral-500">Live preview</p>
+        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-ink-faint">Live preview</p>
         <LivePreview pages={pages} tokens={tokens} />
       </div>
     </div>

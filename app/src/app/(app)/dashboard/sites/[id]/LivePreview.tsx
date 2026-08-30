@@ -37,9 +37,9 @@ export function LivePreview({
 
   if (!tokens || pages.length === 0) {
     return (
-      <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-neutral-800 p-8 text-center">
+      <div className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-hairline p-8 text-center">
         <span className="spinner" aria-hidden />
-        <p className="max-w-xs text-sm text-neutral-500">
+        <p className="max-w-xs text-sm text-ink-faint">
           Nothing to show yet — the structural and visual engines are still drafting the first version.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function LivePreview({
         )}:wght@700&family=${encodeURIComponent(tokens.fonts.body)}:wght@400;500&display=swap`}
       />
       <div
-        className="preview-frame flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-neutral-800"
+        className="preview-frame flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-hairline"
         style={frameStyle}
       >
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-black/5 px-3 py-2">

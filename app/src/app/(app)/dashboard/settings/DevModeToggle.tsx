@@ -11,7 +11,7 @@ export function DevModeToggle({ viewingAsRegular }: { viewingAsRegular: boolean 
       type="button"
       disabled={isPending}
       onClick={() => startTransition(() => setDevViewMode(!viewingAsRegular))}
-      className="press rounded-lg border border-blue-800 bg-blue-950/40 px-4 py-2 text-sm font-semibold text-blue-300 transition-colors hover:border-blue-600 disabled:opacity-60"
+      className="press rounded-full border border-accent/50 bg-accent-soft px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-accent disabled:opacity-60"
     >
       {viewingAsRegular ? "Switch back to dev account" : "View as a regular user"}
     </button>

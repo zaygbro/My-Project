@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
-/* Matches the marketing site: a committed black/blue world, no light mode. */
+/* Matches the marketing site: a committed black/blue world, no light mode.
+   --background is the marketing site's own --bg value (not a plain
+   #000000 approximation), so the two apps sit on the literal same canvas
+   color rather than two different near-blacks. */
 :root {
-  --background: #000000;
+  --background: #050507;
   --foreground: #ffffff;
 
   /* Motion tokens — the one place these curves are defined; every
@@ -20,6 +23,23 @@
      face, so headings in the app match the marketing site's identity
      instead of falling back to font-sans everywhere. */
   --font-display: var(--font-space-grotesk);
+
+  /* The marketing site's own palette (see (marketing)/marketing.css's
+     :root), registered as real Tailwind utilities — bg-surface,
+     border-hairline, text-ink-dim, bg-accent-hover, etc. — instead of
+     reaching for Tailwind's stock neutral/blue scale, which is only
+     APPROXIMATELY the same color: close enough not to look broken, not
+     close enough to read as the same product sharing one design system. */
+  --color-surface: #0a0a0c;
+  --color-surface-2: #111114;
+  --color-hairline: #232328;
+  --color-hairline-soft: #1a1a1f;
+  --color-ink-dim: #9a9aa6;
+  --color-ink-faint: #5c5c66;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2f6fe0;
+  --color-accent-soft: rgba(59, 130, 246, 0.12);
+  --color-accent-glow: rgba(59, 130, 246, 0.45);
 }
 
 body {

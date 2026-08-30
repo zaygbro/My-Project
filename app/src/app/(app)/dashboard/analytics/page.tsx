@@ -64,10 +64,10 @@ async function getPlanPricesInCents(): Promise<Partial<Record<PlanId, Partial<Re
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-      <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+    <div className="rounded-2xl border border-hairline bg-surface p-5">
+      <p className="font-mono text-xs uppercase tracking-wide text-ink-faint">{label}</p>
       <p className="font-display mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{value}</p>
-      {sub && <p className="mt-1 text-xs text-neutral-500">{sub}</p>}
+      {sub && <p className="mt-1 text-xs text-ink-faint">{sub}</p>}
     </div>
   );
 }
@@ -76,18 +76,18 @@ function Trend({ label, values }: { label: string; values: number[] }) {
   const max = Math.max(1, ...values);
   return (
     <div>
-      <p className="mb-2 font-mono text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="mb-2 font-mono text-xs uppercase tracking-wide text-ink-faint">{label}</p>
       <div className="flex h-16 items-end gap-1">
         {values.map((v, i) => (
           <div
             key={i}
-            className="field-transition min-h-1 flex-1 rounded-t bg-blue-500/70"
+            className="field-transition min-h-1 flex-1 rounded-t bg-accent/70"
             style={{ height: `${Math.max(4, (v / max) * 100)}%` }}
             title={`${v}`}
           />
         ))}
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[10px] text-neutral-600">
+      <div className="mt-1 flex justify-between font-mono text-[10px] text-ink-faint">
         <span>{TREND_DAYS} days ago</span>
         <span>today</span>
       </div>
@@ -164,15 +164,15 @@ export default async function AnalyticsPage() {
   return (
     <div className="fade-in-up space-y-8">
       <div>
-        <p className="font-mono text-xs uppercase tracking-wide text-blue-500">Dev only</p>
+        <p className="font-mono text-xs uppercase tracking-wide text-accent">Dev only</p>
         <h1 className="font-display mt-1 text-2xl font-extrabold tracking-tight">Analytics</h1>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-ink-faint">
           Platform-wide revenue and activity across every account, not just yours.
         </p>
       </div>
 
       <section className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-wide text-neutral-500">Revenue</h2>
+        <h2 className="font-mono text-xs uppercase tracking-wide text-ink-faint">Revenue</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat
             label="MRR"
@@ -200,48 +200,48 @@ export default async function AnalyticsPage() {
       </section>
 
       <section className="space-y-4">
-        <h2 className="font-mono text-xs uppercase tracking-wide text-neutral-500">Activity</h2>
+        <h2 className="font-mono text-xs uppercase tracking-wide text-ink-faint">Activity</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Stat label="Total users" value={String(totalUsers ?? 0)} sub={`+${newUsers7d ?? 0} in the last 7 days`} />
           <Stat label="Total sites" value={String(totalSites ?? 0)} sub={`+${newSites7d ?? 0} in the last 7 days`} />
           <Stat label="Rebuilds" value={String(totalRebuilds ?? 0)} sub={`${rebuilds7d ?? 0} in the last 7 days`} />
         </div>
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-          <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">Published site views</p>
+        <div className="rounded-2xl border border-hairline bg-surface p-5">
+          <p className="font-mono text-xs uppercase tracking-wide text-ink-faint">Published site views</p>
           <p className="font-display mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{totalViews ?? 0}</p>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-ink-faint">
             Real views of published sites, read from the{" "}
-            <code className="font-mono text-neutral-400">site_events</code> table — nothing here is simulated.
+            <code className="font-mono text-ink-dim">site_events</code> table — nothing here is simulated.
           </p>
         </div>
       </section>
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-        <h2 className="mb-4 font-mono text-xs uppercase tracking-wide text-neutral-500">Last {TREND_DAYS} days</h2>
+      <section className="rounded-2xl border border-hairline bg-surface p-5">
+        <h2 className="mb-4 font-mono text-xs uppercase tracking-wide text-ink-faint">Last {TREND_DAYS} days</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           <Trend label="New users" values={signupTrend} />
           <Trend label="New sites" values={siteTrend} />
         </div>
       </section>
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
-        <h2 className="mb-3 font-mono text-xs uppercase tracking-wide text-neutral-500">Recent signups</h2>
+      <section className="rounded-2xl border border-hairline bg-surface p-5">
+        <h2 className="mb-3 font-mono text-xs uppercase tracking-wide text-ink-faint">Recent signups</h2>
         {recentSignups && recentSignups.length > 0 ? (
           <ul className="space-y-2">
             {recentSignups.map((p) => (
               <li
                 key={p.email + p.created_at}
-                className="flex items-center justify-between border-t border-neutral-900 pt-2 first:border-t-0 first:pt-0"
+                className="flex items-center justify-between border-t border-hairline-soft pt-2 first:border-t-0 first:pt-0"
               >
-                <span className="truncate text-sm text-neutral-300">{p.email}</span>
-                <span className="font-mono text-xs text-neutral-600">
+                <span className="truncate text-sm text-ink-dim">{p.email}</span>
+                <span className="font-mono text-xs text-ink-faint">
                   {new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-neutral-500">No signups yet.</p>
+          <p className="text-sm text-ink-faint">No signups yet.</p>
         )}
       </section>
     </div>

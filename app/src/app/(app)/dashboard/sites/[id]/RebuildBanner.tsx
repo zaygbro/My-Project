@@ -28,9 +28,9 @@ export function RebuildBanner({ siteId }: { siteId: string }) {
   }
 
   return (
-    <section className="fade-in-up mb-8 rounded-xl border border-blue-900 bg-blue-950/20 p-5">
-      <h2 className="text-sm font-semibold text-blue-300">This site was never really generated</h2>
-      <p className="mt-1.5 text-sm text-neutral-400">
+    <section className="fade-in-up mb-8 rounded-2xl border border-accent/40 bg-accent-soft p-5">
+      <h2 className="text-sm font-semibold text-accent">This site was never really generated</h2>
+      <p className="mt-1.5 text-sm text-ink-dim">
         It holds a single placeholder section from before Francisity could build multi-page sites, which is
         why there&rsquo;s no design or page structure here. Rebuilding runs your brief through the real
         pipeline — structure, copy, design tokens, and validation.
@@ -38,14 +38,14 @@ export function RebuildBanner({ siteId }: { siteId: string }) {
 
       {confirming ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-sm text-neutral-300">
+          <span className="text-sm text-ink-dim">
             Replace this site&rsquo;s current content? The version you have now stays in history.
           </span>
           <button
             type="button"
             onClick={rebuild}
             disabled={isPending}
-            className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+            className="press rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
           >
             <span className="inline-flex items-center gap-2">
               {isPending && <span className="spinner" aria-hidden />}
@@ -56,7 +56,7 @@ export function RebuildBanner({ siteId }: { siteId: string }) {
             type="button"
             onClick={() => setConfirming(false)}
             disabled={isPending}
-            className="press rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 disabled:opacity-60"
+            className="press rounded-full border border-hairline px-4 py-2 text-sm text-ink-dim disabled:opacity-60"
           >
             Cancel
           </button>
@@ -65,7 +65,7 @@ export function RebuildBanner({ siteId }: { siteId: string }) {
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="press mt-3 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600"
+          className="press mt-3 rounded-full bg-accent px-4 py-2 text-sm font-bold text-white hover:bg-accent-hover"
         >
           Rebuild with AI
         </button>

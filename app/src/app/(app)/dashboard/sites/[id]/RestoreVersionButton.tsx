@@ -20,7 +20,7 @@ export function RestoreVersionButton({ siteId, versionId }: { siteId: string; ve
       <button
         type="submit"
         disabled={isPending}
-        className="press rounded-lg border border-neutral-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:border-neutral-500 disabled:opacity-50"
+        className="press rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:border-ink-faint disabled:opacity-50"
       >
         <span className="inline-flex items-center gap-2">
           {isPending && <span className="spinner" aria-hidden />}

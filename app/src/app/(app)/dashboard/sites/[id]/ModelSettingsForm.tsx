@@ -24,7 +24,7 @@ export function ModelSettingsForm({ siteId, current }: { siteId: string; current
       <button
         type="submit"
         disabled={selected === current || isPending}
-        className="press mt-3 rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-blue-500 disabled:opacity-50"
+        className="press mt-3 rounded-full border border-hairline bg-surface-2 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-accent disabled:opacity-50"
       >
         <span className="inline-flex items-center gap-2">
           {isPending && <span className="spinner" aria-hidden />}

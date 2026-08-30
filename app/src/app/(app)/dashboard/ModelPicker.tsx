@@ -21,7 +21,7 @@ export function ModelPicker({
         <label
           key={m.id}
           className={`press hover-lift cursor-pointer rounded-lg border p-3 text-sm transition-colors duration-150 ${
-            value === m.id ? "border-blue-500 bg-blue-950/30" : "border-neutral-800 bg-neutral-900"
+            value === m.id ? "border-accent bg-accent-soft" : "border-hairline bg-surface-2"
           } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
         >
           <input
@@ -36,13 +36,13 @@ export function ModelPicker({
           <div className="flex items-center justify-between gap-2">
             <span className="font-semibold">{m.label}</span>
             {recommendedId === m.id && (
-              <span className="badge-pop rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              <span className="badge-pop rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase text-white">
                 Recommended
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs text-neutral-500">{m.tagline}</p>
-          <p className="mt-1 font-mono text-[10px] text-neutral-600">
+          <p className="mt-1 text-xs text-ink-dim">{m.tagline}</p>
+          <p className="mt-1 font-mono text-[10px] text-ink-faint">
             ${m.inputPricePerMTok.toFixed(2)} / ${m.outputPricePerMTok.toFixed(2)} per MTok in/out
           </p>
         </label>

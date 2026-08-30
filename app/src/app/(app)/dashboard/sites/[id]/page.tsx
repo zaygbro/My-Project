@@ -57,7 +57,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
       <div className="fade-in-up">
         <Link
           href="/dashboard"
-          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white"
+          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white"
         >
           ← Dashboard
         </Link>
@@ -89,13 +89,13 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
       <div>
         <Link
           href="/dashboard"
-          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white"
+          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white"
         >
           ← Dashboard
         </Link>
         <header className="fade-in-up mb-6">
           <h1 className="font-display text-2xl font-extrabold tracking-tight">{site.name}</h1>
-          {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
+          {site.brief && <p className="mt-1 text-sm text-ink-dim">{site.brief}</p>}
         </header>
         <BuildProgress
           siteId={site.id}
@@ -158,25 +158,25 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   return (
     <div>
-      <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white">
+      <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white">
         ← Dashboard
       </Link>
 
       <header className="fade-in-up mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="font-display text-2xl font-extrabold tracking-tight">{site.name}</h1>
-            {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
+            {site.brief && <p className="mt-1 text-sm text-ink-dim">{site.brief}</p>}
           </div>
           {PLAN_LIMITS[plan].exportEnabled ? (
             <a
               href={`/api/sites/${site.id}/export`}
-              className="press rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
+              className="press rounded-full border border-hairline bg-surface-2 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-ink-dim"
             >
               Export to code
             </a>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-500">Export to code is a Pro feature</span>
+              <span className="text-xs text-ink-faint">Export to code is a Pro feature</span>
               <UpgradeButton plan="pro" period="monthly" label="Upgrade to Pro" />
             </div>
           )}
@@ -198,10 +198,10 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         >
           <div className="flex flex-col lg:min-h-0">
             <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
+              <h2 className="text-sm font-mono uppercase tracking-wide text-ink-faint">
                 {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
               </h2>
-              <span className="font-mono text-xs text-neutral-500">
+              <span className="font-mono text-xs text-ink-faint">
                 {rebuildLimit === null ? "Unlimited" : `${rebuildsUsed}/${rebuildLimit} used`}
               </span>
             </div>
@@ -215,14 +215,14 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
                 />
               </div>
             ) : (
-              <p className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-sm text-neutral-500">
+              <p className="rounded-2xl border border-hairline bg-surface p-5 text-sm text-ink-faint">
                 AI generation isn&rsquo;t configured yet — set{" "}
-                <code className="font-mono text-neutral-400">ANTHROPIC_API_KEY</code> to chat with{" "}
+                <code className="font-mono text-ink-dim">ANTHROPIC_API_KEY</code> to chat with{" "}
                 {modelInfo.label} about this site.
               </p>
             )}
             {atRebuildLimit && (
-              <p className="mt-3 shrink-0 text-sm text-blue-400">
+              <p className="mt-3 shrink-0 text-sm text-accent">
                 You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for
                 unlimited rebuilds.
               </p>
@@ -230,7 +230,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           </div>
 
           <div className="flex flex-col lg:min-h-0">
-            <p className="mb-3 shrink-0 font-mono text-xs uppercase tracking-wide text-neutral-500">Preview</p>
+            <p className="mb-3 shrink-0 font-mono text-xs uppercase tracking-wide text-ink-faint">Preview</p>
             <div className="lg:min-h-0 lg:flex-1">
               <LivePreview
                 pages={pages}
@@ -254,23 +254,23 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
         {/* Analytics */}
         <section
-          className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
+          className="fade-in-up mb-8 rounded-2xl border border-hairline bg-surface p-5"
           style={{ animationDelay: "40ms" }}
         >
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Analytics</h2>
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">Analytics</h2>
           {hasTraffic ? (
             <div className="flex gap-8">
               <div>
                 <p className="font-display text-2xl font-extrabold tabular-nums">{totalViews}</p>
-                <p className="text-xs text-neutral-500">All-time views</p>
+                <p className="text-xs text-ink-faint">All-time views</p>
               </div>
               <div>
                 <p className="font-display text-2xl font-extrabold tabular-nums">{recentViews}</p>
-                <p className="text-xs text-neutral-500">Last 7 days</p>
+                <p className="text-xs text-ink-faint">Last 7 days</p>
               </div>
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-ink-faint">
               {isPublished
                 ? "No visits recorded yet — this counts real views of your published site."
                 : "No visits yet. Publish this site to start recording real traffic."}
@@ -282,34 +282,34 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             produced, and the palette the export actually renders with. */}
         {tokens && (
           <section
-            className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
+            className="fade-in-up mb-8 rounded-2xl border border-hairline bg-surface p-5"
             style={{ animationDelay: "60ms" }}
           >
-            <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Design</h2>
+            <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">Design</h2>
             <div className="flex flex-wrap items-start gap-6">
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Palette</p>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-ink-faint">Palette</p>
                 <div className="flex gap-2">
                   {Object.entries(tokens.colors).map(([name, hex]) => (
                     <div key={name} className="text-center">
                       <span
-                        className="block h-9 w-9 rounded-lg border border-neutral-800"
+                        className="block h-9 w-9 rounded-lg border border-hairline"
                         style={{ backgroundColor: hex }}
                         title={`${name}: ${hex}`}
                       />
-                      <span className="mt-1 block font-mono text-[9px] text-neutral-600">{hex}</span>
+                      <span className="mt-1 block font-mono text-[9px] text-ink-faint">{hex}</span>
                     </div>
                   ))}
                 </div>
               </div>
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Type</p>
-                <p className="text-sm text-neutral-300">{tokens.fonts.display}</p>
-                <p className="text-sm text-neutral-500">{tokens.fonts.body}</p>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-ink-faint">Type</p>
+                <p className="text-sm text-ink-dim">{tokens.fonts.display}</p>
+                <p className="text-sm text-ink-faint">{tokens.fonts.body}</p>
               </div>
               <div>
-                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Radius</p>
-                <p className="font-mono text-sm text-neutral-300">{tokens.radius}</p>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-ink-faint">Radius</p>
+                <p className="font-mono text-sm text-ink-dim">{tokens.radius}</p>
               </div>
             </div>
           </section>
@@ -317,13 +317,13 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
         {/* AI model */}
         <section className="fade-in-up mb-8" style={{ animationDelay: "120ms" }}>
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">
             AI model for this site
           </h2>
           {isGenerationConfigured ? (
             <ModelSettingsForm siteId={site.id} current={site.preferred_model} />
           ) : (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-ink-faint">
               AI generation isn&rsquo;t configured yet — currently set to {modelInfo.label} for when it is.
             </p>
           )}
@@ -331,21 +331,21 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
         {/* Version history */}
         <section className="fade-in-up" style={{ animationDelay: "160ms" }}>
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Version history</h2>
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">Version history</h2>
           <ul className="space-y-2">
             {(versions ?? []).map((version, i) => (
               <li
                 key={version.id}
-                className="flex items-center justify-between rounded-lg border border-neutral-800 bg-neutral-950 px-4 py-3"
+                className="flex items-center justify-between rounded-lg border border-hairline bg-surface px-4 py-3"
               >
                 <div>
                   <p className="text-sm">
-                    <span className="font-mono text-xs uppercase text-blue-500">{version.kind}</span>
+                    <span className="font-mono text-xs uppercase text-accent">{version.kind}</span>
                     {version.changed_sections.length > 0 && (
-                      <span className="ml-2 text-neutral-400">{version.changed_sections.join(", ")}</span>
+                      <span className="ml-2 text-ink-dim">{version.changed_sections.join(", ")}</span>
                     )}
                   </p>
-                  <p className="text-xs text-neutral-500">{formatDate(version.created_at)}</p>
+                  <p className="text-xs text-ink-faint">{formatDate(version.created_at)}</p>
                 </div>
                 {i !== 0 && <RestoreVersionButton siteId={site.id} versionId={version.id} />}
               </li>

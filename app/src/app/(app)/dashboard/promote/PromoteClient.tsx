@@ -39,7 +39,7 @@ function CopyButton({ value, label = "Copy" }: { value: string; label?: string }
     <button
       type="button"
       onClick={copy}
-      className="press shrink-0 rounded-md border border-neutral-800 bg-neutral-900 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+      className="press shrink-0 rounded-md border border-hairline bg-surface-2 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide text-ink-dim transition-colors hover:border-ink-faint hover:text-white"
     >
       {copied ? "Copied" : label}
     </button>
@@ -58,16 +58,16 @@ function Block({
   mono?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
+    <div className="rounded-2xl border border-hairline bg-surface p-4">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-wide text-neutral-500">{title}</p>
-          {hint && <p className="mt-0.5 text-[11px] text-neutral-600">{hint}</p>}
+          <p className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">{title}</p>
+          {hint && <p className="mt-0.5 text-[11px] text-ink-faint">{hint}</p>}
         </div>
         <CopyButton value={value} />
       </div>
       <p
-        className={`whitespace-pre-wrap break-words text-sm text-neutral-300 ${mono ? "font-mono text-xs" : ""}`}
+        className={`whitespace-pre-wrap break-words text-sm text-ink-dim ${mono ? "font-mono text-xs" : ""}`}
       >
         {value}
       </p>
@@ -92,9 +92,9 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
 
   return (
     <div className="space-y-6">
-      <form action={formAction} className="space-y-4 rounded-xl border border-neutral-800 bg-neutral-950 p-5">
+      <form action={formAction} className="space-y-4 rounded-2xl border border-hairline bg-surface p-5">
         <div>
-          <label htmlFor="siteId" className="mb-1 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+          <label htmlFor="siteId" className="mb-1 block text-xs font-mono uppercase tracking-wide text-ink-faint">
             Site to advertise
           </label>
           <select
@@ -102,7 +102,7 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
             name="siteId"
             value={siteId}
             onChange={(e) => setSiteId(e.target.value)}
-            className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+            className="field-transition w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
           >
             {sites.map((s) => (
               <option key={s.id} value={s.id}>
@@ -112,7 +112,7 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
             ))}
           </select>
           {site && !site.published_at && (
-            <p className="mt-1.5 text-[11px] text-neutral-600">
+            <p className="mt-1.5 text-[11px] text-ink-faint">
               This site isn&rsquo;t published, so the ad won&rsquo;t include a link. Publish it first if you
               want people to be able to visit.
             </p>
@@ -120,7 +120,7 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
         </div>
 
         <div>
-          <span className="mb-2 block text-xs font-mono uppercase tracking-wide text-neutral-500">
+          <span className="mb-2 block text-xs font-mono uppercase tracking-wide text-ink-faint">
             Where it&rsquo;s going
           </span>
           <input type="hidden" name="platform" value={platform} />
@@ -133,15 +133,15 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
                 aria-pressed={platform === p.id}
                 className={`press rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   platform === p.id
-                    ? "border-blue-600 bg-blue-950/40 text-blue-300"
-                    : "border-neutral-800 text-neutral-400 hover:border-neutral-600 hover:text-white"
+                    ? "border-accent bg-accent-soft text-white"
+                    : "border-hairline text-ink-dim hover:border-ink-faint hover:text-white"
                 }`}
               >
                 {p.label}
               </button>
             ))}
           </div>
-          <p className="mt-2 font-mono text-[11px] text-neutral-600">
+          <p className="mt-2 font-mono text-[11px] text-ink-faint">
             {spec.aspect} · ~{spec.targetSeconds}s · caption up to {spec.captionLimit} chars
           </p>
         </div>
@@ -149,7 +149,7 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
         <button
           type="submit"
           disabled={isPending}
-          className="press w-full rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
+          className="press w-full rounded-full bg-accent px-4 py-2.5 text-sm font-bold text-white hover:bg-accent-hover disabled:opacity-60"
         >
           <span className="inline-flex items-center justify-center gap-2">
             {isPending && <span className="spinner" aria-hidden />}
@@ -162,17 +162,17 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
         <div className="fade-in-up space-y-4">
           <Block title="Hook — the first two seconds" value={script.hook} />
 
-          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-            <p className="mb-3 font-mono text-[10px] uppercase tracking-wide text-neutral-500">Shot list</p>
+          <div className="rounded-2xl border border-hairline bg-surface p-4">
+            <p className="mb-3 font-mono text-[10px] uppercase tracking-wide text-ink-faint">Shot list</p>
             <ol className="space-y-3">
               {script.shots.map((shot, i) => (
-                <li key={i} className="flex gap-3 border-l-2 border-neutral-800 pl-3">
-                  <span className="shrink-0 font-mono text-xs text-blue-400">{shot.seconds}s</span>
+                <li key={i} className="flex gap-3 border-l-2 border-hairline pl-3">
+                  <span className="shrink-0 font-mono text-xs text-accent">{shot.seconds}s</span>
                   <div className="min-w-0">
-                    <p className="text-sm text-neutral-300">{shot.visual}</p>
+                    <p className="text-sm text-ink-dim">{shot.visual}</p>
                     {shot.onScreenText && (
-                      <p className="mt-1 text-xs text-neutral-500">
-                        On screen: <span className="text-neutral-400">{shot.onScreenText}</span>
+                      <p className="mt-1 text-xs text-ink-faint">
+                        On screen: <span className="text-ink-dim">{shot.onScreenText}</span>
                       </p>
                     )}
                   </div>
@@ -183,17 +183,17 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
 
           {/* Render step. The prompt and command are produced here; the video
               itself is rendered by whatever tool the user runs them in. */}
-          <div className="rounded-xl border border-blue-900 bg-blue-950/20 p-4">
-            <p className="mb-1 font-mono text-[10px] uppercase tracking-wide text-blue-400">
+          <div className="rounded-2xl border border-accent/40 bg-accent-soft p-4">
+            <p className="mb-1 font-mono text-[10px] uppercase tracking-wide text-accent">
               Render the video
             </p>
-            <p className="mb-3 text-xs text-neutral-400">
+            <p className="mb-3 text-xs text-ink-dim">
               Paste the prompt into any text-to-video tool, or run the command below with the{" "}
               <a
                 href="https://inference.sh"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-blue-300"
+                className="underline underline-offset-2 hover:text-accent-hover"
               >
                 inference.sh
               </a>{" "}
@@ -201,14 +201,14 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
             </p>
 
             <div className="mb-3">
-              <label htmlFor="model" className="mb-1 block font-mono text-[10px] uppercase tracking-wide text-neutral-500">
+              <label htmlFor="model" className="mb-1 block font-mono text-[10px] uppercase tracking-wide text-ink-faint">
                 Video model
               </label>
               <select
                 id="model"
                 value={modelId}
                 onChange={(e) => setModelId(e.target.value)}
-                className="field-transition w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+                className="field-transition w-full rounded-lg border border-hairline bg-surface-2 px-3 py-2 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
               >
                 {VIDEO_MODELS.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -244,25 +244,25 @@ export function PromoteClient({ sites }: { sites: SiteOption[] }) {
 
           {platform === "shorts" && <Block title="Shorts title" value={script.shortTitle} />}
 
-          <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-4">
-            <p className="mb-3 font-mono text-[10px] uppercase tracking-wide text-neutral-500">
+          <div className="rounded-2xl border border-hairline bg-surface p-4">
+            <p className="mb-3 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
               Posting to {spec.label}
             </p>
             <ol className="space-y-2">
               {spec.uploadSteps.map((step, i) => (
-                <li key={i} className="flex gap-3 text-sm text-neutral-400">
-                  <span className="shrink-0 font-mono text-xs text-neutral-600">{i + 1}</span>
+                <li key={i} className="flex gap-3 text-sm text-ink-dim">
+                  <span className="shrink-0 font-mono text-xs text-ink-faint">{i + 1}</span>
                   <span>{step}</span>
                 </li>
               ))}
             </ol>
-            <p className="mt-3 border-t border-neutral-900 pt-3 text-[11px] text-neutral-600">
+            <p className="mt-3 border-t border-hairline-soft pt-3 text-[11px] text-ink-faint">
               Platforms change their limits — check{" "}
               <a
                 href={spec.docsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline underline-offset-2 hover:text-neutral-400"
+                className="underline underline-offset-2 hover:text-white"
               >
                 {spec.docsLabel}
               </a>{" "}
