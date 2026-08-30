@@ -233,7 +233,9 @@ button{ font-family: inherit; }
   margin-top: 40px; display:flex; align-items:center; gap: 10px;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-lg);
   padding: 8px 8px 8px 20px;
+  transition: border-color .2s ease, box-shadow .2s ease;
 }
+.brief-bar:focus-within{ border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .brief-slash{ font-family: var(--font-mono); color: var(--accent); font-weight: 600; font-size: 1.05rem; }
 .brief-bar input{
   flex:1; min-width: 0; background: none; border:none; outline:none; color: var(--text);
@@ -252,9 +254,10 @@ button{ font-family: inherit; }
 .chip{
   background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
   padding: 8px 14px; border-radius: 999px; font-size: 0.82rem; cursor:pointer; font-family: var(--font-body);
-  transition: border-color .15s ease, color .15s ease;
+  transition: border-color .15s ease, color .15s ease, transform .15s ease-out;
 }
 .chip:hover{ border-color: var(--accent); color: var(--text); }
+.chip:active{ transform: scale(0.96); }
 
 .fact-rail{
   position: relative; z-index: 1;
@@ -414,9 +417,10 @@ section{ padding: 150px 0; }
 .council-replay{
   display:block; margin: 28px auto 0; background: none; border: none; cursor: pointer;
   font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-faint);
-  transition: color .15s ease;
+  transition: color .15s ease, transform .15s ease-out;
 }
 .council-replay:hover{ color: var(--accent); }
+.council-replay:active{ transform: scale(0.96); }
 
 /* ================= PROCESS ================= */
 .step-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 18px; max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
@@ -447,7 +451,9 @@ section{ padding: 150px 0; }
 .billing-btn{
   font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); background: var(--surface);
   border: 1px solid var(--border); padding: 9px 18px; cursor: pointer; display:flex; align-items:center; gap: 8px;
+  transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease-out;
 }
+.billing-btn:active{ transform: scale(0.96); }
 .billing-btn:first-child{ border-radius: 999px 0 0 999px; }
 .billing-btn:last-child{ border-radius: 0 999px 999px 0; border-left: none; }
 .billing-btn.active{ background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
@@ -501,10 +507,10 @@ section{ padding: 150px 0; }
 }
 .skills-search{
   flex:1; min-width:0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: 10px 14px; color: var(--text); font-size: 0.88rem; transition: border-color .2s ease;
+  padding: 10px 14px; color: var(--text); font-size: 0.88rem; transition: border-color .2s ease, box-shadow .2s ease;
 }
 .skills-search::placeholder{ color: var(--text-faint); }
-.skills-search:focus{ outline:none; border-color: var(--accent); }
+.skills-search:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .skills-grid{
   display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px;
   max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter);
@@ -532,8 +538,10 @@ section{ padding: 150px 0; }
 .skill-copy{
   flex-shrink:0; font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
   letter-spacing: 0.04em; color: var(--accent); background: none; border: none; padding: 4px 0; cursor: pointer;
+  transition: color .15s ease, transform .15s ease-out;
 }
 .skill-copy:hover{ color: var(--accent-hover); }
+.skill-copy:active{ transform: scale(0.94); }
 .skill-copy.copied{ color: var(--text); }
 .skills-empty{
   grid-column: 1 / -1; text-align:center; color: var(--text-faint); font-size: 0.9rem; padding: 32px 0;
