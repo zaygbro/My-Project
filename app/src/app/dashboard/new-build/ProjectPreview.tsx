@@ -85,7 +85,7 @@ function EditableSection({
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             placeholder={`What should change about "${title}"?`}
-            className="w-full resize-none rounded-lg border border-black/15 bg-white/70 px-3 py-2 text-sm text-black outline-none focus:border-blue-500"
+            className="field-transition w-full resize-none rounded-lg border border-black/15 bg-white/70 px-3 py-2 text-sm text-black outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
           />
           <div className="flex gap-2">
             <button
