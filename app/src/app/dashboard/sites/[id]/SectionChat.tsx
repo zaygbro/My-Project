@@ -9,18 +9,20 @@ const initialState: SendMessageState = { error: null };
 
 export function SectionChat({
   siteId,
+  pageSlug,
   sectionKey,
   modelLabel,
   disabled,
   initialMessages,
 }: {
   siteId: string;
+  pageSlug: string;
   sectionKey: string;
   modelLabel: string;
   disabled: boolean;
   initialMessages: ChatTurn[];
 }) {
-  const action = sendSectionMessage.bind(null, siteId, sectionKey);
+  const action = sendSectionMessage.bind(null, siteId, pageSlug, sectionKey);
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [messages, setMessages] = useState<ChatTurn[]>(initialMessages);
   const formRef = useRef<HTMLFormElement>(null);

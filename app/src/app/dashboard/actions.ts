@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
-import type { SiteSection } from "@/lib/supabase/types";
 import { isAiModelId, recommendModel, type AiModelId } from "@/lib/ai/models";
 import { chatAboutSection, isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
+import { isGenerationConfigured } from "@/lib/generation/generate";
+import type { GeneratedPage } from "@/lib/generation/types";
+import { findSection, replaceSectionBody, sectionRef } from "@/lib/site-content";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
@@ -118,15 +120,20 @@ export async function createSite(
     }
   }
 
-  const initialContent: SiteSection[] = [
+  // The site row is created empty and `pending`: the real multi-page
+  // generation runs from the site's own page, which streams its progress.
+  // Creating a site therefore returns immediately instead of blocking this
+  // action (and the user's tab) on a 20-60s model call that might fail.
+  //
+  // When generation isn't configured at all, skip straight to a validated
+  // one-page site holding the brief, so the app stays usable without a key
+  // rather than parking every new site in a build screen that can't finish.
+  const configured = isGenerationConfigured;
+  const fallbackPages: GeneratedPage[] = [
     {
-      key: "overview",
-      title: "Overview",
-      // When AI chat isn't configured there's no reply box to point at —
-      // fall back to showing the raw brief instead of a dead-end message.
-      body: isAnthropicConfigured
-        ? `Nothing written yet — reply below and I'll draft this section for ${name}.`
-        : brief || `A new site called "${name}".`,
+      slug: "index",
+      title: name,
+      sections: [{ key: "overview", title: "Overview", body: brief || `A new site called "${name}".` }],
     },
   ];
 
@@ -137,7 +144,8 @@ export async function createSite(
       name,
       brief: brief || null,
       badge_enabled: PLAN_LIMITS[plan].badge,
-      content: initialContent,
+      pages: configured ? [] : fallbackPages,
+      generation_status: configured ? "pending" : "validated",
       preferred_model: model,
     })
     .select("id")
@@ -147,52 +155,40 @@ export async function createSite(
     return { error: error?.message ?? "Couldn't create the site." };
   }
 
-  // Seed version history with the site's starting content so "roll back to
-  // when this was created" is always available.
-  await supabase.from("site_versions").insert({
-    site_id: site.id,
-    content: initialContent,
-    changed_sections: [],
-    kind: "create",
-  });
-
-  // Open with a clarifying question rather than silently turning the raw
-  // brief into "copy" — templated, not a model call, so creating a site
-  // never waits on the AI. chatAboutSection asks further questions itself
-  // once the owner replies, if it still doesn't know enough to write well.
-  if (isAnthropicConfigured) {
-    await supabase.from("site_messages").insert({
+  if (!configured) {
+    await supabase.from("site_versions").insert({
       site_id: site.id,
-      section_key: "overview",
-      role: "assistant",
-      content: `I'd love to write this well — tell me more about ${name}: what do you offer, who's it for, and what feeling should the page give visitors?`,
+      pages: fallbackPages,
+      changed_sections: [],
+      kind: "create",
     });
   }
 
   revalidatePath("/dashboard");
-  return { error: null, success: true };
+  redirect(`/dashboard/sites/${site.id}`);
 }
 
 /** Shared by manual edits and AI-generated ones: writes the new content and a version snapshot. */
 async function writeSectionEdit(
   supabase: SupabaseClient<Database>,
   siteId: string,
-  currentContent: SiteSection[],
+  currentPages: GeneratedPage[],
+  pageSlug: string,
   sectionKey: string,
   newBody: string
 ): Promise<{ error: string | null }> {
-  const newContent = currentContent.map((s) => (s.key === sectionKey ? { ...s, body: newBody } : s));
+  const newPages = replaceSectionBody(currentPages, pageSlug, sectionKey, newBody);
 
   const { error: updateError } = await supabase
     .from("sites")
-    .update({ content: newContent })
+    .update({ pages: newPages })
     .eq("id", siteId);
   if (updateError) return { error: updateError.message };
 
   const { error: versionError } = await supabase.from("site_versions").insert({
     site_id: siteId,
-    content: newContent,
-    changed_sections: [sectionKey],
+    pages: newPages,
+    changed_sections: [sectionRef(pageSlug, sectionKey)],
     kind: "edit",
   });
   if (versionError) return { error: versionError.message };
@@ -227,6 +223,7 @@ export interface SendMessageState {
  * rebuild quota — there's no separate "free chat editing" loophole). */
 export async function sendSectionMessage(
   siteId: string,
+  pageSlug: string,
   sectionKey: string,
   _prevState: SendMessageState,
   formData: FormData
@@ -244,7 +241,7 @@ export async function sendSectionMessage(
 
   const { data: site } = await supabase
     .from("sites")
-    .select("id, name, brief, content, preferred_model")
+    .select("id, name, brief, pages, preferred_model")
     .eq("id", siteId)
     .eq("user_id", user.id)
     .single();
@@ -255,20 +252,22 @@ export async function sendSectionMessage(
   const quotaError = await checkRebuildQuota(supabase, user.id, plan);
   if (quotaError) return { error: quotaError };
 
-  const currentContent = site.content as SiteSection[];
-  const section = currentContent.find((s) => s.key === sectionKey);
+  const currentPages = site.pages as GeneratedPage[];
+  const section = findSection(currentPages, pageSlug, sectionKey);
   if (!section) return { error: "Unknown section." };
 
   const { data: historyRows } = await supabase
     .from("site_messages")
     .select("role, content")
     .eq("site_id", siteId)
+    .eq("page_slug", pageSlug)
     .eq("section_key", sectionKey)
     .order("created_at", { ascending: true });
   const history: ChatTurn[] = (historyRows ?? []).map((row) => ({ role: row.role, content: row.content }));
 
   const { error: userMessageError } = await supabase.from("site_messages").insert({
     site_id: siteId,
+    page_slug: pageSlug,
     section_key: sectionKey,
     role: "user",
     content: message,
@@ -292,6 +291,7 @@ export async function sendSectionMessage(
 
   const { error: assistantMessageError } = await supabase.from("site_messages").insert({
     site_id: siteId,
+    page_slug: pageSlug,
     section_key: sectionKey,
     role: "assistant",
     content: result.reply,
@@ -299,7 +299,14 @@ export async function sendSectionMessage(
   if (assistantMessageError) return { error: assistantMessageError.message };
 
   if (result.body !== section.body) {
-    const { error: writeError } = await writeSectionEdit(supabase, siteId, currentContent, sectionKey, result.body);
+    const { error: writeError } = await writeSectionEdit(
+      supabase,
+      siteId,
+      currentPages,
+      pageSlug,
+      sectionKey,
+      result.body
+    );
     if (writeError) return { error: writeError };
   }
 
@@ -367,21 +374,25 @@ export async function rollbackToVersion(
 
   const { data: version } = await supabase
     .from("site_versions")
-    .select("content")
+    .select("pages, design_tokens")
     .eq("id", versionId)
     .eq("site_id", siteId)
     .single();
   if (!version) return { error: "Version not found." };
 
+  // Tokens are restored alongside pages: a snapshot taken before a design
+  // change should bring that design back with it, not leave the old copy
+  // sitting under the new palette.
   const { error: updateError } = await supabase
     .from("sites")
-    .update({ content: version.content })
+    .update({ pages: version.pages, design_tokens: version.design_tokens })
     .eq("id", siteId);
   if (updateError) return { error: updateError.message };
 
   const { error: versionError } = await supabase.from("site_versions").insert({
     site_id: siteId,
-    content: version.content,
+    pages: version.pages,
+    design_tokens: version.design_tokens,
     changed_sections: [],
     kind: "rollback",
   });

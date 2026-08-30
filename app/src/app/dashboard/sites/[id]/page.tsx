@@ -4,13 +4,15 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
-import type { SiteSection } from "@/lib/supabase/types";
+import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
 import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
+import { BuildProgress } from "./BuildProgress";
 import { getModelInfo } from "@/lib/ai/models";
 import { isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
+import { countSections, sectionRef } from "@/lib/site-content";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -39,6 +41,32 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   if (!site) notFound();
 
+  // A site that's still building (or failed) has no pages, versions, or chat
+  // history to render yet — show the live build screen instead of an empty
+  // shell, and skip the queries that would all come back empty anyway.
+  if (site.generation_status !== "validated") {
+    return (
+      <div>
+        <Link
+          href="/dashboard"
+          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white"
+        >
+          ← Dashboard
+        </Link>
+        <header className="fade-in-up mb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight">{site.name}</h1>
+          {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
+        </header>
+        <BuildProgress
+          siteId={site.id}
+          initialStatus={site.generation_status}
+          initialChangeLog={(site.change_log ?? []) as ChangeLogEntry[]}
+          initialError={site.generation_error}
+        />
+      </div>
+    );
+  }
+
   const [plan, { data: versions }, { count: totalViews }, { count: recentViews }, { data: messages }] =
     await Promise.all([
       getEffectivePlanForUser(user.id),
@@ -56,23 +84,28 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         .gte("occurred_at", sevenDaysAgoISO()),
       supabase
         .from("site_messages")
-        .select("section_key, role, content")
+        .select("page_slug, section_key, role, content")
         .eq("site_id", id)
         .order("created_at", { ascending: true }),
     ]);
 
+  // Keyed by page + section: a section key is only unique within its page,
+  // so keying on section alone would cross-wire "intro" on Home with
+  // "intro" on About.
   const messagesBySection = new Map<string, ChatTurn[]>();
   for (const m of messages ?? []) {
-    const turns = messagesBySection.get(m.section_key) ?? [];
+    const key = sectionRef(m.page_slug, m.section_key);
+    const turns = messagesBySection.get(key) ?? [];
     turns.push({ role: m.role, content: m.content });
-    messagesBySection.set(m.section_key, turns);
+    messagesBySection.set(key, turns);
   }
 
   const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
   const rebuildsUsed = rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
   const atRebuildLimit = rebuildLimit !== null && rebuildsUsed >= rebuildLimit;
 
-  const content = site.content as SiteSection[];
+  const pages = site.pages as GeneratedPage[];
+  const tokens = site.design_tokens as DesignTokens | null;
   const hasTraffic = (totalViews ?? 0) > 0;
   const modelInfo = getModelInfo(site.preferred_model);
 
@@ -127,25 +160,79 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           )}
         </section>
 
-        {/* Sections */}
+        {/* Design tokens — the "visual engine" half of what generation
+            produced, and the palette the export actually renders with. */}
+        {tokens && (
+          <section
+            className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
+            style={{ animationDelay: "60ms" }}
+          >
+            <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">Design</h2>
+            <div className="flex flex-wrap items-start gap-6">
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Palette</p>
+                <div className="flex gap-2">
+                  {Object.entries(tokens.colors).map(([name, hex]) => (
+                    <div key={name} className="text-center">
+                      <span
+                        className="block h-9 w-9 rounded-lg border border-neutral-800"
+                        style={{ backgroundColor: hex }}
+                        title={`${name}: ${hex}`}
+                      />
+                      <span className="mt-1 block font-mono text-[9px] text-neutral-600">{hex}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Type</p>
+                <p className="text-sm text-neutral-300">{tokens.fonts.display}</p>
+                <p className="text-sm text-neutral-500">{tokens.fonts.body}</p>
+              </div>
+              <div>
+                <p className="mb-2 font-mono text-[10px] uppercase tracking-wide text-neutral-600">Radius</p>
+                <p className="font-mono text-sm text-neutral-300">{tokens.radius}</p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Pages & sections */}
         <section className="mb-8">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">Sections</h2>
+            <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
+              {pages.length} {pages.length === 1 ? "page" : "pages"} · {countSections(pages)} sections
+            </h2>
             <span className="font-mono text-xs text-neutral-500">
               {rebuildLimit === null ? "Unlimited rebuilds" : `${rebuildsUsed}/${rebuildLimit} rebuilds used this month`}
             </span>
           </div>
-          <div className="space-y-4">
-            {content.map((section, i) => (
-              <div key={section.key} className="fade-in-up" style={{ animationDelay: `${80 + i * 50}ms` }}>
-                <SectionEditor
-                  siteId={site.id}
-                  section={section}
-                  disabled={atRebuildLimit}
-                  aiConfigured={isAnthropicConfigured}
-                  modelLabel={modelInfo.label}
-                  initialMessages={messagesBySection.get(section.key) ?? []}
-                />
+          <div className="space-y-8">
+            {pages.map((page, pageIndex) => (
+              <div key={page.slug}>
+                <div className="mb-3 flex items-baseline gap-2">
+                  <h3 className="text-base font-bold tracking-tight">{page.title}</h3>
+                  <span className="font-mono text-xs text-neutral-600">/{page.slug}</span>
+                </div>
+                <div className="space-y-4">
+                  {page.sections.map((section, i) => (
+                    <div
+                      key={section.key}
+                      className="fade-in-up"
+                      style={{ animationDelay: `${80 + (pageIndex * 3 + i) * 50}ms` }}
+                    >
+                      <SectionEditor
+                        siteId={site.id}
+                        pageSlug={page.slug}
+                        section={section}
+                        disabled={atRebuildLimit}
+                        aiConfigured={isAnthropicConfigured}
+                        modelLabel={modelInfo.label}
+                        initialMessages={messagesBySection.get(sectionRef(page.slug, section.key)) ?? []}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>

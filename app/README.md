@@ -104,9 +104,27 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
 - **Site limits**: enforced server-side in `dashboard/actions.ts`
   (`createSite`), not just in the UI — the free tier's cap can't be
   bypassed by calling the action directly.
-- **Site content & rebuilds**: each site has structured `content`
-  (an array of `{key, title, body}` sections — see `SiteSection` in
-  `lib/supabase/types.ts`). Editing a section via
+- **Site generation**: creating a site runs the real pipeline in
+  `lib/generation/`. `createSite` inserts a `pending` row and redirects
+  immediately, so the tab is never blocked on a 20-60s model call;
+  `BuildProgress` then calls `startGeneration`, which claims the job with a
+  **conditional** `pending -> generating` update (so a Strict Mode double
+  mount or a second tab can't run — and bill for — the same generation
+  twice) and streams each stage into `sites.change_log` as it happens.
+  The pipeline generates design tokens plus one page per must-have page,
+  validates the whole project (real WCAG 4.5:1 contrast math, generic-filler
+  detection, broken internal links, missing pages), runs one full-state fix
+  pass if needed, and escalates rather than looping. A run that dies
+  mid-flight (closed tab, killed invocation) is recoverable: the build
+  screen notices a stalled run and `retryGeneration` reclaims any
+  non-`validated` row.
+- **Site content & rebuilds**: `sites.pages` is the single source of truth
+  for content — an array of `{slug, title, sections}` (see
+  `0006_multipage_generation.sql`, which backfilled every pre-existing site
+  into a one-page site so there's no dual-read fallback; the old flat
+  `content` column is left in place but nothing reads it). Section keys are
+  only unique *within* a page, so chat history and edits are keyed by
+  `pageSlug/sectionKey`. Editing a section via
   `dashboard/sites/[id]/SectionEditor.tsx` calls the `updateSiteSection`
   server action, which checks the plan's monthly rebuild quota (counted
   from real `site_versions` rows, not a manually-incremented counter,
@@ -134,12 +152,15 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
   site's prices — so it reads "—" rather than a wrong number when
   Stripe isn't configured or a price ID doesn't resolve.
 - **Export to code**: `GET /api/sites/[id]/export` (Pro/Studio only,
-  via `PLAN_LIMITS[plan].exportEnabled`) renders a site's sections into
-  a plain static HTML/CSS pair (`lib/export.ts`, with real HTML
-  escaping) and streams it back as a `.zip`. It's a genuinely
-  dependency-free starting point, not a copy of the marketing site's
-  design — the "Export to code" button on a site's page is a plain
-  download link, no client JS needed.
+  via `PLAN_LIMITS[plan].exportEnabled`) renders one HTML file per page
+  plus a shared stylesheet built from that site's own generated design
+  tokens, and streams it back as a `.zip` (`lib/export.ts`). Every token
+  is re-validated on the way out (hex colors, font-family names, CSS
+  lengths) and falls back to a safe default rather than being
+  interpolated blind, so a malformed generated token can't inject CSS;
+  content is HTML-escaped. Exporting a site that hasn't finished
+  generating is a 409, not a half-built zip. Dependency-free: no build
+  step, no framework — the button is a plain download link, no client JS.
 - **AI-assisted section drafting**: `lib/ai/models.ts` is the catalog of
   four real, current Claude models (Haiku 4.5 / Sonnet 5 / Opus 5 /
   Fable 5, with accurate pricing) plus `recommendModel()`, a pure

@@ -3,11 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
+import type { GenerationStatus } from "@/lib/supabase/types";
+
 export interface SiteSummary {
   id: string;
   name: string;
   brief: string | null;
   badge_enabled: boolean;
+  generation_status: GenerationStatus;
 }
 
 // A few deterministic abstract "page" thumbnails so a grid of sites doesn't
@@ -97,10 +100,23 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
               <div className="flex flex-1 flex-col gap-1 p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-semibold">{site.name}</p>
-                  {site.badge_enabled && (
-                    <span className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
-                      Badge on
+                  {/* A site can be mid-build when you navigate back here, so
+                      say so rather than showing a card that looks finished. */}
+                  {site.generation_status === "pending" || site.generation_status === "generating" ? (
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase text-blue-400">
+                      <span className="spinner" aria-hidden />
+                      Building
                     </span>
+                  ) : site.generation_status === "failed" ? (
+                    <span className="shrink-0 rounded-full border border-red-900 bg-red-950/30 px-2 py-0.5 font-mono text-[10px] uppercase text-red-400">
+                      Failed
+                    </span>
+                  ) : (
+                    site.badge_enabled && (
+                      <span className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
+                        Badge on
+                      </span>
+                    )
                   )}
                 </div>
                 {site.brief && <p className="line-clamp-2 text-sm text-neutral-500">{site.brief}</p>}

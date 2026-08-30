@@ -6,12 +6,19 @@
 // `Functions`, to satisfy supabase-js's GenericSchema constraint — without
 // them every row type silently collapses to `never`.
 
+import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
+
 /** One editable block of a site's content — a section-level rebuild targets one of these by `key`. */
 export interface SiteSection {
   key: string;
   title: string;
   body: string;
 }
+
+/** Where a site is in the generation pipeline. Existing sites (and any
+ * created before generation was wired in) are 'validated' — see
+ * 0006_multipage_generation.sql. */
+export type GenerationStatus = "pending" | "generating" | "validated" | "failed";
 
 export interface Database {
   public: {
@@ -81,7 +88,15 @@ export interface Database {
           subdomain: string | null;
           custom_domain: string | null;
           badge_enabled: boolean;
+          /** Legacy flat content. Superseded by `pages` in 0006 — kept so the
+           * migration is reversible, but nothing reads it any more. */
           content: SiteSection[];
+          pages: GeneratedPage[];
+          design_tokens: DesignTokens | null;
+          generation_status: GenerationStatus;
+          generation_error: string | null;
+          change_log: ChangeLogEntry[];
+          total_cost_usd: number;
           preferred_model: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at: string;
         };
@@ -94,6 +109,12 @@ export interface Database {
           custom_domain?: string | null;
           badge_enabled?: boolean;
           content?: SiteSection[];
+          pages?: GeneratedPage[];
+          design_tokens?: DesignTokens | null;
+          generation_status?: GenerationStatus;
+          generation_error?: string | null;
+          change_log?: ChangeLogEntry[];
+          total_cost_usd?: number;
           preferred_model?: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at?: string;
         };
@@ -104,7 +125,11 @@ export interface Database {
         Row: {
           id: string;
           site_id: string;
+          /** Legacy flat snapshot, superseded by `pages` — see 0006. */
           content: SiteSection[];
+          pages: GeneratedPage[];
+          design_tokens: DesignTokens | null;
+          /** Entries are "pageSlug/sectionKey" for multi-page sites. */
           changed_sections: string[];
           kind: "create" | "edit" | "rollback";
           created_at: string;
@@ -112,7 +137,9 @@ export interface Database {
         Insert: {
           id?: string;
           site_id: string;
-          content: SiteSection[];
+          content?: SiteSection[];
+          pages?: GeneratedPage[];
+          design_tokens?: DesignTokens | null;
           changed_sections?: string[];
           kind?: "create" | "edit" | "rollback";
           created_at?: string;
@@ -124,6 +151,7 @@ export interface Database {
         Row: {
           id: string;
           site_id: string;
+          page_slug: string;
           section_key: string;
           role: "user" | "assistant";
           content: string;
@@ -132,6 +160,7 @@ export interface Database {
         Insert: {
           id?: string;
           site_id: string;
+          page_slug?: string;
           section_key: string;
           role: "user" | "assistant";
           content: string;

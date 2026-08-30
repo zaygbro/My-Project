@@ -4,9 +4,14 @@
 
 import type { AiModelId } from "../ai/models";
 
+/** Industry and tone are optional because the dashboard's create form is a
+ * single freeform brief ("a coffee roastery in Kyoto…"), not the structured
+ * intake the new-build prototype uses — that brief lands in `freeformNotes`
+ * instead. `mustHavePages` stays required either way, since validation
+ * enforces that every page the brief asked for actually got generated. */
 export interface StructuredBrief {
-  industry: string;
-  tone: string;
+  industry?: string;
+  tone?: string;
   mustHavePages: string[];
   brandAssets?: { primaryColor?: string; logoDescription?: string };
   references?: string[];

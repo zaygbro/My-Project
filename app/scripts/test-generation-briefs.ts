@@ -86,7 +86,10 @@ async function main() {
     console.log(`Total cost: $${state.totalCostUsd.toFixed(4)}`);
 
     results.push({
-      industry: brief.industry,
+      // Every brief in this script's fixture list sets an industry; the
+      // fallback exists because the field is optional for freeform
+      // dashboard briefs, which this script doesn't exercise.
+      industry: brief.industry ?? "(freeform)",
       status: state.status,
       passedOnFirstTry,
       issueCountFirstPass,

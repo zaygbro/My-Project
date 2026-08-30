@@ -1,11 +1,12 @@
 "use client";
 
-import type { SiteSection } from "@/lib/supabase/types";
+import type { PageSection } from "@/lib/generation/types";
 import { SectionChat } from "./SectionChat";
 import type { ChatTurn } from "@/lib/ai/generate";
 
 export function SectionEditor({
   siteId,
+  pageSlug,
   section,
   disabled,
   aiConfigured,
@@ -13,7 +14,8 @@ export function SectionEditor({
   initialMessages,
 }: {
   siteId: string;
-  section: SiteSection;
+  pageSlug: string;
+  section: PageSection;
   disabled: boolean;
   aiConfigured: boolean;
   modelLabel: string;
@@ -27,6 +29,7 @@ export function SectionEditor({
       {aiConfigured ? (
         <SectionChat
           siteId={siteId}
+          pageSlug={pageSlug}
           sectionKey={section.key}
           modelLabel={modelLabel}
           disabled={disabled}
