@@ -8,6 +8,7 @@ import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generati
 import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
+import { DangerZone } from "./DangerZone";
 import { BuildProgress } from "./BuildProgress";
 import { RebuildBanner } from "./RebuildBanner";
 import { PublishPanel } from "./PublishPanel";
@@ -103,6 +104,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           initialPages={(site.pages ?? []) as GeneratedPage[]}
           initialTokens={site.design_tokens as DesignTokens | null}
         />
+        <DangerZone siteId={site.id} />
       </div>
     );
   }
@@ -348,6 +350,8 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             ))}
           </ul>
         </section>
+
+        <DangerZone siteId={site.id} />
     </div>
   );
 }

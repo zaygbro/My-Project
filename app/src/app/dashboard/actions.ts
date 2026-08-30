@@ -389,6 +389,35 @@ export async function rollbackToVersion(
   return { error: null, success: true };
 }
 
+export interface DeleteSiteState {
+  error: string | null;
+  success?: boolean;
+}
+
+/** Deleting the row cascades: site_versions, site_messages, and site_events
+ * all reference sites with `on delete cascade` (see 0001/0002/0004), so
+ * there's nothing else to clean up manually. The subdomain it held becomes
+ * free to reuse the moment the row is gone. The `.eq("user_id", ...)`
+ * mirrors RLS rather than relying on it silently. */
+export async function deleteSite(siteId: string): Promise<DeleteSiteState> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) redirect("/sign-in");
+
+  const { error, count } = await supabase
+    .from("sites")
+    .delete({ count: "exact" })
+    .eq("id", siteId)
+    .eq("user_id", user.id);
+
+  if (error) return { error: error.message };
+  if (!count) return { error: "Site not found." };
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  return { error: null, success: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

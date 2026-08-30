@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import type { GenerationStatus } from "@/lib/supabase/types";
+import { deleteSite } from "./actions";
+import { DeleteSiteButton } from "./DeleteSiteButton";
 
 export interface SiteSummary {
   id: string;
@@ -41,8 +45,16 @@ function hashToIndex(id: string, mod: number): number {
   return hash % mod;
 }
 
+// How long the exit transition (in globals.css's .list-card-exit) actually
+// takes — the refresh that removes the card from the server list is delayed
+// by this much so it doesn't yank the DOM node away mid-animation.
+const EXIT_MS = 200;
+
 export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
+  const [isPending, startTransition] = useTransition();
 
   // Landing here via the sidebar's Search link/Cmd+K (from another page,
   // where there's no #site-search element yet to focus directly) should
@@ -60,6 +72,26 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
       (s) => s.name.toLowerCase().includes(q) || (s.brief ?? "").toLowerCase().includes(q)
     );
   }, [sites, query]);
+
+  function handleDelete(id: string) {
+    setRemovingIds((prev) => new Set(prev).add(id));
+    startTransition(async () => {
+      const result = await deleteSite(id);
+      if (result.error) {
+        toast.error(result.error);
+        setRemovingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        return;
+      }
+      // Let the exit transition actually finish before the server-refreshed
+      // list arrives without this card — otherwise the fade is cut short by
+      // React reconciling it straight out of the DOM.
+      setTimeout(() => router.refresh(), EXIT_MS);
+    });
+  }
 
   return (
     <div>
@@ -86,42 +118,49 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((site, i) => (
-            <Link
-              key={site.id}
-              href={`/dashboard/sites/${site.id}`}
-              className="hover-lift press fade-in-up flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 transition-colors hover:border-neutral-600"
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <div className="flex items-center justify-center border-b border-neutral-800 bg-neutral-900/50 p-4">
-                <svg viewBox="0 0 100 88" fill="none" className="h-20 w-full" aria-hidden>
-                  {THUMBS[hashToIndex(site.id, THUMBS.length)]}
-                </svg>
+            <div key={site.id} className="list-card-exit relative" data-removing={removingIds.has(site.id)}>
+              <div className="absolute top-2 right-2 z-10">
+                <DeleteSiteButton
+                  onConfirm={() => handleDelete(site.id)}
+                  disabled={isPending && removingIds.has(site.id)}
+                />
               </div>
-              <div className="flex flex-1 flex-col gap-1 p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold">{site.name}</p>
-                  {/* A site can be mid-build when you navigate back here, so
-                      say so rather than showing a card that looks finished. */}
-                  {site.generation_status === "pending" || site.generation_status === "generating" ? (
-                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase text-blue-400">
-                      <span className="spinner" aria-hidden />
-                      Building
-                    </span>
-                  ) : site.generation_status === "failed" ? (
-                    <span className="shrink-0 rounded-full border border-red-900 bg-red-950/30 px-2 py-0.5 font-mono text-[10px] uppercase text-red-400">
-                      Failed
-                    </span>
-                  ) : (
-                    site.badge_enabled && (
-                      <span className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
-                        Badge on
-                      </span>
-                    )
-                  )}
+              <Link
+                href={`/dashboard/sites/${site.id}`}
+                className="hover-lift press fade-in-up flex flex-col overflow-hidden rounded-xl border border-neutral-800 bg-neutral-950 transition-colors hover:border-neutral-600"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <div className="flex items-center justify-center border-b border-neutral-800 bg-neutral-900/50 p-4">
+                  <svg viewBox="0 0 100 88" fill="none" className="h-20 w-full" aria-hidden>
+                    {THUMBS[hashToIndex(site.id, THUMBS.length)]}
+                  </svg>
                 </div>
-                {site.brief && <p className="line-clamp-2 text-sm text-neutral-500">{site.brief}</p>}
-              </div>
-            </Link>
+                <div className="flex flex-1 flex-col gap-1 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold">{site.name}</p>
+                    {/* A site can be mid-build when you navigate back here, so
+                        say so rather than showing a card that looks finished. */}
+                    {site.generation_status === "pending" || site.generation_status === "generating" ? (
+                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-blue-800 bg-blue-950/40 px-2 py-0.5 font-mono text-[10px] uppercase text-blue-400">
+                        <span className="spinner" aria-hidden />
+                        Building
+                      </span>
+                    ) : site.generation_status === "failed" ? (
+                      <span className="shrink-0 rounded-full border border-red-900 bg-red-950/30 px-2 py-0.5 font-mono text-[10px] uppercase text-red-400">
+                        Failed
+                      </span>
+                    ) : (
+                      site.badge_enabled && (
+                        <span className="shrink-0 rounded-full border border-neutral-700 px-2 py-0.5 font-mono text-[10px] uppercase text-neutral-500">
+                          Badge on
+                        </span>
+                      )
+                    )}
+                  </div>
+                  {site.brief && <p className="line-clamp-2 text-sm text-neutral-500">{site.brief}</p>}
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
       )}

@@ -178,6 +178,38 @@ body {
   }
 }
 
+/* A destructive icon button's hover cue — a quick shake, not a loop, so it
+   reads as "careful" rather than becoming visual noise on every hover.
+   Gated to a real pointer so a tap on touch can't leave it stuck mid-wiggle. */
+@keyframes trash-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(3deg); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .delete-trash-icon {
+    transition: transform 120ms ease;
+  }
+  .delete-trash-button:hover .delete-trash-icon {
+    animation: trash-wiggle 420ms ease-in-out;
+  }
+}
+
+/* A card leaving a list should visibly leave, not just vanish — this is the
+   "preventing jarring changes" case, applied to removal instead of entry.
+   Kept to transform/opacity so it stays compositor-only like every other
+   one-shot effect here. */
+.list-card-exit {
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+.list-card-exit[data-removing="true"] {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
 /* In-progress spinner for async button states. Constant motion, so
    linear is correct here (progress shouldn't ease). */
 @keyframes spin {
@@ -214,6 +246,15 @@ body {
   }
   .spinner {
     animation-duration: 1.4s;
+  }
+  .delete-trash-button:hover .delete-trash-icon {
+    animation: none;
+  }
+  .list-card-exit {
+    transition: opacity 150ms ease;
+  }
+  .list-card-exit[data-removing="true"] {
+    transform: none;
   }
 }
 
