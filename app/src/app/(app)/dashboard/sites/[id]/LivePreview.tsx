@@ -119,7 +119,25 @@ export function LivePreview({
             activePage.sections.map((section) => (
               <div key={section.key} className="preview-surface p-5">
                 <h3 className="mb-2 text-lg font-bold">{section.title}</h3>
-                <p className="preview-muted whitespace-pre-wrap text-sm">{section.body}</p>
+                {section.body && <p className="preview-muted whitespace-pre-wrap text-sm">{section.body}</p>}
+                {/* This is a fast, still-updating mock of a site that's actively
+                    generating — not the real per-layout rendering (that's what
+                    SiteSection/site-theme.ts draw once a site is validated), just
+                    enough to show items/attribution exist rather than silently
+                    dropping them while a draft is still coming in. */}
+                {Array.isArray(section.items) && section.items.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {section.items.map((item, i) => (
+                      <li key={i} className="preview-muted text-sm">
+                        <span className="font-semibold">{item.label}</span>
+                        {item.detail && <span> — {item.detail}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {section.attribution && (
+                  <p className="preview-muted mt-2 text-sm italic">— {section.attribution}</p>
+                )}
               </div>
             ))
           )}

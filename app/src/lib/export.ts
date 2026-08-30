@@ -1,5 +1,6 @@
-import type { DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import type { DesignTokens, GeneratedPage, PageSection } from "@/lib/generation/types";
 import { buildSiteCss, googleFontsHref, sanitizeTokens } from "@/lib/site-theme";
+import { sanitizeSection } from "@/lib/site-content";
 
 function escapeHtml(input: string): string {
   return input
@@ -8,6 +9,82 @@ function escapeHtml(input: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+/** Static-HTML-string counterpart to components/site/SiteSection.tsx — same
+ * layouts, same sanitizeSection call, just built as an escaped string
+ * instead of JSX since a static export has no React runtime to render one. */
+function renderSection(section: PageSection): string {
+  const safe = sanitizeSection(section);
+  const heading = `<h2>${escapeHtml(safe.title)}</h2>`;
+  const body = safe.body ? `<p>${escapeHtml(safe.body)}</p>` : "";
+
+  switch (safe.layout) {
+    case "stats":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-stats">
+      ${heading}
+      ${body}
+      <div class="site-items">
+${safe.items
+  .map(
+    (item) => `        <div class="site-stat">
+          <span class="site-stat-value">${escapeHtml(item.label)}</span>
+${item.detail ? `          <span class="site-stat-detail">${escapeHtml(item.detail)}</span>\n` : ""}        </div>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
+    case "features":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-features">
+      ${heading}
+      ${body}
+      <div class="site-items">
+${safe.items
+  .map(
+    (item) => `        <div class="site-feature">
+          <span class="site-feature-title">${escapeHtml(item.label)}</span>
+${item.detail ? `          <span class="site-feature-detail">${escapeHtml(item.detail)}</span>\n` : ""}        </div>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
+    case "list":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-list">
+      ${heading}
+      ${body}
+      <ul class="site-list">
+${safe.items
+  .map(
+    (item) => `        <li>
+          <span class="site-list-label">${escapeHtml(item.label)}</span>
+${item.detail ? `          <span class="site-list-detail">${escapeHtml(item.detail)}</span>\n` : ""}        </li>`
+  )
+  .join("\n")}
+      </ul>
+    </section>`;
+
+    case "quote":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-quote">
+      ${heading}
+      <blockquote class="site-quote">
+        <p>${escapeHtml(safe.body)}</p>
+${safe.attribution ? `        <cite class="site-quote-attribution">${escapeHtml(safe.attribution)}</cite>\n` : ""}      </blockquote>
+    </section>`;
+
+    case "cta":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-cta">
+      ${heading}
+      ${body}
+    </section>`;
+
+    default:
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section">
+      ${heading}
+      ${body}
+    </section>`;
+  }
 }
 
 export interface ExportableSite {
@@ -48,14 +125,7 @@ export function renderSiteToStaticFiles(site: ExportableSite): ExportedFile[] {
       )
       .join("\n");
 
-    const sections = page.sections
-      .map(
-        (section) => `    <section id="${escapeHtml(section.key)}" class="site-section">
-      <h2>${escapeHtml(section.title)}</h2>
-      <p>${escapeHtml(section.body)}</p>
-    </section>`
-      )
-      .join("\n");
+    const sections = page.sections.map(renderSection).join("\n");
 
     const badge = site.badgeEnabled
       ? `\n  <footer class="site-footer">\n    <a href="https://francisity.com" rel="noopener">Built with Francisity</a>\n  </footer>`

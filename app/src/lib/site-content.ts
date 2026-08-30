@@ -2,7 +2,7 @@
 // site content since 0006_multipage_generation.sql. Pure functions, so they
 // are unit-testable without a database or an API key.
 
-import type { GeneratedPage, PageSection } from "@/lib/generation/types";
+import { SECTION_LAYOUTS, type GeneratedPage, type PageSection, type SectionItem, type SectionLayout } from "@/lib/generation/types";
 
 /** A single-page brief shouldn't be padded out to three pages just because
  * that's the common default. Deterministic (no AI call) in the same spirit
@@ -78,10 +78,72 @@ export function diffChangedSections(before: GeneratedPage[], after: GeneratedPag
     const beforePage = before.find((p) => p.slug === page.slug);
     for (const section of page.sections) {
       const beforeSection = beforePage?.sections.find((s) => s.key === section.key);
-      if (!beforeSection || beforeSection.body !== section.body || beforeSection.title !== section.title) {
+      if (
+        !beforeSection ||
+        beforeSection.body !== section.body ||
+        beforeSection.title !== section.title ||
+        beforeSection.layout !== section.layout ||
+        beforeSection.attribution !== section.attribution ||
+        JSON.stringify(beforeSection.items) !== JSON.stringify(section.items)
+      ) {
         refs.push(sectionRef(page.slug, section.key));
       }
     }
   }
   return refs;
+}
+
+/** A section as it's actually safe to render: `layout` narrowed to a real,
+ * known value (defaulting to "text" — what every section rendered as before
+ * layouts existed, and what an unrecognized or missing value should still
+ * fall back to), and `items`/`attribution` only populated when the layout
+ * actually uses them. Sections come from a language model and are rendered
+ * to the public, so this is checked here rather than trusted — the same
+ * posture site-theme.ts's sanitizeTokens takes with design tokens. */
+export interface SafeSection {
+  key: string;
+  title: string;
+  body: string;
+  layout: SectionLayout;
+  items: SectionItem[];
+  attribution: string | null;
+}
+
+const LAYOUTS_NEEDING_ITEMS: SectionLayout[] = ["stats", "features", "list"];
+/** Below this many real items, the layout can't say anything a plain
+ * paragraph doesn't already — a single "stat" isn't a comparison, so it
+ * falls back to "text" rather than rendering a lopsided one-item grid. */
+const MIN_ITEMS: Partial<Record<SectionLayout, number>> = { stats: 2, features: 2, list: 1 };
+
+export function sanitizeSection(section: PageSection): SafeSection {
+  const layout: SectionLayout = SECTION_LAYOUTS.includes(section.layout as SectionLayout)
+    ? (section.layout as SectionLayout)
+    : "text";
+
+  const items = Array.isArray(section.items)
+    ? section.items
+        .filter((item): item is SectionItem => typeof item?.label === "string" && item.label.trim().length > 0)
+        .map((item) => ({
+          label: item.label.trim(),
+          detail: typeof item.detail === "string" && item.detail.trim() ? item.detail.trim() : undefined,
+        }))
+    : [];
+
+  if (LAYOUTS_NEEDING_ITEMS.includes(layout) && items.length < (MIN_ITEMS[layout] ?? 1)) {
+    return { key: section.key, title: section.title, body: section.body, layout: "text", items: [], attribution: null };
+  }
+
+  const attribution =
+    layout === "quote" && typeof section.attribution === "string" && section.attribution.trim()
+      ? section.attribution.trim()
+      : null;
+
+  return {
+    key: section.key,
+    title: section.title,
+    body: section.body,
+    layout,
+    items: LAYOUTS_NEEDING_ITEMS.includes(layout) ? items : [],
+    attribution,
+  };
 }

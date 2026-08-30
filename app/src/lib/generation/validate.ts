@@ -6,6 +6,18 @@
 
 import type { DesignTokens, GeneratedPage, GenerationOutput, StructuredBrief, ValidationIssue } from "./types";
 
+/** Layouts that only say something a plain paragraph doesn't when they carry
+ * real items — matches site-content.ts's sanitizeSection, which falls back
+ * to "text" below these same minimums. Flagging it here (rather than only
+ * falling back silently at render time) gives the fix pass a chance to
+ * actually supply the items instead of the site quietly losing the layout
+ * the model said it wanted. */
+const MIN_ITEMS: Partial<Record<NonNullable<GeneratedPage["sections"][number]["layout"]>, number>> = {
+  stats: 2,
+  features: 2,
+  list: 1,
+};
+
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const GENERIC_FILLER = [
   /lorem ipsum/i,
@@ -101,6 +113,15 @@ function validatePages(brief: StructuredBrief, pages: GeneratedPage[], issues: V
           break;
         }
       }
+      const minItems = section.layout ? MIN_ITEMS[section.layout] : undefined;
+      if (minItems !== undefined && (section.items?.length ?? 0) < minItems) {
+        issues.push({
+          severity: "error",
+          code: "missing-section-items",
+          message: `Section "${section.key}" on page "${page.slug}" is a "${section.layout}" layout but has ${section.items?.length ?? 0} item(s) — needs at least ${minItems}.`,
+        });
+      }
+
       for (const match of body.matchAll(MARKDOWN_LINK)) {
         const targetSlug = match[1].replace(/^\//, "") || "index";
         if (!seenSlugs.has(targetSlug) && !pages.some((p) => p.slug === targetSlug)) {

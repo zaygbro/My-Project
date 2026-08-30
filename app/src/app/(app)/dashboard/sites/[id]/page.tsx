@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
-import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
+import { PLAN_LIMITS } from "@/lib/plans";
 import { UpgradeButton } from "../../BillingButtons";
-import { getMonthlyEditCount } from "@/lib/quota";
-import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
 import { isGenerationConfigured } from "@/lib/generation/generate";
-import { SiteChat } from "./SiteChat";
-import { LivePreview } from "./LivePreview";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { DangerZone } from "./DangerZone";
@@ -17,7 +14,6 @@ import { PublishPanel } from "./PublishPanel";
 import { publishedUrl, suggestSubdomain } from "@/lib/publish";
 import { getModelInfo } from "@/lib/ai/models";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
-import { SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -110,35 +106,21 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
     );
   }
 
-  const [plan, { data: versions }, { count: totalViews }, { count: recentViews }, { data: messages }] =
-    await Promise.all([
-      getEffectivePlanForUser(user.id),
-      supabase
-        .from("site_versions")
-        .select("*")
-        .eq("site_id", id)
-        .order("created_at", { ascending: false })
-        .limit(20),
-      supabase.from("site_events").select("id", { count: "exact", head: true }).eq("site_id", id),
-      supabase
-        .from("site_events")
-        .select("id", { count: "exact", head: true })
-        .eq("site_id", id)
-        .gte("occurred_at", sevenDaysAgoISO()),
-      supabase
-        .from("site_messages")
-        .select("role, content")
-        .eq("site_id", id)
-        .eq("page_slug", SITE_CHAT_PAGE_SLUG)
-        .eq("section_key", SITE_CHAT_SECTION_KEY)
-        .order("created_at", { ascending: true }),
-    ]);
-
-  const chatMessages: ChatTurn[] = (messages ?? []).map((m) => ({ role: m.role, content: m.content }));
-
-  const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
-  const rebuildsUsed = rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
-  const atRebuildLimit = rebuildLimit !== null && rebuildsUsed >= rebuildLimit;
+  const [plan, { data: versions }, { count: totalViews }, { count: recentViews }] = await Promise.all([
+    getEffectivePlanForUser(user.id),
+    supabase
+      .from("site_versions")
+      .select("*")
+      .eq("site_id", id)
+      .order("created_at", { ascending: false })
+      .limit(20),
+    supabase.from("site_events").select("id", { count: "exact", head: true }).eq("site_id", id),
+    supabase
+      .from("site_events")
+      .select("id", { count: "exact", head: true })
+      .eq("site_id", id)
+      .gte("occurred_at", sevenDaysAgoISO()),
+  ]);
 
   const pages = site.pages as GeneratedPage[];
   const tokens = site.design_tokens as DesignTokens | null;
@@ -187,60 +169,29 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             (or was wrapped by the 0006 backfill) and is still a placeholder. */}
         {tokens === null && <RebuildBanner siteId={site.id} />}
 
-        {/* Chat + live preview, side by side — the same shape BuildProgress
-            already uses (chat/log on the left, the real site on the right),
-            just with a chat that can change anything instead of a log of
-            what's already happened. The layout doesn't change once a build
-            finishes; only what's in the left pane does. */}
-        <div
-          className="fade-in-up mb-8 grid gap-6 lg:h-[75vh] lg:min-h-[560px] lg:grid-cols-[300px_1fr]"
+        {/* The chat+preview editing session lives on its own page now (see
+            /sites/[id]/edit) instead of a small split-pane wedged into this
+            capped-width column — a real editing session needs the room a
+            full page gives it, not a 300px-wide chat box. */}
+        <Link
+          href={`/sites/${site.id}/edit`}
+          className="hover-lift press fade-in-up mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-hairline bg-surface p-6 transition-colors hover:border-accent"
           style={{ animationDelay: "20ms" }}
         >
-          <div className="flex flex-col lg:min-h-0">
-            <div className="mb-3 flex shrink-0 items-center justify-between">
-              <h2 className="text-sm font-mono uppercase tracking-wide text-ink-faint">
-                {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
-              </h2>
-              <span className="font-mono text-xs text-ink-faint">
-                {rebuildLimit === null ? "Unlimited" : `${rebuildsUsed}/${rebuildLimit} used`}
-              </span>
-            </div>
-            {isGenerationConfigured ? (
-              <div className="lg:min-h-0 lg:flex-1">
-                <SiteChat
-                  siteId={site.id}
-                  modelLabel={modelInfo.label}
-                  disabled={atRebuildLimit}
-                  initialMessages={chatMessages}
-                />
-              </div>
-            ) : (
-              <p className="rounded-2xl border border-hairline bg-surface p-5 text-sm text-ink-faint">
-                AI generation isn&rsquo;t configured yet — set{" "}
-                <code className="font-mono text-ink-dim">ANTHROPIC_API_KEY</code> to chat with{" "}
-                {modelInfo.label} about this site.
-              </p>
-            )}
-            {atRebuildLimit && (
-              <p className="mt-3 shrink-0 text-sm text-accent">
-                You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for
-                unlimited rebuilds.
-              </p>
-            )}
+          <div>
+            <h2 className="font-display text-lg font-bold">
+              {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
+            </h2>
+            <p className="mt-1 text-sm text-ink-dim">
+              {isGenerationConfigured
+                ? "Ask for any change and see it land on the real, full-size site."
+                : `AI generation isn't configured yet — set ANTHROPIC_API_KEY to chat with ${modelInfo.label}.`}
+            </p>
           </div>
-
-          <div className="flex flex-col lg:min-h-0">
-            <p className="mb-3 shrink-0 font-mono text-xs uppercase tracking-wide text-ink-faint">Preview</p>
-            <div className="lg:min-h-0 lg:flex-1">
-              <LivePreview
-                pages={pages}
-                tokens={tokens}
-                openInNewTabHref={`/preview/${site.id}`}
-                scrollClassName="max-h-[70vh] overflow-y-auto lg:max-h-none lg:flex-1"
-              />
-            </div>
-          </div>
-        </div>
+          <span className="press shrink-0 rounded-full bg-accent px-5 py-2.5 text-sm font-bold text-white">
+            Open editor →
+          </span>
+        </Link>
 
         <PublishPanel
           siteId={site.id}

@@ -35,9 +35,15 @@ Respond with ONLY a JSON object, no markdown code fences, no other text, in exac
     "radius": "<a CSS length like 8px>"
   },
   "pages": [
-    { "slug": "<lowercase-hyphenated>", "title": "<page title>", "sections": [ { "key": "<lowercase-key>", "title": "<section heading>", "body": "<real, specific body copy — 2-5 sentences, never generic placeholder text>" } ] }
+    { "slug": "<lowercase-hyphenated>", "title": "<page title>", "sections": [
+      { "key": "<lowercase-key>", "title": "<section heading>", "body": "<real, specific body copy — 2-5 sentences, never generic placeholder text>", "layout": "<one of: text, cta, stats, features, list, quote>" }
+    ] }
   ]
 }
+
+A section's "layout" is optional in the schema but NOT optional in practice — see "Vary the layout" below for what each one means and why picking real ones is the actual job.
+
+Only "stats", "features", and "list" sections take an "items" array: { "key", "title", "body", "layout": "stats", "items": [ { "label": "<a value>", "detail": "<optional caption>" } ] } — "features"/"list" need at least 2/1 real items ("stats" needs at least 2). Only "quote" sections take "attribution": { "key", "title", "body": "<the quote itself>", "layout": "quote", "attribution": "<name, role>" } — attribution is optional. Every other layout ignores both fields entirely; don't include them.
 
 Hard requirements:
 - Generate one page per page named in "Must-have pages", using a slug matching that name (lowercase, spaces to hyphens).
@@ -50,8 +56,16 @@ Design guidance — every generated site is compared against every other AI-gene
 - Never default to the "safe" clichés: a warm cream background (#F4F1EA-ish) with a serif display and a terracotta accent; near-black with one acid-green or vermilion pop; a purple-to-blue gradient; Inter or Space Grotesk as the body/display pair just because they're familiar. Pick colors and fonts that fit THIS business's own category and tone — a bakery, a law firm, and a synth-pop band should never land on the same palette.
 - background and surface are choices, not defaults: flat pure white, pure black, or a neutral mid-grey reads as unconsidered. Bias the neutral very slightly toward the accent hue instead.
 - display and body should read as a deliberate pair (contrast in weight or character — e.g. a characterful display face with a plain, legible body face), not the same family doing both jobs, and not two faces picked at random.
-- The first section on the home page is the site's thesis: lead with the single most concrete, characteristic thing about this specific business, not a generic "Welcome to [name]" opener.
-- Only use numbered or step-style section titles ("01 / 02 / 03", "Step 1") when the content is genuinely a sequence — never as decoration.`;
+- The first section on the home page is the site's thesis: lead with the single most concrete, characteristic thing about this specific business, not a generic "Welcome to [name]" opener. Its layout should almost always be "text" — a hero is an opening statement, not a stat block.
+- Only use numbered or step-style section titles ("01 / 02 / 03", "Step 1") when the content is genuinely a sequence — never as decoration.
+- Vary the layout — this is what makes two sites with different content actually LOOK different, not just read different. Choosing "text" for every section is the single biggest reason AI-generated sites end up looking identical to each other regardless of their colors or copy: pick the layout each section's own content actually calls for, not the same block six times.
+  - "stats": the business has real numbers worth calling out (years running, customers served, response time, capacity, ratings).
+  - "features": several distinct things worth comparing side by side (services offered, product lines, amenities, plans) — each item is its own short label + one-line description, not a paragraph.
+  - "list": a sequence or enumeration (how it works, a menu, what's included) where order or a flat rundown matters more than prose.
+  - "quote": a testimonial, review, or a specific person's voice belongs in the site (only when the brief or content genuinely supports one — never invent a fake named reviewer with fabricated specifics presented as verifiable; write it as illustrative, not as attributed-to-a-real-person evidence).
+  - "cta": a closing section whose entire job is to prompt the next action — keep it short.
+  - "text": the default for anything that's genuinely just prose (an about/story section, a policy, general context) — this should still be a normal fraction of the page, not fill it end to end.
+  - A typical page should use at least two or three DIFFERENT layouts across its sections, not one layout repeated for every section on it.`;
 
 function briefToPrompt(brief: StructuredBrief): string {
   // Industry/tone are omitted entirely rather than printed as "undefined"
@@ -286,6 +300,8 @@ Respond with ONLY a JSON object, no markdown code fences, no other text, in exac
   "pages": <the FULL updated pages array (same shape as the current pages below) with your changes applied, or null if you are only asking a question and changed nothing>,
   "tokens": <the FULL updated tokens object (same shape as the current tokens below), ONLY when the owner asked for a visual/design change (colors, fonts, radius, "make it feel more X", "upgrade the UI") — omit this field or set it to null for a content-only change>
 }
+
+Each section can also carry a "layout" ("text", "cta", "stats", "features", "list", or "quote" — absent/"text" is a plain heading+paragraph block) plus, only where that layout needs them, an "items" array ({ "label", "detail"? } — "stats" needs 2+, "features" needs 2+, "list" needs 1+) or a "quote" section's "attribution". Changing a section's layout — "make this a stats section", "turn the reviews into a proper list" — is a legitimate, in-scope edit, exactly like a wording change: update that section's "layout" (and its "items"/"attribution" if the new layout needs them) in the pages you return.
 
 Rules:
 - Never add, remove, or rename a page, or change a page's slug — only edit, add, or remove SECTIONS within the existing pages.

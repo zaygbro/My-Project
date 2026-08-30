@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { buildSiteCss, googleFontsHref, sanitizeTokens } from "@/lib/site-theme";
 import type { DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import { SiteSection } from "@/components/site/SiteSection";
 
 /**
  * The owner's own full-fidelity look at a site — same rendering (real
@@ -111,10 +112,7 @@ export default async function DraftPreviewPage(props: PageProps<"/preview/[id]/[
       <main className="site-main">
         <h1>{page.title}</h1>
         {page.sections.map((section) => (
-          <section key={section.key} id={section.key} className="site-section">
-            <h2>{section.title}</h2>
-            <p>{section.body}</p>
-          </section>
+          <SiteSection key={section.key} section={section} />
         ))}
       </main>
     </>

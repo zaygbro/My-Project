@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildSiteCss, googleFontsHref, sanitizeTokens } from "@/lib/site-theme";
 import type { DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import { SiteSection } from "@/components/site/SiteSection";
 import { ViewBeacon } from "./ViewBeacon";
 
 // A published site is public and changes only when its owner re-publishes,
@@ -128,10 +129,7 @@ export default async function PublishedSitePage(props: PageProps<"/s/[subdomain]
       <main className="site-main">
         <h1>{page.title}</h1>
         {page.sections.map((section) => (
-          <section key={section.key} id={section.key} className="site-section">
-            <h2>{section.title}</h2>
-            <p>{section.body}</p>
-          </section>
+          <SiteSection key={section.key} section={section} />
         ))}
       </main>
 

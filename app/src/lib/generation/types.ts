@@ -30,10 +30,40 @@ export interface DesignTokens {
   radius: string;
 }
 
+/** How a section is drawn — not just what it says. Every site used to render
+ * every section as the same "kicker + heading + paragraph" block regardless
+ * of content, which is why sites with completely different copy and colors
+ * still read as the same design. Giving sections a real layout is what
+ * actually varies the page's shape. "text" (the default when a section has
+ * no layout at all, which covers every already-generated site) is exactly
+ * today's block; the rest need `items` (stats/features/list) or
+ * `attribution` (quote) to have anything to render beyond a plain block, and
+ * fall back to "text" at render time if that's missing — see
+ * site-content.ts's sanitizeSection. */
+export type SectionLayout = "text" | "cta" | "stats" | "features" | "list" | "quote";
+
+export const SECTION_LAYOUTS: SectionLayout[] = ["text", "cta", "stats", "features", "list", "quote"];
+
+/** One entry in a "stats" (value + label), "features" (title + description),
+ * or "list" (label, optionally with a detail line) section. Reused across
+ * all three rather than three separate shapes — the prompt just describes
+ * `label`/`detail` differently per layout. */
+export interface SectionItem {
+  label: string;
+  detail?: string;
+}
+
 export interface PageSection {
   key: string;
   title: string;
   body: string;
+  /** Absent on every section generated before this existed — treated as
+   * "text" wherever a section is rendered. */
+  layout?: SectionLayout;
+  /** Only meaningful for "stats" / "features" / "list". */
+  items?: SectionItem[];
+  /** Only meaningful for "quote" — the speaker's name/role under the quote. */
+  attribution?: string;
 }
 
 export interface GeneratedPage {

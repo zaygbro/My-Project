@@ -137,5 +137,10 @@ export async function sendSiteMessage(
   }
 
   revalidatePath(`/dashboard/sites/${siteId}`);
+  // The dedicated chat+preview editor is a separate route (outside
+  // /dashboard, so it can use the full viewport instead of the dashboard
+  // shell's capped-width main column) — it needs its own revalidation to
+  // pick up the new change_log entry that remounts its preview iframe.
+  revalidatePath(`/sites/${siteId}/edit`);
   return { error: null, success: true, reply: result.reply };
 }

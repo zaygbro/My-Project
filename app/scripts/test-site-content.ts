@@ -10,9 +10,11 @@ import {
   diffChangedSections,
   findSection,
   replaceSectionBody,
+  sanitizeSection,
   sectionRef,
 } from "../src/lib/site-content";
 import { renderSiteToStaticFiles } from "../src/lib/export";
+import { validateProject } from "../src/lib/generation/validate";
 import {
   normalizeSubdomain,
   publishedUrl,
@@ -23,7 +25,7 @@ import { buildSiteCss, sanitizeTokens } from "../src/lib/site-theme";
 import { validatePassword } from "../src/lib/password";
 import { safeNextPath } from "../src/lib/redirects";
 import { PLATFORM_LIST, beltCommand, isPlatformId } from "../src/lib/promote/platforms";
-import type { DesignTokens, GeneratedPage } from "../src/lib/generation/types";
+import type { DesignTokens, GeneratedPage, PageSection, StructuredBrief } from "../src/lib/generation/types";
 
 let passed = 0;
 function test(name: string, fn: () => void) {
@@ -136,6 +138,143 @@ test("two sections changing across two different pages both show up", () => {
   after = replaceSectionBody(after, "about", "intro", "NEW ABOUT");
   assert.deepEqual(diffChangedSections(pages, after).sort(), ["about/intro", "index/intro"]);
 });
+test("detects a layout change even when body and title stay the same", () => {
+  const after = pages.map((p) =>
+    p.slug === "index"
+      ? { ...p, sections: p.sections.map((s) => (s.key === "cta" ? { ...s, layout: "cta" as const } : s)) }
+      : p
+  );
+  assert.deepEqual(diffChangedSections(pages, after), ["index/cta"]);
+});
+
+console.log("\nsanitizeSection");
+test("defaults to text when layout is absent", () => {
+  const s: PageSection = { key: "a", title: "T", body: "B" };
+  assert.deepEqual(sanitizeSection(s), { key: "a", title: "T", body: "B", layout: "text", items: [], attribution: null });
+});
+test("falls back to text for an unrecognized layout string", () => {
+  const s = { key: "a", title: "T", body: "B", layout: "carousel" } as unknown as PageSection;
+  assert.equal(sanitizeSection(s).layout, "text");
+});
+test("keeps a stats section with enough real items", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "T",
+    body: "B",
+    layout: "stats",
+    items: [{ label: "500+", detail: "customers" }, { label: "12", detail: "years" }],
+  };
+  const safe = sanitizeSection(s);
+  assert.equal(safe.layout, "stats");
+  assert.deepEqual(safe.items, [{ label: "500+", detail: "customers" }, { label: "12", detail: "years" }]);
+});
+test("falls back to text when a stats section has too few items", () => {
+  const s: PageSection = { key: "a", title: "T", body: "B", layout: "stats", items: [{ label: "500+" }] };
+  const safe = sanitizeSection(s);
+  assert.equal(safe.layout, "text");
+  assert.deepEqual(safe.items, []);
+});
+test("a single real item is enough for a list section", () => {
+  const s: PageSection = { key: "a", title: "T", body: "B", layout: "list", items: [{ label: "Step one" }] };
+  assert.equal(sanitizeSection(s).layout, "list");
+});
+test("drops malformed items (missing/blank label) instead of throwing", () => {
+  const s = {
+    key: "a",
+    title: "T",
+    body: "B",
+    layout: "features",
+    items: [{ label: "Real" }, { label: "   " }, { detail: "no label at all" }, null, "not an object"],
+  } as unknown as PageSection;
+  const safe = sanitizeSection(s);
+  // Only one real item survives, which is below the 2-item minimum for
+  // "features" — so this also exercises the same fallback-to-text path.
+  assert.equal(safe.layout, "text");
+});
+test("trims whitespace on item label/detail", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "T",
+    body: "B",
+    layout: "list",
+    items: [{ label: "  Padded  ", detail: "  also padded  " }],
+  };
+  assert.deepEqual(sanitizeSection(s).items, [{ label: "Padded", detail: "also padded" }]);
+});
+test("ignores a non-array items value instead of throwing", () => {
+  const s = { key: "a", title: "T", body: "B", layout: "list", items: "not an array" } as unknown as PageSection;
+  assert.equal(sanitizeSection(s).layout, "text");
+});
+test("keeps a quote's attribution when present", () => {
+  const s: PageSection = { key: "a", title: "T", body: "Great place.", layout: "quote", attribution: "Jane, regular" };
+  const safe = sanitizeSection(s);
+  assert.equal(safe.layout, "quote");
+  assert.equal(safe.attribution, "Jane, regular");
+});
+test("a quote with no attribution renders without one, not a fallback", () => {
+  const s: PageSection = { key: "a", title: "T", body: "Great place." };
+  const withQuote = { ...s, layout: "quote" as const };
+  const safe = sanitizeSection(withQuote);
+  assert.equal(safe.layout, "quote");
+  assert.equal(safe.attribution, null);
+});
+test("attribution is ignored on every layout except quote", () => {
+  const s: PageSection = { key: "a", title: "T", body: "B", layout: "text", attribution: "Someone" };
+  assert.equal(sanitizeSection(s).attribution, null);
+});
+test("cta and text carry no items even if the model included some", () => {
+  const s: PageSection = { key: "a", title: "T", body: "B", layout: "cta", items: [{ label: "x" }, { label: "y" }] };
+  assert.deepEqual(sanitizeSection(s).items, []);
+});
+
+console.log("\nvalidateProject — section layouts");
+const layoutBrief: StructuredBrief = { mustHavePages: ["Home"] };
+const layoutTokens: DesignTokens = {
+  colors: { background: "#ffffff", surface: "#f0f0f0", text: "#000000", textMuted: "#444444", accent: "#3b82f6" },
+  fonts: { display: "Georgia", body: "Helvetica" },
+  radius: "8px",
+};
+test("flags a stats section declared with too few items", () => {
+  const issues = validateProject(layoutBrief, {
+    tokens: layoutTokens,
+    pages: [
+      {
+        slug: "index",
+        title: "Home",
+        sections: [{ key: "s", title: "By the numbers", body: "Some context.", layout: "stats", items: [{ label: "1" }] }],
+      },
+    ],
+  });
+  assert.ok(issues.some((i) => i.code === "missing-section-items"));
+});
+test("passes a stats section with enough items", () => {
+  const issues = validateProject(layoutBrief, {
+    tokens: layoutTokens,
+    pages: [
+      {
+        slug: "index",
+        title: "Home",
+        sections: [
+          {
+            key: "s",
+            title: "By the numbers",
+            body: "Some context.",
+            layout: "stats",
+            items: [{ label: "1" }, { label: "2" }],
+          },
+        ],
+      },
+    ],
+  });
+  assert.ok(!issues.some((i) => i.code === "missing-section-items"));
+});
+test("a plain text section is never flagged for missing items", () => {
+  const issues = validateProject(layoutBrief, {
+    tokens: layoutTokens,
+    pages: [{ slug: "index", title: "Home", sections: [{ key: "s", title: "About", body: "Some copy." }] }],
+  });
+  assert.ok(!issues.some((i) => i.code === "missing-section-items"));
+});
 
 console.log("\nrenderSiteToStaticFiles");
 const tokens: DesignTokens = {
@@ -209,6 +348,44 @@ test("escapes html in site content", () => {
   assert.doesNotMatch(html, /<script>alert/);
   assert.match(html, /&lt;script&gt;/);
   assert.doesNotMatch(html, /<img onerror/);
+});
+test("renders each real layout's own markup, not just the plain block", () => {
+  const varied: GeneratedPage[] = [
+    {
+      slug: "index",
+      title: "Home",
+      sections: [
+        { key: "s1", title: "By the numbers", body: "", layout: "stats", items: [{ label: "500+", detail: "orders" }, { label: "12", detail: "years" }] },
+        { key: "s2", title: "What we offer", body: "", layout: "features", items: [{ label: "Fast", detail: "Same-day turnaround" }, { label: "Local", detail: "Sourced within 50 miles" }] },
+        { key: "s3", title: "How it works", body: "", layout: "list", items: [{ label: "Order online" }, { label: "We roast" }] },
+        { key: "s4", title: "Reviews", body: "Best coffee in town.", layout: "quote", attribution: "A regular" },
+        { key: "s5", title: "Ready?", body: "Come say hi.", layout: "cta" },
+      ],
+    },
+  ];
+  const html = renderSiteToStaticFiles({ name: "X", pages: varied, tokens, badgeEnabled: false }).find(
+    (f) => f.path === "index.html"
+  )!.contents;
+  assert.match(html, /class="site-section site-section-stats"/);
+  assert.match(html, /site-stat-value">500\+</);
+  assert.match(html, /class="site-section site-section-features"/);
+  assert.match(html, /site-feature-title">Fast</);
+  assert.match(html, /class="site-section site-section-list"/);
+  assert.match(html, /site-list-label">Order online</);
+  assert.match(html, /class="site-section site-section-quote"/);
+  assert.match(html, /site-quote-attribution">A regular</);
+  assert.match(html, /class="site-section site-section-cta"/);
+});
+test("a features section with too few items exports as plain text, not a broken grid", () => {
+  const thin: GeneratedPage[] = [
+    { slug: "index", title: "Home", sections: [{ key: "s", title: "Offer", body: "One thing.", layout: "features", items: [{ label: "Only one" }] }] },
+  ];
+  const html = renderSiteToStaticFiles({ name: "X", pages: thin, tokens, badgeEnabled: false }).find(
+    (f) => f.path === "index.html"
+  )!.contents;
+  assert.doesNotMatch(html, /site-section-features/);
+  assert.match(html, /class="site-section">/);
+  assert.match(html, /One thing\./);
 });
 test("omits nav for a single-page site but still renders it", () => {
   const single = [pages[0]];

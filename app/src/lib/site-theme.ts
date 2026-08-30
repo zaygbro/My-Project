@@ -226,6 +226,145 @@ html body {
   z-index: -1;
 }
 
+/* ---------- Section layouts ----------
+   These are what actually vary a page's SHAPE, not just its palette — see
+   PageSection.layout's doc comment. Every rule here is purely additive on
+   top of the base .site-section (heading, paragraph, band/border) above;
+   only the CTA band needs to override anything, since it always gets an
+   accent tint regardless of its even/odd position in the alternating
+   rhythm — a closing section should never look like it landed there by
+   chance of position. */
+
+.site-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 24px 28px;
+  margin-top: 20px;
+}
+
+.site-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.site-stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--accent);
+}
+.site-stat-detail {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.site-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.site-feature-title {
+  font-weight: 700;
+  font-size: 0.98rem;
+  color: var(--text);
+}
+.site-feature-detail {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.site-list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.site-list li {
+  position: relative;
+  padding-left: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.site-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.site-list-label {
+  font-weight: 600;
+  color: var(--text);
+}
+.site-list-detail {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.site-quote {
+  margin: 16px 0 0;
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
+}
+.site-quote p {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  max-width: 56ch;
+  color: var(--text);
+}
+.site-quote-attribution {
+  display: block;
+  margin-top: 10px;
+  font-style: normal;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.site-quote-attribution::before {
+  content: "— ";
+}
+
+.site-section:not(:first-of-type).site-section-cta {
+  border-left: none;
+  text-align: center;
+  padding-top: 44px;
+  padding-bottom: 44px;
+}
+.site-section:not(:first-of-type).site-section-cta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  background: var(--accent);
+  opacity: 0.08;
+  z-index: -1;
+}
+.site-section-cta h2 {
+  font-size: clamp(1.6rem, 3.6vw, 2.2rem);
+}
+.site-section-cta p {
+  margin: 0 auto;
+  max-width: 46ch;
+  font-size: 1.05rem;
+}
+
 .site-footer {
   padding: 32px 0 64px;
   font-size: 0.85rem;
