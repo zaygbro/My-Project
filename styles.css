@@ -16,6 +16,7 @@
   --accent-hover:#2F6FE0;
   --accent-soft: rgba(59,130,246,0.12);
   --accent-glow: rgba(59,130,246,0.45);
+  --success: #3FD671;
 
   --font-display: 'Space Grotesk', 'Geist', -apple-system, sans-serif;
   --font-body: 'Geist', -apple-system, sans-serif;
@@ -374,7 +375,7 @@ section{ padding: 150px 0; }
   padding: 6px 0; opacity: 0; animation: lineIn .4s ease forwards; animation-delay: var(--d, 0s);
   white-space: pre-wrap;
 }
-.console-line .ok{ color: #3fd671; margin-right: 8px; }
+.console-line .ok{ color: var(--success); margin-right: 8px; }
 .console-line.accent{ color: var(--accent); }
 .console-line.accent.strong{ font-weight: 600; }
 .console-line a{ text-decoration: underline; }
@@ -606,9 +607,9 @@ section{ padding: 150px 0; }
 .status-name{ font-size: 0.98rem; color: var(--text); }
 .status-pill{
   display:inline-flex; align-items:center; gap: 7px; font-family: var(--font-mono); font-size: 0.74rem;
-  text-transform: uppercase; letter-spacing: 0.04em; color: #3fd671;
+  text-transform: uppercase; letter-spacing: 0.04em; color: var(--success);
 }
-.status-pill::before{ content:""; width: 7px; height: 7px; border-radius: 50%; background: #3fd671; }
+.status-pill::before{ content:""; width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
 .changelog-entry{ padding: 20px 0; border-top: 1px solid var(--border-soft); }
 .changelog-date{ font-family: var(--font-mono); font-size: 0.74rem; color: var(--accent); margin-bottom: 8px; display:block; }
 
