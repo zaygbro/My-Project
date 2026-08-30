@@ -77,29 +77,14 @@ briefForm?.addEventListener('submit', (e) => {
     return;
   }
   const btn = briefForm.querySelector('button');
-  const original = btn.innerHTML;
   btn.innerHTML = 'Drafting…';
   btn.disabled = true;
   setTimeout(() => {
     btn.innerHTML = 'Issued ✓';
     setTimeout(() => {
-      btn.innerHTML = original;
-      btn.disabled = false;
-      document.getElementById('waitlist').scrollIntoView({ behavior: 'smooth' });
+      window.location.href = `https://my-project-five-ochre-25.vercel.app/try?brief=${encodeURIComponent(val)}`;
     }, 1100);
   }, 1500);
-});
-
-// ---------- Waitlist form ----------
-const waitlistForm = document.getElementById('waitlistForm');
-const waitlistNote = document.getElementById('waitlistNote');
-waitlistForm?.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const email = document.getElementById('waitlistEmail').value.trim();
-  if (!email) return;
-  waitlistNote.textContent = `You're on the list — we'll email ${email} when your invite is ready.`;
-  waitlistNote.classList.add('success');
-  waitlistForm.reset();
 });
 
 // ---------- Sticky nav shadow ----------

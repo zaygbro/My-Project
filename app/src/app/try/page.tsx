@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { loadAnonSite, saveAnonSite, clearAnonSite, type AnonSite } from "@/lib/anon-site";
@@ -13,12 +13,30 @@ import { claimAnonymousSite } from "./actions";
 type Mode = "loading" | "claiming" | "create" | "editor";
 
 export default function TryPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-black text-white">
+          <span className="spinner" aria-hidden />
+        </main>
+      }
+    >
+      <TryPageInner />
+    </Suspense>
+  );
+}
+
+function TryPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>("loading");
   const [anonSite, setAnonSite] = useState<AnonSite | null>(null);
 
   const [name, setName] = useState("");
-  const [brief, setBrief] = useState("");
+  // Pre-filled from the marketing site's own demo bar (?brief=...) so typing
+  // a brief there and hitting "Build" hands it straight into the real
+  // builder instead of the fake local animation it used to end with.
+  const [brief, setBrief] = useState(() => searchParams.get("brief") ?? "");
   const [manualModel, setManualModel] = useState<AiModelId | null>(null);
   const recommended = useMemo(() => recommendModel(brief), [brief]);
   const selectedModel = manualModel ?? recommended;
