@@ -8,7 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODELS, type AiModelId } from "../ai/models";
 import { validateProject } from "./validate";
 import { diffChangedSections } from "../site-content";
-import type { ChangeLogEntry, ChatTurn, GeneratedPage, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
+import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
 export const isGenerationConfigured = Boolean(apiKey);
@@ -283,13 +283,14 @@ that well, ask one short clarifying question instead of guessing or writing gene
 Respond with ONLY a JSON object, no markdown code fences, no other text, in exactly this shape:
 {
   "reply": "<what you say back to the owner — a short clarifying question, or one short sentence describing what you changed, no exclamation marks>",
-  "pages": <the FULL updated pages array (same shape as the current pages below) with your changes applied, or null if you are only asking a question and changed nothing>
+  "pages": <the FULL updated pages array (same shape as the current pages below) with your changes applied, or null if you are only asking a question and changed nothing>,
+  "tokens": <the FULL updated tokens object (same shape as the current tokens below), ONLY when the owner asked for a visual/design change (colors, fonts, radius, "make it feel more X", "upgrade the UI") — omit this field or set it to null for a content-only change>
 }
 
 Rules:
 - Never add, remove, or rename a page, or change a page's slug — only edit, add, or remove SECTIONS within the existing pages.
-- Never change design tokens (colors, fonts, radius) — this chat only edits content, not the visual system.
-- When you DO make a change, return every page, not just the one(s) you touched — the response replaces the whole pages array.
+- You CAN change design tokens (colors, fonts, radius) when the owner is asking for that — a visual request is not out of scope, so don't deflect it to a content suggestion instead. text and textMuted must keep at least 4.5:1 contrast against background. Pick real Google Font family names, not the same face for both display and body, and avoid the obvious AI-generated defaults (cream background with a terracotta accent, near-black with one neon accent, a purple-to-blue gradient, Inter or Space Grotesk as a reflexive pair) unless the owner specifically asks for one of those looks.
+- When you DO make a content change, return every page, not just the one(s) you touched — the response replaces the whole pages array. The same applies to tokens: return the complete object, not a partial patch.
 - Never write "Lorem ipsum", generic placeholder text, or anything not specific to this business.
 - New or rewritten copy should read as this specific business, not marketing-in-general — a concrete detail beats a generic claim. Don't add numbered or step-style titles ("01", "Step 1") unless the content is genuinely a sequence.
 - This is a fictional business. Even if the brief or a page names a real, existing company, never write that real company's actual history, facts, or trademarks — a named real brand is a style reference only, never something to describe truthfully.`;
@@ -297,6 +298,7 @@ Rules:
 interface ChatEditModelResult {
   reply: string;
   pages: GeneratedPage[] | null;
+  tokens: DesignTokens | null;
 }
 
 async function callChatModel(model: AiModelId, userMessage: string): Promise<{ result: ChatEditModelResult; usage: TokenUsage }> {
@@ -330,7 +332,11 @@ async function callChatModel(model: AiModelId, userMessage: string): Promise<{ r
 
   const usage = priceUsage(model, response.usage.input_tokens, response.usage.output_tokens);
   return {
-    result: { reply: record.reply, pages: Array.isArray(record.pages) ? (record.pages as GeneratedPage[]) : null },
+    result: {
+      reply: record.reply,
+      pages: Array.isArray(record.pages) ? (record.pages as GeneratedPage[]) : null,
+      tokens: record.tokens && typeof record.tokens === "object" ? (record.tokens as DesignTokens) : null,
+    },
     usage,
   };
 }
@@ -342,6 +348,10 @@ export interface ChatEditResult {
    * only asked a question, made no real change, or the edit failed
    * validation and was discarded. */
   changedRefs: string[];
+  /** Whether this turn changed design tokens (colors/fonts/radius) — kept
+   * separate from changedRefs since a tokens-only change (no section edits)
+   * would otherwise show up as no change at all. */
+  tokensChanged: boolean;
 }
 
 /**
@@ -367,7 +377,7 @@ export async function chatEditProject(
     `Owner: ${message}`,
   ].join("\n\n");
 
-  const userMessage = `Current site (tokens are fixed and shown only for context — you cannot change them):
+  const userMessage = `Current site (shown for context; include an updated "tokens" object in your response only if the owner is asking for a visual/design change):
 ${JSON.stringify({ tokens: state.tokens, pages: state.pages }, null, 2)}
 
 Conversation so far:
@@ -377,7 +387,7 @@ Respond to the owner's latest message.`;
 
   const { result, usage } = await callChatModel(state.model, userMessage);
 
-  if (!result.pages) {
+  if (!result.pages && !result.tokens) {
     // A clarifying question — nothing to validate or persist as content.
     await emit(changeLog, onProgress, {
       timestamp: new Date().toISOString(),
@@ -389,6 +399,7 @@ Respond to the owner's latest message.`;
       reply: result.reply,
       projectState: { ...state, changeLog, totalCostUsd: state.totalCostUsd + usage.costUsd },
       changedRefs: [],
+      tokensChanged: false,
     };
   }
 
@@ -399,15 +410,18 @@ Respond to the owner's latest message.`;
     usage,
   });
 
+  const nextTokens = result.tokens ?? state.tokens;
+  const nextPages = result.pages ?? state.pages;
   const recovered = await validateAndRecover(
     state.brief,
-    { tokens: state.tokens, pages: result.pages },
+    { tokens: nextTokens, pages: nextPages },
     state.model,
     changeLog,
     onProgress
   );
   const isGood = recovered.status === "validated";
   const changedRefs = isGood ? diffChangedSections(state.pages, recovered.output.pages) : [];
+  const tokensChanged = isGood && result.tokens !== null;
 
   return {
     reply: isGood
@@ -415,10 +429,12 @@ Respond to the owner's latest message.`;
       : `${result.reply} (That edit didn't pass validation, so I've kept your site as it was — see the build log below for exactly what was wrong.)`,
     projectState: {
       ...state,
+      tokens: isGood ? recovered.output.tokens : state.tokens,
       pages: isGood ? recovered.output.pages : state.pages,
       changeLog,
       totalCostUsd: state.totalCostUsd + usage.costUsd + recovered.costUsd,
     },
     changedRefs,
+    tokensChanged,
   };
 }

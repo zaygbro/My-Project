@@ -106,11 +106,13 @@ export async function sendSiteMessage(
   });
   if (assistantMessageError) return { error: assistantMessageError.message };
 
-  if (result.changedRefs.length > 0) {
+  const hasRealChange = result.changedRefs.length > 0 || result.tokensChanged;
+  if (hasRealChange) {
     const { error: updateError } = await supabase
       .from("sites")
       .update({
         pages: result.projectState.pages,
+        design_tokens: result.projectState.tokens,
         change_log: result.projectState.changeLog,
         total_cost_usd: result.projectState.totalCostUsd,
       })
@@ -120,8 +122,8 @@ export async function sendSiteMessage(
     const { error: versionError } = await supabase.from("site_versions").insert({
       site_id: siteId,
       pages: result.projectState.pages,
-      design_tokens: state.tokens,
-      changed_sections: result.changedRefs,
+      design_tokens: result.projectState.tokens,
+      changed_sections: result.tokensChanged ? [...result.changedRefs, "design"] : result.changedRefs,
       kind: "edit",
     });
     if (versionError) return { error: versionError.message };
