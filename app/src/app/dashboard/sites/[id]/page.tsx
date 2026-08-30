@@ -6,7 +6,6 @@ import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
 import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage } from "@/lib/generation/types";
 import { isGenerationConfigured } from "@/lib/generation/generate";
-import { SectionEditor } from "./SectionEditor";
 import { SiteChat } from "./SiteChat";
 import { LivePreview } from "./LivePreview";
 import { ModelSettingsForm } from "./ModelSettingsForm";
@@ -18,7 +17,7 @@ import { PublishPanel } from "./PublishPanel";
 import { publishedUrl, suggestSubdomain } from "@/lib/publish";
 import { getModelInfo } from "@/lib/ai/models";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
-import { countSections, SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
+import { SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -303,36 +302,6 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             </div>
           </section>
         )}
-
-        {/* Pages & sections — a plain-text read of the same content, useful
-            for scanning quickly without the site's own (sometimes low-
-            contrast-for-browsing) fonts and colors getting in the way. */}
-        <section className="mb-8">
-          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
-            {pages.length} {pages.length === 1 ? "page" : "pages"} · {countSections(pages)} sections
-          </h2>
-          <div className="space-y-8">
-            {pages.map((page, pageIndex) => (
-              <div key={page.slug}>
-                <div className="mb-3 flex items-baseline gap-2">
-                  <h3 className="text-base font-bold tracking-tight">{page.title}</h3>
-                  <span className="font-mono text-xs text-neutral-600">/{page.slug}</span>
-                </div>
-                <div className="space-y-4">
-                  {page.sections.map((section, i) => (
-                    <div
-                      key={section.key}
-                      className="fade-in-up"
-                      style={{ animationDelay: `${80 + (pageIndex * 3 + i) * 50}ms` }}
-                    >
-                      <SectionEditor section={section} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
 
         {/* AI model */}
         <section className="fade-in-up mb-8" style={{ animationDelay: "120ms" }}>

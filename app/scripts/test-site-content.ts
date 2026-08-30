@@ -6,7 +6,6 @@
 
 import assert from "node:assert/strict";
 import {
-  countSections,
   deriveMustHavePages,
   diffChangedSections,
   findSection,
@@ -136,12 +135,6 @@ test("two sections changing across two different pages both show up", () => {
   let after = replaceSectionBody(pages, "index", "intro", "NEW HOME");
   after = replaceSectionBody(after, "about", "intro", "NEW ABOUT");
   assert.deepEqual(diffChangedSections(pages, after).sort(), ["about/intro", "index/intro"]);
-});
-
-console.log("\ncountSections");
-test("counts across every page", () => {
-  assert.equal(countSections(pages), 3);
-  assert.equal(countSections([]), 0);
 });
 
 console.log("\nrenderSiteToStaticFiles");

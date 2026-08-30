@@ -62,10 +62,6 @@ export function replaceSectionBody(
   );
 }
 
-export function countSections(pages: GeneratedPage[]): number {
-  return pages.reduce((total, page) => total + page.sections.length, 0);
-}
-
 /** Which sections actually changed between one version of a site's pages and
  * the next — used to label a version-history entry and to decide whether a
  * chat turn produced a real edit at all (an empty result means the model
