@@ -133,12 +133,29 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
   creation — writes a full content snapshot to `site_versions`.
   `rollbackToVersion` restores one as a new `'rollback'`-kind version
   (non-destructive; rollbacks don't consume rebuild quota).
+- **Publishing**: `publishSite` snapshots the draft's `pages`,
+  `design_tokens` and `name` into their `published_*` counterparts and
+  stamps `published_at` — it does **not** serve the live draft. That's
+  what lets someone keep editing without changing what visitors see, and
+  comparing snapshot to draft is what makes "you have unpublished
+  changes" a real check rather than a flag someone must remember to set.
+  Published sites render at `/s/<address>` (works with no DNS setup at
+  all); set `NEXT_PUBLIC_PUBLISH_ROOT_DOMAIN` plus wildcard DNS and
+  `proxy.ts` additionally maps `<address>.<root>` onto that same route.
+  Visitors are anonymous and RLS scopes `sites` to its owner, so the
+  public renderer reads via the service-role client with an **explicit
+  column allowlist** — deliberately not an anon read policy, because RLS
+  is row-level, not column-level, so "anyone may read published rows"
+  would also expose that row's draft `pages` and `brief`. Addresses are
+  validated in `lib/publish.ts` (length, charset, no leading/trailing or
+  double hyphens, reserved names like `www`/`api`/`dashboard`) and are
+  unique case-insensitively.
 - **Analytics**: `POST /api/track` is a public, unauthenticated endpoint
-  a published site calls to record a view into `site_events`. Nothing
-  calls it yet because there's no hosting pipeline serving published
-  sites — a site's own analytics panel (`dashboard/sites/[id]/page.tsx`)
-  reads real rows and shows an honest empty state instead of inventing
-  numbers.
+  a published site calls to record a view into `site_events`. Its caller
+  is `ViewBeacon` on the published-site route, which uses `sendBeacon` so
+  a visitor who bounces immediately still counts. Both the per-site panel
+  and the dev analytics page read those real rows — an empty state means
+  genuinely no traffic, never a stubbed number.
 - **Platform analytics (dev only)**: `dashboard/analytics/page.tsx` is a
   revenue + activity overview across every account, not just the
   signed-in one — `notFound()` for anyone whose `profiles.is_dev` isn't
@@ -199,13 +216,20 @@ revenue split is a business decision, not an engineering one). **Rush
 build** specifically can't be built honestly yet at all: there's no
 generation queue for it to skip.
 
-AI generation itself is real for one section at a time (see above), but
-the full "council" from the marketing copy isn't: there's no
-structure/visual/copy/assurance pipeline, no concurrent multi-engine
-drafting, and no whole-site generation from a brief — `createSite`
-still seeds the first section with the brief text as typed, not an AI
-draft of it. Don't add copy implying any of the above (Phase 3 items or
-the full council) exists until it does.
+Whole-site generation and publishing are now real (see above), but the
+marketing site's "**four specialist engines at once**" still is not, and
+copy shouldn't imply otherwise. What actually runs is a single model call
+producing structure, design tokens and copy together, followed by a
+deterministic assurance pass (validation + one full-state fix). That is a
+real pipeline with a real quality gate — it is not four engines drafting
+concurrently and being reconciled.
+
+**Custom domains** are also still out: `sites.custom_domain` exists and
+the Pro plan's copy promises "Custom domain + SSL", but nothing reads
+that column. Publishing today means a Francisity subdomain (or a path on
+the app's origin). Wiring a real custom domain needs per-domain
+verification and certificate issuing through the host's API, which is
+infrastructure work rather than a schema change.
 
 ## UI polish & motion
 

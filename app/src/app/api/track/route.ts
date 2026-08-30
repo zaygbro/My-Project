@@ -2,11 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Public, unauthenticated ingestion endpoint — a published Francisity site
-// calls this to record a view. There's no real hosting pipeline serving
-// published sites yet, so nothing calls this today; it's the real,
-// working mechanism that will feed the analytics panel once one exists,
-// not a placeholder. Cross-origin by design, since a published site lives
-// on its own subdomain.
+// calls this to record a view. Its caller is ViewBeacon, rendered by the
+// published-site route in app/s/[subdomain]. Cross-origin by design, since
+// a published site can be served from its own subdomain.
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",

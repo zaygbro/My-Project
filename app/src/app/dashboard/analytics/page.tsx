@@ -210,8 +210,8 @@ export default async function AnalyticsPage() {
           <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">Published site views</p>
           <p className="mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{totalViews ?? 0}</p>
           <p className="mt-1 text-xs text-neutral-500">
-            Honestly zero until publishing to a live URL ships — this reads the real{" "}
-            <code className="font-mono text-neutral-400">site_events</code> table, nothing here is simulated.
+            Real views of published sites, read from the{" "}
+            <code className="font-mono text-neutral-400">site_events</code> table — nothing here is simulated.
           </p>
         </div>
       </section>

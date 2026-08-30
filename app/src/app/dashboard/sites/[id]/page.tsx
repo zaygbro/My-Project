@@ -9,6 +9,8 @@ import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { BuildProgress } from "./BuildProgress";
+import { PublishPanel } from "./PublishPanel";
+import { publishedUrl, suggestSubdomain } from "@/lib/publish";
 import { getModelInfo } from "@/lib/ai/models";
 import { isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
@@ -109,6 +111,17 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
   const hasTraffic = (totalViews ?? 0) > 0;
   const modelInfo = getModelInfo(site.preferred_model);
 
+  const isPublished = site.published_at !== null;
+  // Publishing snapshots the draft, so "has unpublished changes" is a real
+  // comparison between what's live and what's current — not a flag someone
+  // has to remember to set.
+  const hasUnpublishedChanges =
+    isPublished && JSON.stringify(site.published_pages) !== JSON.stringify(pages);
+  const rootDomain = process.env.NEXT_PUBLIC_PUBLISH_ROOT_DOMAIN?.trim() || null;
+  const appOrigin = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const liveUrl =
+    isPublished && site.subdomain ? publishedUrl(site.subdomain, appOrigin) : null;
+
   return (
     <div>
       <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white">
@@ -135,6 +148,16 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           )}
         </header>
 
+        <PublishPanel
+          siteId={site.id}
+          subdomain={site.subdomain}
+          suggested={suggestSubdomain(site.name)}
+          isPublished={isPublished}
+          hasUnpublishedChanges={hasUnpublishedChanges}
+          publishedUrl={liveUrl}
+          rootDomain={rootDomain}
+        />
+
         {/* Analytics */}
         <section
           className="fade-in-up mb-8 rounded-xl border border-neutral-800 bg-neutral-950 p-5"
@@ -154,8 +177,9 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             </div>
           ) : (
             <p className="text-sm text-neutral-500">
-              No visits recorded yet. Publishing to a live URL isn&rsquo;t built yet, so there&rsquo;s honestly
-              nothing to show — this panel reads real event data and will populate once publishing ships.
+              {isPublished
+                ? "No visits recorded yet — this counts real views of your published site."
+                : "No visits yet. Publish this site to start recording real traffic."}
             </p>
           )}
         </section>

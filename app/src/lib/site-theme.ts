@@ -1,0 +1,169 @@
+// Turning a site's generated design tokens into real CSS. Shared by the
+// static export and the published-site renderer so a site someone visits
+// and a site someone downloads look identical — one source of truth for
+// "what a Francisity site looks like".
+//
+// Every value is re-validated here rather than interpolated blind: tokens
+// come from a language model, land inside a stylesheet, and are served to
+// the public, so a malformed one must fall back rather than inject CSS.
+
+import type { DesignTokens } from "@/lib/generation/types";
+
+export const FALLBACK_TOKENS: DesignTokens = {
+  colors: {
+    background: "#ffffff",
+    surface: "#f6f6f6",
+    text: "#111111",
+    textMuted: "#555555",
+    accent: "#3b82f6",
+  },
+  fonts: { display: "Georgia", body: "Helvetica" },
+  radius: "8px",
+};
+
+/** Family names are letters, digits, spaces and hyphens — anything else is
+ * dropped rather than escaped, since the value goes into both a CSS
+ * declaration and a Google Fonts URL. */
+export function safeFontFamily(family: string, fallback: string): string {
+  const cleaned = family.replace(/[^A-Za-z0-9 -]/g, "").trim();
+  return cleaned || fallback;
+}
+
+export function safeHex(value: string, fallback: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? value : fallback;
+}
+
+export function safeLength(value: string, fallback: string): string {
+  return /^[0-9]+(\.[0-9]+)?(px|rem|em|%)$/.test(value) ? value : fallback;
+}
+
+export interface SafeTokens {
+  colors: DesignTokens["colors"];
+  displayFont: string;
+  bodyFont: string;
+  radius: string;
+}
+
+export function sanitizeTokens(tokens: DesignTokens | null): SafeTokens {
+  const t = tokens ?? FALLBACK_TOKENS;
+  return {
+    colors: {
+      background: safeHex(t.colors.background, FALLBACK_TOKENS.colors.background),
+      surface: safeHex(t.colors.surface, FALLBACK_TOKENS.colors.surface),
+      text: safeHex(t.colors.text, FALLBACK_TOKENS.colors.text),
+      textMuted: safeHex(t.colors.textMuted, FALLBACK_TOKENS.colors.textMuted),
+      accent: safeHex(t.colors.accent, FALLBACK_TOKENS.colors.accent),
+    },
+    displayFont: safeFontFamily(t.fonts.display, FALLBACK_TOKENS.fonts.display),
+    bodyFont: safeFontFamily(t.fonts.body, FALLBACK_TOKENS.fonts.body),
+    radius: safeLength(t.radius, FALLBACK_TOKENS.radius),
+  };
+}
+
+export function googleFontsHref(tokens: SafeTokens): string {
+  return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+    tokens.displayFont
+  )}:wght@700&family=${encodeURIComponent(tokens.bodyFont)}:wght@400;500&display=swap`;
+}
+
+export function buildSiteCss(tokens: SafeTokens): string {
+  return `:root {
+  --bg: ${tokens.colors.background};
+  --surface: ${tokens.colors.surface};
+  --text: ${tokens.colors.text};
+  --text-muted: ${tokens.colors.textMuted};
+  --accent: ${tokens.colors.accent};
+  --radius: ${tokens.radius};
+  --font-display: "${tokens.displayFont}", Georgia, serif;
+  --font-body: "${tokens.bodyFont}", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --max-width: 760px;
+}
+
+* { box-sizing: border-box; }
+
+/* Deliberately \`html body\` (specificity 0,0,2) rather than \`body\`: the app's
+   own globals.css paints the body black with a noise texture for the
+   dashboard, and a published site must win that regardless of which
+   stylesheet the framework happens to inject first. The \`background\`
+   shorthand is what clears that inherited noise image. */
+html body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+.site-header, .site-main, .site-footer {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 32px;
+  padding-bottom: 8px;
+}
+
+.site-brand {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 0.9rem;
+}
+
+.site-nav a { color: var(--text-muted); text-decoration: none; }
+.site-nav a:hover { color: var(--accent); }
+.site-nav [aria-current="page"] { color: var(--accent); font-weight: 500; }
+
+.site-main h1 {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 32px 0 8px;
+}
+
+.site-section {
+  padding: 32px 0;
+  border-top: 1px solid var(--surface);
+}
+
+.site-section h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0 0 12px;
+}
+
+.site-section p {
+  color: var(--text-muted);
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.site-footer {
+  padding: 32px 0 64px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.site-footer a { color: var(--accent); }
+
+@media (max-width: 600px) {
+  .site-main h1 { font-size: 1.75rem; }
+}
+`;
+}

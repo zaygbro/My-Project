@@ -13,6 +13,13 @@ import {
   sectionRef,
 } from "../src/lib/site-content";
 import { renderSiteToStaticFiles } from "../src/lib/export";
+import {
+  normalizeSubdomain,
+  publishedUrl,
+  suggestSubdomain,
+  validateSubdomain,
+} from "../src/lib/publish";
+import { sanitizeTokens } from "../src/lib/site-theme";
 import type { DesignTokens, GeneratedPage } from "../src/lib/generation/types";
 
 let passed = 0;
@@ -201,6 +208,91 @@ test("includes the badge only when enabled", () => {
 test("handles a site with no pages at all without throwing", () => {
   const files = renderSiteToStaticFiles({ name: "Empty", pages: [], tokens, badgeEnabled: false });
   assert.deepEqual(files.map((f) => f.path).sort(), ["index.html", "styles.css"]);
+});
+
+console.log("\nvalidateSubdomain");
+test("accepts a normal address", () => {
+  const r = validateSubdomain("kyoto-coffee");
+  assert.equal(r.ok && r.value, "kyoto-coffee");
+});
+test("lowercases and trims", () => {
+  const r = validateSubdomain("  Kyoto-Coffee  ");
+  assert.equal(r.ok && r.value, "kyoto-coffee");
+});
+test("rejects too short and too long", () => {
+  assert.equal(validateSubdomain("ab").ok, false);
+  assert.equal(validateSubdomain("a".repeat(64)).ok, false);
+  assert.equal(validateSubdomain("a".repeat(63)).ok, true);
+});
+test("rejects invalid characters", () => {
+  for (const bad of ["has space", "under_score", "dot.dot", "emoji🙂", "UPPER!"]) {
+    assert.equal(validateSubdomain(bad).ok, false, bad);
+  }
+});
+test("rejects leading/trailing/double hyphens", () => {
+  assert.equal(validateSubdomain("-lead").ok, false);
+  assert.equal(validateSubdomain("trail-").ok, false);
+  // Double hyphens are the punycode prefix form, so they stay out.
+  assert.equal(validateSubdomain("a--b").ok, false);
+});
+test("rejects reserved hostnames that would shadow app routes", () => {
+  for (const bad of ["www", "api", "dashboard", "sign-in", "admin", "s", "francisity"]) {
+    assert.equal(validateSubdomain(bad).ok, false, bad);
+  }
+});
+test("every rejection carries a message a user can act on", () => {
+  const r = validateSubdomain("-nope");
+  assert.equal(r.ok, false);
+  assert.equal(typeof (r as { error: string }).error, "string");
+  assert.ok((r as { error: string }).error.length > 0);
+});
+
+console.log("\nnormalizeSubdomain / suggestSubdomain");
+test("normalizes a messy site name", () => {
+  assert.equal(normalizeSubdomain("Kyoto Coffee Roastery!"), "kyoto-coffee-roastery");
+  assert.equal(normalizeSubdomain("  --Hello__World--  "), "hello-world");
+});
+test("suggestions are always valid addresses", () => {
+  for (const name of ["Kyoto Coffee", "A", "!!!", "Joe's Bar & Grill", "x".repeat(200)]) {
+    const suggestion = suggestSubdomain(name);
+    assert.equal(validateSubdomain(suggestion).ok, true, `${name} -> ${suggestion}`);
+  }
+});
+
+console.log("\npublishedUrl");
+test("falls back to a path on the app's own origin with no wildcard domain", () => {
+  delete process.env.NEXT_PUBLIC_PUBLISH_ROOT_DOMAIN;
+  assert.equal(publishedUrl("acme", "https://app.example.com"), "https://app.example.com/s/acme");
+  // A trailing slash on the origin must not produce a double slash.
+  assert.equal(publishedUrl("acme", "https://app.example.com/"), "https://app.example.com/s/acme");
+});
+test("uses a real subdomain when a wildcard root domain is configured", () => {
+  process.env.NEXT_PUBLIC_PUBLISH_ROOT_DOMAIN = "francisity.app";
+  assert.equal(publishedUrl("acme", "https://ignored"), "https://acme.francisity.app");
+  delete process.env.NEXT_PUBLIC_PUBLISH_ROOT_DOMAIN;
+});
+
+console.log("\nsanitizeTokens");
+test("passes through valid tokens untouched", () => {
+  const safe = sanitizeTokens(tokens);
+  assert.equal(safe.colors.accent, "#ff6b6b");
+  assert.equal(safe.displayFont, "Space Grotesk");
+  assert.equal(safe.radius, "12px");
+});
+test("falls back on every malformed field independently", () => {
+  const safe = sanitizeTokens({
+    colors: { ...tokens.colors, accent: "not-a-color" },
+    fonts: { display: "!!!", body: "Inter" },
+    radius: "12 furlongs",
+  });
+  assert.equal(safe.colors.accent, "#3b82f6"); // fell back
+  assert.equal(safe.colors.text, "#ffffff"); // valid one kept
+  assert.equal(safe.displayFont, "Georgia"); // fell back
+  assert.equal(safe.bodyFont, "Inter"); // valid one kept
+  assert.equal(safe.radius, "8px"); // fell back
+});
+test("handles null tokens", () => {
+  assert.equal(sanitizeTokens(null).colors.background, "#ffffff");
 });
 
 console.log(`\n${passed} passed${process.exitCode ? " (with failures above)" : ""}\n`);

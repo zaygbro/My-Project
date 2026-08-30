@@ -97,6 +97,13 @@ export interface Database {
           generation_error: string | null;
           change_log: ChangeLogEntry[];
           total_cost_usd: number;
+          /** Snapshot of what visitors actually see. Null until first
+           * published; deliberately separate from the draft `pages` so an
+           * edit doesn't silently change a live site. */
+          published_at: string | null;
+          published_pages: GeneratedPage[] | null;
+          published_design_tokens: DesignTokens | null;
+          published_name: string | null;
           preferred_model: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at: string;
         };
@@ -115,6 +122,10 @@ export interface Database {
           generation_error?: string | null;
           change_log?: ChangeLogEntry[];
           total_cost_usd?: number;
+          published_at?: string | null;
+          published_pages?: GeneratedPage[] | null;
+          published_design_tokens?: DesignTokens | null;
+          published_name?: string | null;
           preferred_model?: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
           created_at?: string;
         };
