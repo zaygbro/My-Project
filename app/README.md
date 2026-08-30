@@ -74,6 +74,18 @@ and set it as `ANTHROPIC_API_KEY`. Without it, "Generate with AI" stays
 visibly disabled on every site's page rather than pretending to work —
 everything else in the app functions normally.
 
+Optionally, also set `OPENAI_API_KEY` ([platform.openai.com](https://platform.openai.com))
+and/or `GOOGLE_API_KEY` ([aistudio.google.com](https://aistudio.google.com))
+to add GPT-5 and Gemini 3 Pro as selectable models. The owner still always
+picks one main model for a site; the moment a SECOND provider's key is also
+set, that provider's flagship model automatically joins as a helper on every
+new generation — each configured provider drafts the same brief
+independently, and the main model merges the strongest choices from every
+draft into the one version that actually gets validated and saved (see
+`generateProject` in `src/lib/generation/generate.ts`). With only one
+provider configured, generation behaves exactly as it always has — one
+model, one call.
+
 ## 4. Configure and run
 
 ```bash

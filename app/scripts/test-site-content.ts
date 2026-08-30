@@ -16,6 +16,7 @@ import {
 import { renderSiteToStaticFiles } from "../src/lib/export";
 import { sanitizeOptions } from "../src/lib/generation/generate";
 import { validateProject } from "../src/lib/generation/validate";
+import { resolveHelperModels, type AiProvider } from "../src/lib/ai/models";
 import {
   normalizeSubdomain,
   publishedUrl,
@@ -662,6 +663,31 @@ test("drops duplicate entries", () => {
 });
 test("caps the list at 4 options", () => {
   assert.deepEqual(sanitizeOptions(["A", "B", "C", "D", "E", "F"]), ["A", "B", "C", "D"]);
+});
+
+console.log("\nresolveHelperModels");
+test("no helpers when only the main model's own provider is configured", () => {
+  assert.deepEqual(resolveHelperModels("claude-sonnet-5", new Set<AiProvider>(["anthropic"])), []);
+});
+test("brings in every OTHER configured provider's flagship", () => {
+  assert.deepEqual(
+    resolveHelperModels("claude-sonnet-5", new Set<AiProvider>(["anthropic", "openai", "google"])),
+    ["gpt-5", "gemini-3-pro"]
+  );
+});
+test("never helps with another model from the main model's own provider", () => {
+  // Fable 5 is Anthropic's flagship — a Claude main model should never see
+  // itself (or another Claude tier) offered back as a "helper".
+  assert.deepEqual(resolveHelperModels("claude-fable-5", new Set<AiProvider>(["anthropic"])), []);
+});
+test("works with any provider as the main model, not just Anthropic", () => {
+  assert.deepEqual(
+    resolveHelperModels("gpt-5", new Set<AiProvider>(["openai", "anthropic"])),
+    ["claude-fable-5"]
+  );
+});
+test("only offers helpers that are actually configured", () => {
+  assert.deepEqual(resolveHelperModels("claude-sonnet-5", new Set<AiProvider>(["anthropic", "openai"])), ["gpt-5"]);
 });
 
 console.log(`\n${passed} passed${process.exitCode ? " (with failures above)" : ""}\n`);

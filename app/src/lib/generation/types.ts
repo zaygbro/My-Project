@@ -86,7 +86,11 @@ export interface TokenUsage {
 
 export interface ChangeLogEntry {
   timestamp: string;
-  kind: "generate" | "edit" | "fix" | "validate" | "escalate";
+  /** "synthesize" is the ensemble merge step — see generate.ts's
+   * resolveHelperModels — that combines multiple providers' independent
+   * drafts of the same brief into the one draft that actually gets
+   * validated. Absent when only one provider is configured. */
+  kind: "generate" | "edit" | "fix" | "validate" | "escalate" | "synthesize";
   summary: string;
   issues?: ValidationIssue[];
   usage?: TokenUsage;

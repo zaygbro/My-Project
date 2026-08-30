@@ -17,6 +17,7 @@ function ChangeLogRow({ entry }: { entry: ChangeLogEntry }) {
     fix: "Fix pass",
     validate: "Validate",
     escalate: "Escalated",
+    synthesize: "Combine drafts",
   };
   const kindColor: Record<ChangeLogEntry["kind"], string> = {
     generate: "text-blue-400",
@@ -24,6 +25,7 @@ function ChangeLogRow({ entry }: { entry: ChangeLogEntry }) {
     fix: "text-blue-400",
     validate: "text-neutral-400",
     escalate: "text-red-400",
+    synthesize: "text-blue-400",
   };
   return (
     <li className="border-l-2 border-neutral-800 py-2 pl-4">

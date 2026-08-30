@@ -7,6 +7,7 @@
 // them every row type silently collapses to `never`.
 
 import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import type { AiModelId } from "@/lib/ai/models";
 
 /** One editable block of a site's content — a section-level rebuild targets one of these by `key`. */
 export interface SiteSection {
@@ -104,7 +105,7 @@ export interface Database {
           published_pages: GeneratedPage[] | null;
           published_design_tokens: DesignTokens | null;
           published_name: string | null;
-          preferred_model: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
+          preferred_model: AiModelId;
           created_at: string;
         };
         Insert: {
@@ -126,7 +127,7 @@ export interface Database {
           published_pages?: GeneratedPage[] | null;
           published_design_tokens?: DesignTokens | null;
           published_name?: string | null;
-          preferred_model?: "claude-haiku-4-5" | "claude-sonnet-5" | "claude-opus-5" | "claude-fable-5";
+          preferred_model?: AiModelId;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["sites"]["Insert"]>;

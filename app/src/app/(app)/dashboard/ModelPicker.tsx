@@ -1,6 +1,6 @@
 "use client";
 
-import { AI_MODELS, type AiModelId } from "@/lib/ai/models";
+import { AI_MODELS, PROVIDER_LABEL, type AiModelId } from "@/lib/ai/models";
 
 export function ModelPicker({
   name,
@@ -43,7 +43,7 @@ export function ModelPicker({
           </div>
           <p className="mt-1 text-xs text-ink-dim">{m.tagline}</p>
           <p className="mt-1 font-mono text-[10px] text-ink-faint">
-            ${m.inputPricePerMTok.toFixed(2)} / ${m.outputPricePerMTok.toFixed(2)} per MTok in/out
+            {PROVIDER_LABEL[m.provider]} · ${m.inputPricePerMTok.toFixed(2)} / ${m.outputPricePerMTok.toFixed(2)} per MTok in/out
           </p>
         </label>
       ))}

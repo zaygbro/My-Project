@@ -5,18 +5,47 @@
 // without a live code-execution sandbox: the "build" here is structural
 // validation of the generated project against real rules, not a vibe check.
 import Anthropic from "@anthropic-ai/sdk";
-import { AI_MODELS, type AiModelId } from "../ai/models";
+import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
+import {
+  ALL_PROVIDERS,
+  getModelInfo,
+  resolveHelperModels,
+  type AiModelId,
+  type AiModelInfo,
+  type AiProvider,
+} from "../ai/models";
 import { validateProject } from "./validate";
 import { diffChangedSections } from "../site-content";
 import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
 
-const apiKey = process.env.ANTHROPIC_API_KEY;
-export const isGenerationConfigured = Boolean(apiKey);
-const client = new Anthropic({ apiKey: apiKey ?? "sk-ant-placeholder" });
+const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+const openaiApiKey = process.env.OPENAI_API_KEY;
+const googleApiKey = process.env.GOOGLE_API_KEY;
+
+const anthropicClient = new Anthropic({ apiKey: anthropicApiKey ?? "sk-ant-placeholder" });
+const openaiClient = new OpenAI({ apiKey: openaiApiKey ?? "sk-placeholder" });
+const googleClient = new GoogleGenAI({ apiKey: googleApiKey ?? "placeholder" });
+
+export function isProviderConfigured(provider: AiProvider): boolean {
+  switch (provider) {
+    case "anthropic":
+      return Boolean(anthropicApiKey);
+    case "openai":
+      return Boolean(openaiApiKey);
+    case "google":
+      return Boolean(googleApiKey);
+  }
+}
+
+/** True as soon as ONE provider is configured — the whole app's "is AI on at
+ * all" gate. Which specific models are actually available to a given
+ * generation is a separate question, answered per-call by
+ * resolveHelperModels + isProviderConfigured. */
+export const isGenerationConfigured = ALL_PROVIDERS.some(isProviderConfigured);
 
 function priceUsage(model: AiModelId, inputTokens: number, outputTokens: number): TokenUsage {
-  const info = AI_MODELS.find((m) => m.id === model);
-  if (!info) throw new Error(`Unknown model: ${model}`);
+  const info = getModelInfo(model);
   const costUsd = (inputTokens / 1_000_000) * info.inputPricePerMTok + (outputTokens / 1_000_000) * info.outputPricePerMTok;
   return { inputTokens, outputTokens, costUsd };
 }
@@ -113,13 +142,19 @@ async function emit(
   await onProgress?.(entry);
 }
 
-async function callModel(
+interface RawModelResult {
+  raw: string;
+  usage: TokenUsage;
+}
+
+async function callAnthropicRaw(
   model: AiModelId,
+  modelInfo: AiModelInfo,
   system: string,
-  userMessage: string
-): Promise<{ output: GenerationOutput; usage: TokenUsage }> {
-  const modelInfo = AI_MODELS.find((m) => m.id === model)!;
-  const response = await client.messages.create({
+  userMessage: string,
+  refusalMessage: string
+): Promise<RawModelResult> {
+  const response = await anthropicClient.messages.create({
     model,
     max_tokens: 4000,
     system,
@@ -127,17 +162,90 @@ async function callModel(
     messages: [{ role: "user", content: userMessage }],
   });
 
-  if (response.stop_reason === "refusal") {
-    throw new Error("The model declined to generate this project.");
-  }
+  if (response.stop_reason === "refusal") throw new Error(refusalMessage);
 
   const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === "text");
   const raw = textBlock?.text.trim();
   if (!raw) throw new Error("The model didn't return any text.");
 
-  const parsed = JSON.parse(extractJson(raw)) as GenerationOutput;
-  const usage = priceUsage(model, response.usage.input_tokens, response.usage.output_tokens);
-  return { output: parsed, usage };
+  return { raw, usage: priceUsage(model, response.usage.input_tokens, response.usage.output_tokens) };
+}
+
+async function callOpenAiRaw(
+  model: AiModelId,
+  system: string,
+  userMessage: string,
+  refusalMessage: string
+): Promise<RawModelResult> {
+  const response = await openaiClient.chat.completions.create({
+    model,
+    max_completion_tokens: 4000,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: userMessage },
+    ],
+  });
+
+  const choice = response.choices[0];
+  if (choice?.finish_reason === "content_filter") throw new Error(refusalMessage);
+
+  const raw = choice?.message?.content?.trim();
+  if (!raw) throw new Error("The model didn't return any text.");
+
+  const usage = priceUsage(model, response.usage?.prompt_tokens ?? 0, response.usage?.completion_tokens ?? 0);
+  return { raw, usage };
+}
+
+async function callGoogleRaw(model: AiModelId, system: string, userMessage: string): Promise<RawModelResult> {
+  const response = await googleClient.models.generateContent({
+    model,
+    contents: userMessage,
+    config: { systemInstruction: system, maxOutputTokens: 4000 },
+  });
+
+  const raw = response.text?.trim();
+  if (!raw) throw new Error("The model didn't return any text.");
+
+  const usage = priceUsage(
+    model,
+    response.usageMetadata?.promptTokenCount ?? 0,
+    response.usageMetadata?.candidatesTokenCount ?? 0
+  );
+  return { raw, usage };
+}
+
+/** Every model call, from every provider, funnels through here — the rest of
+ * this file (generation, fix passes, edits, chat) never touches a provider
+ * SDK directly, so adding or swapping a provider only ever changes this one
+ * dispatch. */
+async function callRawModel(
+  model: AiModelId,
+  system: string,
+  userMessage: string,
+  refusalMessage = "The model declined to respond."
+): Promise<RawModelResult> {
+  const modelInfo = getModelInfo(model);
+  switch (modelInfo.provider) {
+    case "anthropic":
+      return callAnthropicRaw(model, modelInfo, system, userMessage, refusalMessage);
+    case "openai":
+      return callOpenAiRaw(model, system, userMessage, refusalMessage);
+    case "google":
+      // Google's API has no equivalent "refused to answer" finish reason
+      // exposed the same way — a refusal just comes back as normal (if
+      // evasive) text, so there's nothing to special-case here.
+      return callGoogleRaw(model, system, userMessage);
+  }
+}
+
+async function callModel(
+  model: AiModelId,
+  system: string,
+  userMessage: string
+): Promise<{ output: GenerationOutput; usage: TokenUsage }> {
+  const { raw, usage } = await callRawModel(model, system, userMessage, "The model declined to generate this project.");
+  const output = JSON.parse(extractJson(raw)) as GenerationOutput;
+  return { output, usage };
 }
 
 /**
@@ -208,6 +316,96 @@ Return the FULL corrected project (same JSON shape as before) with every issue r
   return { output: fixResult.output, status: "failed", costUsd };
 }
 
+/** Anonymized so the model judges content, not brand names — telling it
+ * "this draft is from GPT-5" invites deference or bias neither draft earned
+ * on its own merits. */
+function buildSynthesisPrompt(brief: StructuredBrief, drafts: GenerationOutput[]): string {
+  const letters = ["A", "B", "C", "D"];
+  const draftsText = drafts.map((d, i) => `Draft ${letters[i]}:\n${JSON.stringify(d, null, 2)}`).join("\n\n");
+  return `${briefToPrompt(brief)}
+
+Multiple independent AI models each generated a full draft of this exact same brief, shown below. Produce ONE final version that is better than any single draft alone: combine the strongest choices across all of them — the most specific and concrete copy, the best-fitting color palette and type pairing, the most fitting layout choice per section — into one coherent, internally consistent site. Don't just pick one draft wholesale unless it is genuinely the strongest on every count; you're expected to blend improvements from more than one draft when that produces a better result. The result must read as a single coherent voice and design, not a visible patchwork of styles.
+
+${draftsText}
+
+Return the FULL final project in the exact same JSON shape as before (see the schema above) — not a diff, not a comparison, not commentary.`;
+}
+
+/**
+ * Runs the initial draft. When the owner's chosen main model is the only
+ * configured provider, this is exactly one call — unchanged from before this
+ * feature existed. The moment a second provider's key is ALSO set,
+ * resolveHelperModels brings in that provider's own flagship to draft the
+ * same brief independently, and the main model gets a follow-up call to
+ * merge the strongest choices from every draft that came back into one
+ * final, coherent version (see buildSynthesisPrompt) — this is the "AIs work
+ * together" behavior: the owner still only ever picks one main model, extra
+ * providers only ever help it, never replace it.
+ */
+async function runInitialGeneration(
+  brief: StructuredBrief,
+  model: AiModelId,
+  changeLog: ChangeLogEntry[],
+  onProgress: ProgressFn | undefined,
+  onDraft: DraftFn | undefined
+): Promise<{ output: GenerationOutput; costUsd: number }> {
+  const helpers = resolveHelperModels(model, new Set(ALL_PROVIDERS.filter(isProviderConfigured)));
+  const prompt = briefToPrompt(brief);
+
+  if (helpers.length === 0) {
+    const { output, usage } = await callModel(model, SYSTEM_PROMPT, prompt);
+    await emit(changeLog, onProgress, { timestamp: new Date().toISOString(), kind: "generate", summary: "Initial generation", usage });
+    await onDraft?.(output);
+    return { output, costUsd: usage.costUsd };
+  }
+
+  const draftModels = [model, ...helpers];
+  const settled = await Promise.allSettled(draftModels.map((m) => callModel(m, SYSTEM_PROMPT, prompt)));
+
+  let costUsd = 0;
+  const drafts: { model: AiModelId; output: GenerationOutput }[] = [];
+  for (let i = 0; i < settled.length; i++) {
+    const draftModel = draftModels[i];
+    const result = settled[i];
+    if (result.status === "fulfilled") {
+      costUsd += result.value.usage.costUsd;
+      drafts.push({ model: draftModel, output: result.value.output });
+      await emit(changeLog, onProgress, {
+        timestamp: new Date().toISOString(),
+        kind: "generate",
+        summary: `Draft from ${getModelInfo(draftModel).label}${draftModel === model ? " (your chosen main model)" : ""}`,
+        usage: result.value.usage,
+      });
+    } else {
+      const reason = result.reason instanceof Error ? result.reason.message : "unknown error";
+      await emit(changeLog, onProgress, {
+        timestamp: new Date().toISOString(),
+        kind: "generate",
+        summary: `Draft from ${getModelInfo(draftModel).label} failed (${reason}) — continuing without it`,
+      });
+    }
+  }
+
+  if (drafts.length === 0) throw new Error("Every configured model failed to generate a draft.");
+
+  // Show something real immediately: the main model's own draft if it came
+  // back, otherwise whichever draft did.
+  await onDraft?.((drafts.find((d) => d.model === model) ?? drafts[0]).output);
+
+  if (drafts.length === 1) return { output: drafts[0].output, costUsd };
+
+  const { output, usage } = await callModel(model, SYSTEM_PROMPT, buildSynthesisPrompt(brief, drafts.map((d) => d.output)));
+  costUsd += usage.costUsd;
+  await emit(changeLog, onProgress, {
+    timestamp: new Date().toISOString(),
+    kind: "synthesize",
+    summary: `Combined the best of ${drafts.length} independent drafts into one site`,
+    usage,
+  });
+  await onDraft?.(output);
+  return { output, costUsd };
+}
+
 export async function generateProject(
   brief: StructuredBrief,
   model: AiModelId = "claude-haiku-4-5",
@@ -216,16 +414,7 @@ export async function generateProject(
 ): Promise<ProjectState> {
   const changeLog: ChangeLogEntry[] = [];
 
-  const { output, usage } = await callModel(model, SYSTEM_PROMPT, briefToPrompt(brief));
-  await emit(changeLog, onProgress, {
-    timestamp: new Date().toISOString(),
-    kind: "generate",
-    summary: "Initial generation",
-    usage,
-  });
-  // The very first real content — a live preview can start rendering the
-  // actual site now instead of waiting for validation/fix to finish too.
-  await onDraft?.(output);
+  const { output, costUsd } = await runInitialGeneration(brief, model, changeLog, onProgress, onDraft);
 
   const recovered = await validateAndRecover(brief, output, model, changeLog, onProgress, onDraft);
 
@@ -236,7 +425,7 @@ export async function generateProject(
     pages: recovered.output.pages,
     changeLog,
     status: recovered.status,
-    totalCostUsd: usage.costUsd + recovered.costUsd,
+    totalCostUsd: costUsd + recovered.costUsd,
   };
 }
 
@@ -342,22 +531,12 @@ export function sanitizeOptions(value: unknown): string[] {
 }
 
 async function callChatModel(model: AiModelId, userMessage: string): Promise<{ result: ChatEditModelResult; usage: TokenUsage }> {
-  const modelInfo = AI_MODELS.find((m) => m.id === model)!;
-  const response = await client.messages.create({
+  const { raw, usage } = await callRawModel(
     model,
-    max_tokens: 4000,
-    system: CHAT_EDIT_SYSTEM_PROMPT,
-    ...(modelInfo.supportsEffort ? { output_config: { effort: "medium" as const } } : {}),
-    messages: [{ role: "user", content: userMessage }],
-  });
-
-  if (response.stop_reason === "refusal") {
-    throw new Error("The model declined to respond — try rewording your message.");
-  }
-
-  const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === "text");
-  const raw = textBlock?.text.trim();
-  if (!raw) throw new Error("The model didn't return any text.");
+    CHAT_EDIT_SYSTEM_PROMPT,
+    userMessage,
+    "The model declined to respond — try rewording your message."
+  );
 
   let parsed: unknown;
   try {
@@ -370,7 +549,6 @@ async function callChatModel(model: AiModelId, userMessage: string): Promise<{ r
     throw new Error("The model's response was missing a reply.");
   }
 
-  const usage = priceUsage(model, response.usage.input_tokens, response.usage.output_tokens);
   return {
     result: {
       reply: record.reply,
