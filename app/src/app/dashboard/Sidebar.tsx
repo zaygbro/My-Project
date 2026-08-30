@@ -181,7 +181,20 @@ export function Sidebar({
           </div>
         )}
 
-        <div className="mt-4">
+        <div className="mt-4 space-y-1">
+          {isDev && (
+            <NavLink
+              href="/dashboard/analytics"
+              active={pathname.startsWith("/dashboard/analytics")}
+              onNavigate={() => setOpen(false)}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M3 3v18h18" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M7 15l4-5 3 3 5-7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Analytics
+            </NavLink>
+          )}
           <NavLink
             href="/dashboard/settings"
             active={pathname.startsWith("/dashboard/settings")}

@@ -118,8 +118,21 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
 - **Analytics**: `POST /api/track` is a public, unauthenticated endpoint
   a published site calls to record a view into `site_events`. Nothing
   calls it yet because there's no hosting pipeline serving published
-  sites — the dashboard's analytics panel reads real rows and shows an
-  honest empty state instead of inventing numbers.
+  sites — a site's own analytics panel (`dashboard/sites/[id]/page.tsx`)
+  reads real rows and shows an honest empty state instead of inventing
+  numbers.
+- **Platform analytics (dev only)**: `dashboard/analytics/page.tsx` is a
+  revenue + activity overview across every account, not just the
+  signed-in one — `notFound()` for anyone whose `profiles.is_dev` isn't
+  set (there's no self-service way to set it; flip it directly in
+  Supabase's SQL Editor, see `0005_dev_accounts.sql`). It queries with
+  `createAdminClient()` (service role, bypasses RLS) rather than the
+  per-request client every other page uses. Revenue (MRR/ARR) is
+  computed from real active/trialing rows in `subscriptions` priced
+  against Stripe's own `prices.retrieve()` for the configured
+  `STRIPE_PRICE_IDS` — not a second hardcoded copy of the marketing
+  site's prices — so it reads "—" rather than a wrong number when
+  Stripe isn't configured or a price ID doesn't resolve.
 - **Export to code**: `GET /api/sites/[id]/export` (Pro/Studio only,
   via `PLAN_LIMITS[plan].exportEnabled`) renders a site's sections into
   a plain static HTML/CSS pair (`lib/export.ts`, with real HTML
