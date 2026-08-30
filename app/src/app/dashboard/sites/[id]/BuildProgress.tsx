@@ -98,8 +98,21 @@ export function BuildProgress({
 
   // Once the site really exists, re-render the server component tree so the
   // finished pages replace this screen.
+  //
+  // router.refresh() alone is not enough to rely on here. If the refreshed
+  // payload is served from the router cache, or the refresh lands before the
+  // action's revalidatePath has propagated, the server still reports the old
+  // status and this component stays mounted — leaving the build screen stuck
+  // on "Loading your site…" forever with no way out.
+  //
+  // Still being mounted a moment after the refresh is itself the signal that
+  // it didn't take (a successful one unmounts this component), so that's the
+  // cue to fall back to a hard reload, which cannot be served from that cache.
   useEffect(() => {
-    if (status === "validated") router.refresh();
+    if (status !== "validated") return;
+    router.refresh();
+    const timer = setTimeout(() => window.location.reload(), 2500);
+    return () => clearTimeout(timer);
   }, [status, router]);
 
   // Watch for a run that has stopped making progress. Any new stage resets
@@ -140,7 +153,14 @@ export function BuildProgress({
         </div>
       </div>
 
-      <ol className="mt-6 space-y-3" aria-live="polite">
+      {/* Once the run is done the stage list has nothing left to say, and
+          rendering it from an empty change log would show every stage as
+          un-started next to a "Done" heading — which reads as broken. */}
+      <ol
+        className="mt-6 space-y-3"
+        aria-live="polite"
+        hidden={status === "validated" && changeLog.length === 0}
+      >
         {STAGES.map((stage) => {
           const state = stageState(changeLog, stage.kind, status);
           return (

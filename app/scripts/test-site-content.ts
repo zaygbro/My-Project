@@ -20,6 +20,8 @@ import {
   validateSubdomain,
 } from "../src/lib/publish";
 import { sanitizeTokens } from "../src/lib/site-theme";
+import { validatePassword } from "../src/lib/password";
+import { safeNextPath } from "../src/lib/redirects";
 import type { DesignTokens, GeneratedPage } from "../src/lib/generation/types";
 
 let passed = 0;
@@ -293,6 +295,72 @@ test("falls back on every malformed field independently", () => {
 });
 test("handles null tokens", () => {
   assert.equal(sanitizeTokens(null).colors.background, "#ffffff");
+});
+
+console.log("\nvalidatePassword");
+test("accepts a reasonable password", () => {
+  assert.equal(validatePassword("correct-horse-battery").ok, true);
+});
+test("rejects anything under 8 characters", () => {
+  assert.equal(validatePassword("short1!").ok, false);
+  assert.equal(validatePassword("abcd1234").ok, true);
+});
+test("rejects passwords past bcrypt's 72-byte limit", () => {
+  // bcrypt silently truncates at 72 bytes, so a longer password would have
+  // its tail ignored — accepting it would be lying to the user.
+  assert.equal(validatePassword("a1b2c3d4".repeat(9)).ok, true); // 72 bytes
+  assert.equal(validatePassword("a1b2c3d4".repeat(9) + "x").ok, false); // 73
+});
+test("counts bytes, not characters, for the limit", () => {
+  // Each emoji is 4 bytes: 20 of them is 80 bytes but only 20 characters,
+  // so a character-based check would wrongly let this through.
+  assert.equal(validatePassword("🙂".repeat(20)).ok, false);
+});
+test("rejects a password of only spaces", () => {
+  assert.equal(validatePassword("          ").ok, false);
+});
+test("rejects too few distinct characters", () => {
+  assert.equal(validatePassword("aaaaaaaa").ok, false);
+  assert.equal(validatePassword("11111111").ok, false);
+});
+test("every rejection carries a message", () => {
+  const r = validatePassword("aaa");
+  assert.equal(r.ok, false);
+  assert.ok((r as { error: string }).error.length > 0);
+});
+
+console.log("\nsafeNextPath (open-redirect guard)");
+test("allows ordinary same-site paths", () => {
+  assert.equal(safeNextPath("/dashboard"), "/dashboard");
+  assert.equal(safeNextPath("/dashboard/sites/abc"), "/dashboard/sites/abc");
+  // Hyphenated routes are real and must survive.
+  assert.equal(safeNextPath("/sign-in"), "/sign-in");
+  assert.equal(safeNextPath("/dashboard/new-build"), "/dashboard/new-build");
+  assert.equal(safeNextPath("/auth/reset"), "/auth/reset");
+  assert.equal(safeNextPath("/dashboard?tab=1#x"), "/dashboard?tab=1#x");
+});
+test("blocks absolute URLs to another origin", () => {
+  assert.equal(safeNextPath("https://evil.example.com"), "/dashboard");
+  assert.equal(safeNextPath("http://evil.example.com/phish"), "/dashboard");
+});
+test("blocks protocol-relative URLs", () => {
+  // These start with "/" but browsers treat them as another origin.
+  assert.equal(safeNextPath("//evil.example.com"), "/dashboard");
+  assert.equal(safeNextPath("///evil.example.com"), "/dashboard");
+});
+test("blocks backslash and control-character smuggling", () => {
+  assert.equal(safeNextPath("/\\evil.example.com"), "/dashboard");
+  assert.equal(safeNextPath("/\tevil"), "/dashboard");
+  assert.equal(safeNextPath("/\nhttps://evil.example.com"), "/dashboard");
+});
+test("blocks scheme-like paths", () => {
+  assert.equal(safeNextPath("/javascript:alert(1)"), "/dashboard");
+  assert.equal(safeNextPath("/data:text/html,x"), "/dashboard");
+});
+test("falls back for empty or missing values", () => {
+  assert.equal(safeNextPath(null), "/dashboard");
+  assert.equal(safeNextPath(undefined), "/dashboard");
+  assert.equal(safeNextPath(""), "/dashboard");
 });
 
 console.log(`\n${passed} passed${process.exitCode ? " (with failures above)" : ""}\n`);

@@ -1,49 +1,177 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { validatePassword } from "@/lib/password";
+import { safeNextPath } from "@/lib/redirects";
+
+type Method = "password" | "code";
+type Intent = "signin" | "signup";
+/** Terminal screens that replace the form once an email is on its way. */
+type Sent = null | "code" | "confirm" | "reset";
+
+const FIELD =
+  "field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30";
+const LABEL = "block text-xs font-mono uppercase tracking-wide text-neutral-500";
+const SUBMIT =
+  "press w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60";
 
 export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-black text-white">
+          <span className="spinner" aria-hidden />
+        </main>
+      }
+    >
+      <SignInInner />
+    </Suspense>
+  );
+}
+
+function SignInInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Preserve where the visitor was actually headed — proxy.ts puts it here
+  // when it bounces someone away from a protected page. Sanitized because
+  // this value is in a URL anyone can craft, and it ends up in both a
+  // client-side navigation and Supabase's emailRedirectTo.
+  const next = safeNextPath(searchParams.get("next"));
+
+  const [method, setMethod] = useState<Method>("password");
+  const [intent, setIntent] = useState<Intent>("signin");
+  const [sent, setSent] = useState<Sent>(null);
+  const [busy, setBusy] = useState(false);
+
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "verifying">("idle");
 
-  async function handleSendCode(e: FormEvent) {
+  function reset() {
+    setSent(null);
+    setCode("");
+    setPassword("");
+    setBusy(false);
+  }
+
+  async function handlePasswordSignIn(e: FormEvent) {
     e.preventDefault();
-    setStatus("sending");
-
+    setBusy(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
 
     if (error) {
-      setStatus("idle");
+      // Supabase returns the same "Invalid login credentials" whether the
+      // email is unknown or the password is wrong — that's deliberate (it
+      // stops the form being used to discover who has an account), so the
+      // message is passed through rather than "helpfully" narrowed.
       toast.error(error.message);
       return;
     }
-    setStatus("sent");
+    router.push(next);
+    router.refresh();
+  }
+
+  async function handlePasswordSignUp(e: FormEvent) {
+    e.preventDefault();
+
+    const check = validatePassword(password);
+    if (!check.ok) {
+      toast.error(check.error);
+      return;
+    }
+
+    setBusy(true);
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}` },
+    });
+    setBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    // When email confirmation is on, signing up with an address that already
+    // exists returns a decoy user with no identities rather than an error —
+    // again to prevent account enumeration. Show the same "check your email"
+    // screen a real signup gets, so this form can't be used to test whether
+    // an address is registered.
+    if (data.user && data.user.identities?.length === 0) {
+      setSent("confirm");
+      return;
+    }
+
+    // Confirmation disabled in Supabase: a session comes back immediately.
+    if (data.session) {
+      router.push(next);
+      router.refresh();
+      return;
+    }
+
+    setSent("confirm");
+  }
+
+  async function handleSendCode(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    setBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSent("code");
   }
 
   async function handleVerifyCode(e: FormEvent) {
     e.preventDefault();
-    setStatus("verifying");
-
+    setBusy(true);
     const supabase = createClient();
     const { error } = await supabase.auth.verifyOtp({ email, token: code, type: "email" });
+    setBusy(false);
 
     if (error) {
-      setStatus("sent");
       toast.error(error.message);
       return;
     }
-    router.push("/dashboard");
+    router.push(next);
+    router.refresh();
+  }
+
+  async function handleForgotPassword() {
+    if (!email) {
+      toast.error("Enter your email first, then choose “Forgot password”.");
+      return;
+    }
+    setBusy(true);
+    const supabase = createClient();
+    // The recovery link lands on the callback, which exchanges it for a
+    // session and forwards to the page that actually sets a new password.
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/auth/reset`,
+    });
+    setBusy(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setSent("reset");
   }
 
   return (
-    <main className="entry-glow flex min-h-screen items-center justify-center bg-black px-6 text-white">
+    <main className="entry-glow flex min-h-screen items-center justify-center bg-black px-6 py-12 text-white">
       <div className="fade-in-up w-full max-w-sm">
         <Link
           href="/"
@@ -56,7 +184,7 @@ export default function SignInPage() {
         </Link>
 
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-8">
-          {status === "sent" || status === "verifying" ? (
+          {sent === "code" ? (
             <form onSubmit={handleVerifyCode} className="space-y-4">
               <div className="mb-2 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden />
@@ -65,7 +193,7 @@ export default function SignInPage() {
               <p className="text-sm text-neutral-400">
                 Enter the code we sent to <strong className="text-white">{email}</strong>
               </p>
-              <label htmlFor="code" className="block text-xs font-mono uppercase tracking-wide text-neutral-500">
+              <label htmlFor="code" className={LABEL}>
                 Code
               </label>
               <input
@@ -80,57 +208,172 @@ export default function SignInPage() {
                 placeholder="123456"
                 className="field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-center text-lg tracking-[0.3em] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
               />
-              <button
-                type="submit"
-                disabled={status === "verifying"}
-                className="press w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
-              >
+              <button type="submit" disabled={busy} className={SUBMIT}>
                 <span className="inline-flex items-center justify-center gap-2">
-                  {status === "verifying" && <span className="spinner" aria-hidden />}
-                  {status === "verifying" ? "Verifying…" : "Verify code"}
+                  {busy && <span className="spinner" aria-hidden />}
+                  {busy ? "Verifying…" : "Verify code"}
                 </span>
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setStatus("idle");
-                  setCode("");
-                }}
+                onClick={reset}
                 className="w-full text-center text-xs text-neutral-500 hover:text-neutral-300"
               >
                 Use a different email
               </button>
             </form>
-          ) : (
-            <form onSubmit={handleSendCode} className="space-y-4">
-              <label htmlFor="email" className="block text-xs font-mono uppercase tracking-wide text-neutral-500">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                autoFocus
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
-              />
-              <button
-                type="submit"
-                disabled={status === "sending"}
-                className="press w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
-              >
-                <span className="inline-flex items-center justify-center gap-2">
-                  {status === "sending" && <span className="spinner" aria-hidden />}
-                  {status === "sending" ? "Sending…" : "Send code"}
-                </span>
-              </button>
-              <div className="flex items-center justify-center gap-2 pt-1 font-mono text-[11px] uppercase tracking-wide text-neutral-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-neutral-700" aria-hidden />
-                No password — one-time code by email
+          ) : sent === "confirm" || sent === "reset" ? (
+            <div className="space-y-4 text-center">
+              <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-500">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden />
+                Check your email
               </div>
-            </form>
+              <p className="text-sm text-neutral-400">
+                {sent === "confirm" ? (
+                  <>
+                    We&rsquo;ve sent a confirmation link to{" "}
+                    <strong className="text-white">{email}</strong>. Click it to finish setting up your
+                    account.
+                  </>
+                ) : (
+                  <>
+                    If <strong className="text-white">{email}</strong> has an account, a link to set a new
+                    password is on its way.
+                  </>
+                )}
+              </p>
+              <button
+                type="button"
+                onClick={reset}
+                className="w-full text-center text-xs text-neutral-500 hover:text-neutral-300"
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Method switch. Both are real sign-in paths, so neither is
+                  buried behind an "advanced" affordance. */}
+              <div
+                role="group"
+                aria-label="Sign-in method"
+                className="mb-6 grid grid-cols-2 gap-1 rounded-xl border border-neutral-800 bg-neutral-900/60 p-1"
+              >
+                {(["password", "code"] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setMethod(m)}
+                    aria-pressed={method === m}
+                    className={`press rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                      method === m
+                        ? "bg-neutral-800 text-white"
+                        : "text-neutral-500 hover:text-neutral-300"
+                    }`}
+                  >
+                    {m === "password" ? "Password" : "Email code"}
+                  </button>
+                ))}
+              </div>
+
+              <form
+                onSubmit={
+                  method === "code"
+                    ? handleSendCode
+                    : intent === "signin"
+                      ? handlePasswordSignIn
+                      : handlePasswordSignUp
+                }
+                className="space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <label htmlFor="email" className={LABEL}>
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className={FIELD}
+                  />
+                </div>
+
+                {method === "password" && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <label htmlFor="password" className={LABEL}>
+                        Password
+                      </label>
+                      {intent === "signin" && (
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          disabled={busy}
+                          className="text-[11px] text-neutral-500 underline underline-offset-2 hover:text-neutral-300 disabled:opacity-60"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      id="password"
+                      type="password"
+                      // Tells a password manager to offer a new strong
+                      // password on sign-up and the saved one on sign-in.
+                      autoComplete={intent === "signup" ? "new-password" : "current-password"}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className={FIELD}
+                    />
+                    {intent === "signup" && (
+                      <p className="text-[11px] text-neutral-600">At least 8 characters.</p>
+                    )}
+                  </div>
+                )}
+
+                <button type="submit" disabled={busy} className={SUBMIT}>
+                  <span className="inline-flex items-center justify-center gap-2">
+                    {busy && <span className="spinner" aria-hidden />}
+                    {method === "code"
+                      ? busy
+                        ? "Sending…"
+                        : "Send code"
+                      : intent === "signin"
+                        ? busy
+                          ? "Signing in…"
+                          : "Sign in"
+                        : busy
+                          ? "Creating account…"
+                          : "Create account"}
+                  </span>
+                </button>
+              </form>
+
+              {method === "password" ? (
+                <p className="mt-4 text-center text-xs text-neutral-500">
+                  {intent === "signin" ? "No account yet?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => setIntent(intent === "signin" ? "signup" : "signin")}
+                    className="text-blue-400 underline underline-offset-2 hover:text-blue-300"
+                  >
+                    {intent === "signin" ? "Create one" : "Sign in"}
+                  </button>
+                </p>
+              ) : (
+                <div className="mt-4 flex items-center justify-center gap-2 font-mono text-[11px] uppercase tracking-wide text-neutral-600">
+                  <span className="h-1.5 w-1.5 rounded-full bg-neutral-700" aria-hidden />
+                  One-time code by email — no password needed
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
