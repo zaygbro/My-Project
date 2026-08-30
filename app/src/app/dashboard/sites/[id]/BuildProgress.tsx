@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ChangeLogEntry } from "@/lib/generation/types";
+import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
 import type { GenerationStatus } from "@/lib/supabase/types";
-import { getGenerationStatus, retryGeneration, startGeneration } from "./generation-actions";
+import { getGenerationStatus, retryGeneration, startGeneration, type GenerationSnapshot } from "./generation-actions";
+import { LivePreview } from "./LivePreview";
 
 const POLL_MS = 2000;
 // A generation run lives inside a server action, so a closed tab or a killed
@@ -45,18 +46,32 @@ export function BuildProgress({
   initialStatus,
   initialChangeLog,
   initialError,
+  initialPages,
+  initialTokens,
 }: {
   siteId: string;
   initialStatus: GenerationStatus;
   initialChangeLog: ChangeLogEntry[];
   initialError: string | null;
+  initialPages: GeneratedPage[];
+  initialTokens: DesignTokens | null;
 }) {
   const router = useRouter();
   const [status, setStatus] = useState<GenerationStatus>(initialStatus);
   const [changeLog, setChangeLog] = useState<ChangeLogEntry[]>(initialChangeLog);
   const [error, setError] = useState<string | null>(initialError);
+  const [pages, setPages] = useState<GeneratedPage[]>(initialPages);
+  const [tokens, setTokens] = useState<DesignTokens | null>(initialTokens);
   const [isRetrying, startRetry] = useTransition();
   const [stalled, setStalled] = useState(false);
+
+  function applySnapshot(snapshot: GenerationSnapshot) {
+    setStatus(snapshot.status);
+    setChangeLog(snapshot.changeLog);
+    setError(snapshot.error);
+    setPages(snapshot.pages);
+    setTokens(snapshot.tokens);
+  }
 
   // Kick the run off exactly once per mount. startGeneration itself is the
   // real guard against double-charging (its claim is a conditional update);
@@ -69,9 +84,7 @@ export function BuildProgress({
     let cancelled = false;
     startGeneration(siteId).then((snapshot) => {
       if (cancelled) return;
-      setStatus(snapshot.status);
-      setChangeLog(snapshot.changeLog);
-      setError(snapshot.error);
+      applySnapshot(snapshot);
     });
     return () => {
       cancelled = true;
@@ -86,9 +99,7 @@ export function BuildProgress({
     const timer = setInterval(async () => {
       const snapshot = await getGenerationStatus(siteId);
       if (cancelled) return;
-      setStatus(snapshot.status);
-      setChangeLog(snapshot.changeLog);
-      setError(snapshot.error);
+      applySnapshot(snapshot);
     }, POLL_MS);
     return () => {
       cancelled = true;
@@ -142,7 +153,8 @@ export function BuildProgress({
   const unknownState = !running && status !== "validated" && status !== "failed";
 
   return (
-    <div className="fade-in-up rounded-xl border border-neutral-800 bg-neutral-950 p-6">
+    <div className="fade-in-up grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-6">
       <div className="flex items-center gap-3">
         {running && <span className="spinner" aria-hidden />}
         <div>
@@ -259,10 +271,10 @@ export function BuildProgress({
                 setStatus("generating");
                 setChangeLog([]);
                 setError(null);
+                setPages([]);
+                setTokens(null);
                 const snapshot = await retryGeneration(siteId);
-                setStatus(snapshot.status);
-                setChangeLog(snapshot.changeLog);
-                setError(snapshot.error);
+                applySnapshot(snapshot);
               })
             }
             className="press mt-3 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
@@ -271,6 +283,15 @@ export function BuildProgress({
           </button>
         </div>
       )}
+      </div>
+
+      {/* Right pane: the actual site, rendered live as the pipeline produces
+          it — real pages and copy the moment a model call returns them, not
+          a mockup that appears only once everything is done. */}
+      <div>
+        <p className="mb-2 font-mono text-xs uppercase tracking-wide text-neutral-500">Live preview</p>
+        <LivePreview pages={pages} tokens={tokens} />
+      </div>
     </div>
   );
 }

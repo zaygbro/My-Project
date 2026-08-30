@@ -100,6 +100,8 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           initialStatus={site.generation_status}
           initialChangeLog={(site.change_log ?? []) as ChangeLogEntry[]}
           initialError={site.generation_error}
+          initialPages={(site.pages ?? []) as GeneratedPage[]}
+          initialTokens={site.design_tokens as DesignTokens | null}
         />
       </div>
     );

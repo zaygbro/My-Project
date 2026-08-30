@@ -5,14 +5,21 @@ import { redirect } from "next/navigation";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { generateProject, isGenerationConfigured } from "@/lib/generation/generate";
 import { deriveMustHavePages } from "@/lib/site-content";
-import type { ChangeLogEntry, StructuredBrief } from "@/lib/generation/types";
+import type { ChangeLogEntry, DesignTokens, GeneratedPage, GenerationOutput, StructuredBrief } from "@/lib/generation/types";
 import type { GenerationStatus } from "@/lib/supabase/types";
 
 export interface GenerationSnapshot {
   status: GenerationStatus;
   changeLog: ChangeLogEntry[];
   error: string | null;
+  /** The current best-known content — real generated pages/tokens, even
+   * before the run finishes or passes validation. This is what lets the
+   * build screen show a live preview instead of just a stage checklist. */
+  pages: GeneratedPage[];
+  tokens: DesignTokens | null;
 }
+
+const EMPTY_DRAFT = { pages: [] as GeneratedPage[], tokens: null as DesignTokens | null };
 
 /**
  * Runs the real generation pipeline for a site that's waiting on one.
@@ -42,12 +49,13 @@ export async function startGeneration(siteId: string): Promise<GenerationSnapsho
       status: "failed",
       changeLog: [],
       error: "AI generation isn't configured yet — set ANTHROPIC_API_KEY.",
+      ...EMPTY_DRAFT,
     };
   }
 
   const { data: claimed } = await supabase
     .from("sites")
-    .update({ generation_status: "generating", generation_error: null, change_log: [] })
+    .update({ generation_status: "generating", generation_error: null, change_log: [], pages: [], design_tokens: null })
     .eq("id", siteId)
     .eq("user_id", user.id)
     .eq("generation_status", "pending")
@@ -81,8 +89,18 @@ export async function startGeneration(siteId: string): Promise<GenerationSnapsho
       .eq("id", siteId);
   };
 
+  // Persist the actual content the moment a model call produces it — before
+  // validation, before the fix pass — so the build screen's live preview can
+  // render something real instead of a skeleton for the whole run.
+  const persistDraft = async (output: GenerationOutput) => {
+    await supabase
+      .from("sites")
+      .update({ pages: output.pages, design_tokens: output.tokens })
+      .eq("id", siteId);
+  };
+
   try {
-    const result = await generateProject(brief, claimed.preferred_model, persistProgress);
+    const result = await generateProject(brief, claimed.preferred_model, persistProgress, persistDraft);
 
     await supabase
       .from("sites")
@@ -117,6 +135,8 @@ export async function startGeneration(siteId: string): Promise<GenerationSnapsho
       status: result.status,
       changeLog: result.changeLog,
       error: result.status === "failed" ? "Failed validation twice in a row." : null,
+      pages: result.pages,
+      tokens: result.tokens,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Generation failed.";
@@ -125,7 +145,10 @@ export async function startGeneration(siteId: string): Promise<GenerationSnapsho
       .update({ generation_status: "failed", generation_error: message })
       .eq("id", siteId);
     revalidatePath(`/dashboard/sites/${siteId}`);
-    return { status: "failed", changeLog: [], error: message };
+    // Whatever draft made it into the DB before the failure is still the
+    // truth of "what did we last see" — report it rather than blanking it.
+    const snapshot = await getGenerationStatus(siteId);
+    return { ...snapshot, status: "failed", error: message };
   }
 }
 
@@ -156,7 +179,7 @@ export async function regenerateSite(siteId: string): Promise<GenerationSnapshot
     .select("id")
     .maybeSingle();
 
-  if (!claimed) return { status: "failed", changeLog: [], error: "Site not found." };
+  if (!claimed) return { status: "failed", changeLog: [], error: "Site not found.", ...EMPTY_DRAFT };
 
   revalidatePath(`/dashboard/sites/${siteId}`);
   return startGeneration(siteId);
@@ -170,17 +193,19 @@ export async function getGenerationStatus(siteId: string): Promise<GenerationSna
 
   const { data: site } = await supabase
     .from("sites")
-    .select("generation_status, generation_error, change_log")
+    .select("generation_status, generation_error, change_log, pages, design_tokens")
     .eq("id", siteId)
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!site) return { status: "failed", changeLog: [], error: "Site not found." };
+  if (!site) return { status: "failed", changeLog: [], error: "Site not found.", ...EMPTY_DRAFT };
 
   return {
     status: site.generation_status,
     changeLog: (site.change_log ?? []) as ChangeLogEntry[],
     error: site.generation_error,
+    pages: (site.pages ?? []) as GeneratedPage[],
+    tokens: site.design_tokens as DesignTokens | null,
   };
 }
 

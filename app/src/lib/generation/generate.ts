@@ -67,6 +67,20 @@ function briefToPrompt(brief: StructuredBrief): string {
  * run finish before its own progress lands. */
 export type ProgressFn = (entry: ChangeLogEntry) => Promise<void> | void;
 
+/** Called with the actual generated content — tokens and pages — the moment
+ * a model call produces it: right after the initial generation, and again
+ * after a fix pass if one runs. This is what lets a caller show real content
+ * while a run is still in progress, rather than only a change-log label.
+ *
+ * Deliberately separate from ProgressFn: progress is a log of what
+ * happened, this is a snapshot of the current best-known output. Fired even
+ * for an UNVALIDATED draft — a live preview during generation is allowed to
+ * show something that assurance hasn't cleared yet, since it's clearly
+ * marked as in-progress; nothing here bypasses the "never overwrite a
+ * working site with a broken edit" rule in editSection, which doesn't use
+ * this callback. */
+export type DraftFn = (output: GenerationOutput) => Promise<void> | void;
+
 async function emit(
   changeLog: ChangeLogEntry[],
   onProgress: ProgressFn | undefined,
@@ -112,7 +126,8 @@ async function validateAndRecover(
   output: GenerationOutput,
   model: AiModelId,
   changeLog: ChangeLogEntry[],
-  onProgress?: ProgressFn
+  onProgress?: ProgressFn,
+  onDraft?: DraftFn
 ): Promise<{ output: GenerationOutput; status: "validated" | "failed"; costUsd: number }> {
   let costUsd = 0;
   let issues = validateProject(brief, output);
@@ -141,6 +156,10 @@ Return the FULL corrected project (same JSON shape as before) with every issue r
     issues,
     usage: fixResult.usage,
   });
+  // The fix pass changed the content, so a live preview watching the draft
+  // needs this update too — otherwise it would keep showing the pre-fix
+  // version (with the issues visible above) after the fix already landed.
+  await onDraft?.(fixResult.output);
 
   issues = validateProject(brief, fixResult.output);
   await emit(changeLog, onProgress, {
@@ -165,7 +184,8 @@ Return the FULL corrected project (same JSON shape as before) with every issue r
 export async function generateProject(
   brief: StructuredBrief,
   model: AiModelId = "claude-haiku-4-5",
-  onProgress?: ProgressFn
+  onProgress?: ProgressFn,
+  onDraft?: DraftFn
 ): Promise<ProjectState> {
   const changeLog: ChangeLogEntry[] = [];
 
@@ -176,8 +196,11 @@ export async function generateProject(
     summary: "Initial generation",
     usage,
   });
+  // The very first real content — a live preview can start rendering the
+  // actual site now instead of waiting for validation/fix to finish too.
+  await onDraft?.(output);
 
-  const recovered = await validateAndRecover(brief, output, model, changeLog, onProgress);
+  const recovered = await validateAndRecover(brief, output, model, changeLog, onProgress, onDraft);
 
   return {
     brief,
