@@ -44,7 +44,14 @@ Hard requirements:
 - text and textMuted MUST have strong contrast against background (at least 4.5:1) — pick colors deliberately, not decoratively.
 - Never write "Lorem ipsum", "coming soon", "TODO", or any other placeholder — every sentence must be specific to the brief.
 - Do not write markdown links to pages you didn't generate.
-- Every site is a NEW, FICTIONAL business, even when the brief names a real, existing company (e.g. "a coffee shop like Starbucks", or just "Starbucks"). Never write that real company's actual history, founding story, real store count, real trademarked program names (e.g. a loyalty program named after theirs), or any other verifiable fact about them — that is impersonating a real, identifiable organization, not describing this site's own business. Treat a named real brand only as a style/category reference: invent this business's own name (unless the brief gives one), its own founding story, and its own details in that same space instead.`;
+- Every site is a NEW, FICTIONAL business, even when the brief names a real, existing company (e.g. "a coffee shop like Starbucks", or just "Starbucks"). Never write that real company's actual history, founding story, real store count, real trademarked program names (e.g. a loyalty program named after theirs), or any other verifiable fact about them — that is impersonating a real, identifiable organization, not describing this site's own business. Treat a named real brand only as a style/category reference: invent this business's own name (unless the brief gives one), its own founding story, and its own details in that same space instead.
+
+Design guidance — every generated site is compared against every other AI-generated site, so avoid the handful of choices that make that comparison obvious:
+- Never default to the "safe" clichés: a warm cream background (#F4F1EA-ish) with a serif display and a terracotta accent; near-black with one acid-green or vermilion pop; a purple-to-blue gradient; Inter or Space Grotesk as the body/display pair just because they're familiar. Pick colors and fonts that fit THIS business's own category and tone — a bakery, a law firm, and a synth-pop band should never land on the same palette.
+- background and surface are choices, not defaults: flat pure white, pure black, or a neutral mid-grey reads as unconsidered. Bias the neutral very slightly toward the accent hue instead.
+- display and body should read as a deliberate pair (contrast in weight or character — e.g. a characterful display face with a plain, legible body face), not the same family doing both jobs, and not two faces picked at random.
+- The first section on the home page is the site's thesis: lead with the single most concrete, characteristic thing about this specific business, not a generic "Welcome to [name]" opener.
+- Only use numbered or step-style section titles ("01 / 02 / 03", "Step 1") when the content is genuinely a sequence — never as decoration.`;
 
 function briefToPrompt(brief: StructuredBrief): string {
   // Industry/tone are omitted entirely rather than printed as "undefined"
@@ -284,6 +291,7 @@ Rules:
 - Never change design tokens (colors, fonts, radius) — this chat only edits content, not the visual system.
 - When you DO make a change, return every page, not just the one(s) you touched — the response replaces the whole pages array.
 - Never write "Lorem ipsum", generic placeholder text, or anything not specific to this business.
+- New or rewritten copy should read as this specific business, not marketing-in-general — a concrete detail beats a generic claim. Don't add numbered or step-style titles ("01", "Step 1") unless the content is genuinely a sequence.
 - This is a fictional business. Even if the brief or a page names a real, existing company, never write that real company's actual history, facts, or trademarks — a named real brand is a style reference only, never something to describe truthfully.`;
 
 interface ChatEditModelResult {
