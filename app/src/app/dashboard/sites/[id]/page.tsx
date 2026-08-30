@@ -43,6 +43,41 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   if (!site) notFound();
 
+  // `generation_status` is NOT NULL in the schema, so null/undefined here can
+  // only mean the column isn't there — the migration hasn't been applied to
+  // this database. Without this check the code below reads `undefined`,
+  // which isn't "validated", so it falls through to a build screen that can
+  // never start, poll, or finish: it just sits on "Done / Loading your
+  // site…" forever. Failing loudly with the actual cause beats hanging.
+  if (site.generation_status == null) {
+    return (
+      <div className="fade-in-up">
+        <Link
+          href="/dashboard"
+          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-white"
+        >
+          ← Dashboard
+        </Link>
+        <h1 className="text-2xl font-extrabold tracking-tight">{site.name}</h1>
+        <div className="mt-4 rounded-xl border border-amber-900 bg-amber-950/20 p-5">
+          <p className="text-sm font-semibold text-amber-300">This database is missing the generation schema.</p>
+          <p className="mt-2 text-sm text-neutral-400">
+            This site has no <code className="font-mono text-neutral-300">generation_status</code>, which means
+            the newer migrations haven&rsquo;t been run yet. Apply{" "}
+            <code className="font-mono text-neutral-300">0006_multipage_generation.sql</code> and{" "}
+            <code className="font-mono text-neutral-300">0007_publishing.sql</code> from{" "}
+            <code className="font-mono text-neutral-300">app/supabase/migrations/</code> in the Supabase SQL
+            editor, then reload this page.
+          </p>
+          <p className="mt-2 text-xs text-neutral-500">
+            Until then, building and publishing sites can&rsquo;t work — the columns they read and write
+            don&rsquo;t exist.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // A site that's still building (or failed) has no pages, versions, or chat
   // history to render yet — show the live build screen instead of an empty
   // shell, and skip the queries that would all come back empty anyway.

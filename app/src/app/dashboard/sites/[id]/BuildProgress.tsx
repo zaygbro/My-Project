@@ -135,20 +135,34 @@ export function BuildProgress({
   const running = status === "pending" || status === "generating";
   const spent = changeLog.reduce((sum, e) => sum + (e.usage?.costUsd ?? 0), 0);
 
+  // Anything that isn't one of the four known states means this screen has
+  // nothing to do and nothing to wait for — it won't start, poll, or reload.
+  // Previously that rendered as a permanent "Done / Loading your site…", so
+  // treat it as an error with a way out rather than a dead end.
+  const unknownState = !running && status !== "validated" && status !== "failed";
+
   return (
     <div className="fade-in-up rounded-xl border border-neutral-800 bg-neutral-950 p-6">
       <div className="flex items-center gap-3">
         {running && <span className="spinner" aria-hidden />}
         <div>
           <h2 className="text-lg font-bold tracking-tight">
-            {running ? "Building your site…" : status === "failed" ? "Generation stopped" : "Done"}
+            {running
+              ? "Building your site…"
+              : status === "failed"
+                ? "Generation stopped"
+                : unknownState
+                  ? "This build is in an unknown state"
+                  : "Done"}
           </h2>
           <p className="mt-0.5 text-sm text-neutral-500">
             {running
               ? "Four engines run over your brief, then everything is validated before it reaches you."
               : status === "failed"
                 ? "Nothing half-built was saved — here's exactly what went wrong."
-                : "Loading your site…"}
+                : unknownState
+                  ? "The server didn't report a build status for this site, so there's nothing to wait for. This usually means the database is missing the generation columns."
+                  : "Loading your site…"}
           </p>
         </div>
       </div>
@@ -159,7 +173,7 @@ export function BuildProgress({
       <ol
         className="mt-6 space-y-3"
         aria-live="polite"
-        hidden={status === "validated" && changeLog.length === 0}
+        hidden={unknownState || (status === "validated" && changeLog.length === 0)}
       >
         {STAGES.map((stage) => {
           const state = stageState(changeLog, stage.kind, status);
@@ -223,7 +237,7 @@ export function BuildProgress({
         </div>
       )}
 
-      {(status === "failed" || stalled) && (
+      {(status === "failed" || stalled || unknownState) && (
         <div
           className={`mt-6 rounded-lg border p-4 ${
             status === "failed" ? "border-red-900 bg-red-950/20" : "border-neutral-800 bg-neutral-900/40"
@@ -232,7 +246,9 @@ export function BuildProgress({
           <p className={`text-sm ${status === "failed" ? "text-red-300" : "text-neutral-400"}`}>
             {status === "failed"
               ? (error ?? "Generation failed.")
-              : "This build has gone quiet — it may have been interrupted. You can start it over."}
+              : unknownState
+                ? "Try starting the build again. If it lands back here, the newer migrations (0006, 0007) probably haven't been applied to the database yet."
+                : "This build has gone quiet — it may have been interrupted. You can start it over."}
           </p>
           <button
             type="button"
@@ -251,7 +267,7 @@ export function BuildProgress({
             }
             className="press mt-3 rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-60"
           >
-            {isRetrying ? "Retrying…" : status === "failed" ? "Try again" : "Start over"}
+            {isRetrying ? "Retrying…" : status === "failed" ? "Try again" : unknownState ? "Start build" : "Start over"}
           </button>
         </div>
       )}
