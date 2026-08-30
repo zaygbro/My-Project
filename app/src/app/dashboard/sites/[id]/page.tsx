@@ -121,9 +121,8 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             </div>
           ) : (
             <p className="text-sm text-neutral-500">
-              No visits recorded yet. This site isn&rsquo;t published to a live URL during private beta, so
-              there&rsquo;s honestly nothing to show — this panel reads real event data and will populate once
-              publishing is live.
+              No visits recorded yet. Publishing to a live URL isn&rsquo;t built yet, so there&rsquo;s honestly
+              nothing to show — this panel reads real event data and will populate once publishing ships.
             </p>
           )}
         </section>

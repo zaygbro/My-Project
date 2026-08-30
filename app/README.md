@@ -146,10 +146,12 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
 
 ## Connecting the marketing site
 
-Once this app is deployed (e.g. to `app.francisity.com` or
-`francisity.com/app`), update the marketing site's `#brief`/pricing CTA
-links in `../index.html` to point here instead of the in-page waitlist
-anchor.
+Done: the marketing site's nav/hero/pricing CTAs in `../index.html` link
+straight to `/try` on this app's deployed URL instead of an in-page
+waitlist, and the hero's demo bar hands off the typed brief via
+`/try?brief=...`, which `try/page.tsx` pre-fills. If this app's deployment
+URL ever changes, update the hardcoded URL in `../index.html` and
+`../script.js` to match.
 
 ## Deliberately not built yet
 
