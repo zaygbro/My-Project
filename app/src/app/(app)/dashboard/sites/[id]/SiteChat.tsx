@@ -26,6 +26,10 @@ export function SiteChat({
   const action = sendSiteMessage.bind(null, siteId);
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [messages, setMessages] = useState<ChatTurn[]>(initialMessages);
+  // Not people's own precise words, and not persisted — see
+  // ChatEditResult.options for why these only ever apply to the reply that
+  // just arrived, never to a re-scrolled-to earlier question.
+  const [pendingOptions, setPendingOptions] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -37,6 +41,7 @@ export function SiteChat({
     setPrevState(state);
     if (state.success && state.reply) {
       setMessages((prev) => [...prev, { role: "assistant", content: state.reply! }]);
+      setPendingOptions(state.options ?? []);
     }
   }
 
@@ -49,7 +54,7 @@ export function SiteChat({
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, isPending]);
+  }, [messages, isPending, pendingOptions]);
 
   // Read the message straight from the DOM at submit time (not from
   // controlled state) so the optimistic append can't race React's state
@@ -60,7 +65,20 @@ export function SiteChat({
       e.preventDefault();
       return;
     }
+    setPendingOptions([]);
     setMessages((prev) => [...prev, { role: "user", content: message }]);
+  }
+
+  // A clicked option IS the answer — it sends immediately rather than just
+  // filling the input, so choosing one is genuinely one click, not a click
+  // plus a second confirm.
+  function submitOption(option: string) {
+    if (disabled || isPending) return;
+    setPendingOptions([]);
+    setMessages((prev) => [...prev, { role: "user", content: option }]);
+    const formData = new FormData();
+    formData.set("message", option);
+    formAction(formData);
   }
 
   return (
@@ -89,6 +107,21 @@ export function SiteChat({
               </p>
             </div>
           ))
+        )}
+        {pendingOptions.length > 0 && !isPending && (
+          <div className="fade-in-up flex flex-wrap gap-2 pl-1">
+            {pendingOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => submitOption(option)}
+                disabled={disabled}
+                className="press rounded-full border border-hairline bg-surface-2 px-3 py-1.5 text-sm text-white transition-colors hover:border-accent disabled:opacity-50"
+              >
+                {option}
+              </button>
+            ))}
+          </div>
         )}
         {isPending && (
           <div className="flex flex-col items-start">

@@ -13,6 +13,9 @@ export interface SendSiteMessageState {
   error: string | null;
   success?: boolean;
   reply?: string;
+  /** Short clickable answers to a clarifying question — see
+   * ChatEditResult.options for why these are never persisted. */
+  options?: string[];
 }
 
 /**
@@ -142,5 +145,5 @@ export async function sendSiteMessage(
   // shell's capped-width main column) — it needs its own revalidation to
   // pick up the new change_log entry that remounts its preview iframe.
   revalidatePath(`/sites/${siteId}/edit`);
-  return { error: null, success: true, reply: result.reply };
+  return { error: null, success: true, reply: result.reply, options: result.options };
 }

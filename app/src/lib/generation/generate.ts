@@ -297,9 +297,12 @@ that well, ask one short clarifying question instead of guessing or writing gene
 Respond with ONLY a JSON object, no markdown code fences, no other text, in exactly this shape:
 {
   "reply": "<what you say back to the owner — a short clarifying question, or one short sentence describing what you changed, no exclamation marks>",
+  "options": <2-4 short strings (a few words each) the owner can click instead of typing, or null — see "Offering options" below>,
   "pages": <the FULL updated pages array (same shape as the current pages below) with your changes applied, or null if you are only asking a question and changed nothing>,
   "tokens": <the FULL updated tokens object (same shape as the current tokens below), ONLY when the owner asked for a visual/design change (colors, fonts, radius, "make it feel more X", "upgrade the UI") — omit this field or set it to null for a content-only change>
 }
+
+Offering options: most people asking for a site edit aren't developers and won't reach for precise terms — when your reply is a clarifying question with a small number of natural, concrete answers, spell those answers out as "options" so the owner can just click one instead of having to phrase a reply themselves. Example: asking whether to write vivid drink descriptions or restyle the menu visually becomes options ["Write vivid descriptions", "Restyle it visually"], not left for the owner to type out. Set "options" to null when the reply isn't a question, when you're only confirming a change you already made, or when the real answers are open-ended (a name, a number, freeform text) rather than a short natural list — never invent artificial choices just to have some.
 
 Each section can also carry a "layout" ("text", "cta", "stats", "features", "list", or "quote" — absent/"text" is a plain heading+paragraph block) plus, only where that layout needs them, an "items" array ({ "label", "detail"? } — "stats" needs 2+, "features" needs 2+, "list" needs 1+) or a "quote" section's "attribution". Changing a section's layout — "make this a stats section", "turn the reviews into a proper list" — is a legitimate, in-scope edit, exactly like a wording change: update that section's "layout" (and its "items"/"attribution" if the new layout needs them) in the pages you return.
 
@@ -313,8 +316,29 @@ Rules:
 
 interface ChatEditModelResult {
   reply: string;
+  options: string[];
   pages: GeneratedPage[] | null;
   tokens: DesignTokens | null;
+}
+
+/** Model output is untrusted the same way a section's own content is (see
+ * site-content.ts's sanitizeSection) — a non-array, non-string entries, or
+ * an implausibly long list all get cleaned up rather than handed to the UI
+ * as-is. Capped at 4: any more stops reading as a short list of real
+ * choices and starts looking like the model padding out a menu. */
+export function sanitizeOptions(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== "string") continue;
+    const trimmed = entry.trim();
+    if (!trimmed || seen.has(trimmed)) continue;
+    seen.add(trimmed);
+    out.push(trimmed);
+    if (out.length === 4) break;
+  }
+  return out;
 }
 
 async function callChatModel(model: AiModelId, userMessage: string): Promise<{ result: ChatEditModelResult; usage: TokenUsage }> {
@@ -350,6 +374,7 @@ async function callChatModel(model: AiModelId, userMessage: string): Promise<{ r
   return {
     result: {
       reply: record.reply,
+      options: sanitizeOptions(record.options),
       pages: Array.isArray(record.pages) ? (record.pages as GeneratedPage[]) : null,
       tokens: record.tokens && typeof record.tokens === "object" ? (record.tokens as DesignTokens) : null,
     },
@@ -359,6 +384,13 @@ async function callChatModel(model: AiModelId, userMessage: string): Promise<{ r
 
 export interface ChatEditResult {
   reply: string;
+  /** Short clickable answers to this turn's reply, when it was a
+   * multiple-choice-shaped clarifying question — empty otherwise. Ephemeral
+   * by design: only ever shown for the reply that just arrived, never
+   * persisted to site_messages, so reloading the chat or scrolling back to
+   * an old question doesn't resurrect stale buttons for a question that's
+   * moved on. */
+  options: string[];
   projectState: ProjectState;
   /** "pageSlug/sectionKey" refs touched by this turn — empty when the model
    * only asked a question, made no real change, or the edit failed
@@ -413,6 +445,7 @@ Respond to the owner's latest message.`;
     });
     return {
       reply: result.reply,
+      options: result.options,
       projectState: { ...state, changeLog, totalCostUsd: state.totalCostUsd + usage.costUsd },
       changedRefs: [],
       tokensChanged: false,
@@ -443,6 +476,10 @@ Respond to the owner's latest message.`;
     reply: isGood
       ? result.reply
       : `${result.reply} (That edit didn't pass validation, so I've kept your site as it was — see the build log below for exactly what was wrong.)`,
+    // The reply text gets rewritten above when validation fails, so any
+    // options tied to the original reply no longer match what's actually
+    // being said — only surface them alongside a reply that shipped as-is.
+    options: isGood ? result.options : [],
     projectState: {
       ...state,
       tokens: isGood ? recovered.output.tokens : state.tokens,

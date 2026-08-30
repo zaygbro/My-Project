@@ -14,6 +14,7 @@ import {
   sectionRef,
 } from "../src/lib/site-content";
 import { renderSiteToStaticFiles } from "../src/lib/export";
+import { sanitizeOptions } from "../src/lib/generation/generate";
 import { validateProject } from "../src/lib/generation/validate";
 import {
   normalizeSubdomain,
@@ -639,6 +640,28 @@ test("escapes single quotes so the shell command can't break out", () => {
   const cmd = beltCommand("google/veo-3-1-fast", "a dog's day; rm -rf /", 10, false);
   assert.doesNotMatch(cmd, /[^\\]'; rm/);
   assert.ok(cmd.includes(`'\\''`), "single quote should be shell-escaped");
+});
+
+console.log("\nsanitizeOptions");
+test("passes through a short list of trimmed strings", () => {
+  assert.deepEqual(sanitizeOptions(["Write vivid descriptions", " Restyle it visually "]), [
+    "Write vivid descriptions",
+    "Restyle it visually",
+  ]);
+});
+test("returns empty for non-array input", () => {
+  assert.deepEqual(sanitizeOptions(null), []);
+  assert.deepEqual(sanitizeOptions("Write vivid descriptions"), []);
+  assert.deepEqual(sanitizeOptions(undefined), []);
+});
+test("drops non-string entries and blank strings", () => {
+  assert.deepEqual(sanitizeOptions(["Real option", 42, null, "  ", {}]), ["Real option"]);
+});
+test("drops duplicate entries", () => {
+  assert.deepEqual(sanitizeOptions(["Yes", "No", "Yes"]), ["Yes", "No"]);
+});
+test("caps the list at 4 options", () => {
+  assert.deepEqual(sanitizeOptions(["A", "B", "C", "D", "E", "F"]), ["A", "B", "C", "D"]);
 });
 
 console.log(`\n${passed} passed${process.exitCode ? " (with failures above)" : ""}\n`);
