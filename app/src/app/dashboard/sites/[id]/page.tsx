@@ -4,8 +4,11 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS } from "@/lib/plans";
 import { UpgradeButton } from "../../BillingButtons";
 import { getMonthlyEditCount } from "@/lib/quota";
-import type { ChangeLogEntry, DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage } from "@/lib/generation/types";
+import { isGenerationConfigured } from "@/lib/generation/generate";
 import { SectionEditor } from "./SectionEditor";
+import { SiteChat } from "./SiteChat";
+import { LivePreview } from "./LivePreview";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { DangerZone } from "./DangerZone";
@@ -14,9 +17,8 @@ import { RebuildBanner } from "./RebuildBanner";
 import { PublishPanel } from "./PublishPanel";
 import { publishedUrl, suggestSubdomain } from "@/lib/publish";
 import { getModelInfo } from "@/lib/ai/models";
-import { isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
-import { countSections, sectionRef } from "@/lib/site-content";
+import { countSections, SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -126,21 +128,14 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         .gte("occurred_at", sevenDaysAgoISO()),
       supabase
         .from("site_messages")
-        .select("page_slug, section_key, role, content")
+        .select("role, content")
         .eq("site_id", id)
+        .eq("page_slug", SITE_CHAT_PAGE_SLUG)
+        .eq("section_key", SITE_CHAT_SECTION_KEY)
         .order("created_at", { ascending: true }),
     ]);
 
-  // Keyed by page + section: a section key is only unique within its page,
-  // so keying on section alone would cross-wire "intro" on Home with
-  // "intro" on About.
-  const messagesBySection = new Map<string, ChatTurn[]>();
-  for (const m of messages ?? []) {
-    const key = sectionRef(m.page_slug, m.section_key);
-    const turns = messagesBySection.get(key) ?? [];
-    turns.push({ role: m.role, content: m.content });
-    messagesBySection.set(key, turns);
-  }
+  const chatMessages: ChatTurn[] = (messages ?? []).map((m) => ({ role: m.role, content: m.content }));
 
   const rebuildLimit = PLAN_LIMITS[plan].rebuildLimit;
   const rebuildsUsed = rebuildLimit !== null ? await getMonthlyEditCount(supabase, user.id) : 0;
@@ -192,6 +187,49 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             absence is a reliable marker for one that predates the pipeline
             (or was wrapped by the 0006 backfill) and is still a placeholder. */}
         {tokens === null && <RebuildBanner siteId={site.id} />}
+
+        {/* Chat + live preview, side by side — the same shape BuildProgress
+            already uses (chat/log on the left, the real site on the right),
+            just with a chat that can change anything instead of a log of
+            what's already happened. The layout doesn't change once a build
+            finishes; only what's in the left pane does. */}
+        <div className="fade-in-up mb-8 grid gap-6 lg:grid-cols-[380px_1fr]" style={{ animationDelay: "20ms" }}>
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
+                {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
+              </h2>
+              <span className="font-mono text-xs text-neutral-500">
+                {rebuildLimit === null ? "Unlimited" : `${rebuildsUsed}/${rebuildLimit} used`}
+              </span>
+            </div>
+            {isGenerationConfigured ? (
+              <SiteChat
+                siteId={site.id}
+                modelLabel={modelInfo.label}
+                disabled={atRebuildLimit}
+                initialMessages={chatMessages}
+              />
+            ) : (
+              <p className="rounded-xl border border-neutral-800 bg-neutral-950 p-5 text-sm text-neutral-500">
+                AI generation isn&rsquo;t configured yet — set{" "}
+                <code className="font-mono text-neutral-400">ANTHROPIC_API_KEY</code> to chat with{" "}
+                {modelInfo.label} about this site.
+              </p>
+            )}
+            {atRebuildLimit && (
+              <p className="mt-3 text-sm text-blue-400">
+                You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for
+                unlimited rebuilds.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <p className="mb-3 font-mono text-xs uppercase tracking-wide text-neutral-500">Preview</p>
+            <LivePreview pages={pages} tokens={tokens} />
+          </div>
+        </div>
 
         <PublishPanel
           siteId={site.id}
@@ -266,16 +304,13 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           </section>
         )}
 
-        {/* Pages & sections */}
+        {/* Pages & sections — a plain-text read of the same content, useful
+            for scanning quickly without the site's own (sometimes low-
+            contrast-for-browsing) fonts and colors getting in the way. */}
         <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-mono uppercase tracking-wide text-neutral-500">
-              {pages.length} {pages.length === 1 ? "page" : "pages"} · {countSections(pages)} sections
-            </h2>
-            <span className="font-mono text-xs text-neutral-500">
-              {rebuildLimit === null ? "Unlimited rebuilds" : `${rebuildsUsed}/${rebuildLimit} rebuilds used this month`}
-            </span>
-          </div>
+          <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
+            {pages.length} {pages.length === 1 ? "page" : "pages"} · {countSections(pages)} sections
+          </h2>
           <div className="space-y-8">
             {pages.map((page, pageIndex) => (
               <div key={page.slug}>
@@ -290,27 +325,13 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
                       className="fade-in-up"
                       style={{ animationDelay: `${80 + (pageIndex * 3 + i) * 50}ms` }}
                     >
-                      <SectionEditor
-                        siteId={site.id}
-                        pageSlug={page.slug}
-                        section={section}
-                        disabled={atRebuildLimit}
-                        aiConfigured={isAnthropicConfigured}
-                        modelLabel={modelInfo.label}
-                        initialMessages={messagesBySection.get(sectionRef(page.slug, section.key)) ?? []}
-                      />
+                      <SectionEditor section={section} />
                     </div>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-          {atRebuildLimit && (
-            <p className="mt-3 text-sm text-blue-400">
-              You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for unlimited
-              rebuilds.
-            </p>
-          )}
         </section>
 
         {/* AI model */}
@@ -318,7 +339,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-neutral-500">
             AI model for this site
           </h2>
-          {isAnthropicConfigured ? (
+          {isGenerationConfigured ? (
             <ModelSettingsForm siteId={site.id} current={site.preferred_model} />
           ) : (
             <p className="text-sm text-neutral-500">

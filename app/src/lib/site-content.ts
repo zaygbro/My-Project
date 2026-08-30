@@ -11,6 +11,14 @@ import type { GeneratedPage, PageSection } from "@/lib/generation/types";
 const SINGLE_PAGE_HINTS =
   /\b(landing\s*page|one[-\s]?pager?|one[-\s]?page|single[-\s]?page|coming[-\s]?soon)\b/i;
 
+/** Sentinel `page_slug`/`section_key` values for the single, site-wide AI
+ * chat's rows in `site_messages` — not a real page or section, so a leading
+ * underscore keeps them unambiguous against real slugs, which are always
+ * lowercase-hyphenated with no leading underscore. Shared here so the writer
+ * (chat-actions.ts) and reader (the site page's query) can't drift apart. */
+export const SITE_CHAT_PAGE_SLUG = "_site";
+export const SITE_CHAT_SECTION_KEY = "_chat";
+
 export const DEFAULT_PAGES = ["Home", "About", "Contact"];
 export const SINGLE_PAGE = ["Home"];
 
@@ -56,4 +64,28 @@ export function replaceSectionBody(
 
 export function countSections(pages: GeneratedPage[]): number {
   return pages.reduce((total, page) => total + page.sections.length, 0);
+}
+
+/** Which sections actually changed between one version of a site's pages and
+ * the next — used to label a version-history entry and to decide whether a
+ * chat turn produced a real edit at all (an empty result means the model
+ * only asked a question, or a "change" that left every body identical).
+ *
+ * Only detects additions and modifications, not removals — a section
+ * present in `before` but missing from `after` doesn't get a ref, since
+ * there is no live `sectionRef` for a section that no longer exists. That's
+ * an acceptable gap for what this feeds (an informational label in Version
+ * History), not something anything else depends on. */
+export function diffChangedSections(before: GeneratedPage[], after: GeneratedPage[]): string[] {
+  const refs: string[] = [];
+  for (const page of after) {
+    const beforePage = before.find((p) => p.slug === page.slug);
+    for (const section of page.sections) {
+      const beforeSection = beforePage?.sections.find((s) => s.key === section.key);
+      if (!beforeSection || beforeSection.body !== section.body || beforeSection.title !== section.title) {
+        refs.push(sectionRef(page.slug, section.key));
+      }
+    }
+  }
+  return refs;
 }

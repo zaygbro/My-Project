@@ -2,27 +2,28 @@
 
 import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { sendSectionMessage, type SendMessageState } from "../../actions";
-import type { ChatTurn } from "@/lib/ai/generate";
+import { sendSiteMessage, type SendSiteMessageState } from "./chat-actions";
+import type { ChatTurn } from "@/lib/generation/types";
 
-const initialState: SendMessageState = { error: null };
+const initialState: SendSiteMessageState = { error: null };
 
-export function SectionChat({
+/**
+ * The one place to ask for any change on this site — a section's copy, a
+ * whole page's tone, anything. The model decides which section(s) to touch;
+ * there's no longer a separate chat box per section to hunt for.
+ */
+export function SiteChat({
   siteId,
-  pageSlug,
-  sectionKey,
   modelLabel,
   disabled,
   initialMessages,
 }: {
   siteId: string;
-  pageSlug: string;
-  sectionKey: string;
   modelLabel: string;
   disabled: boolean;
   initialMessages: ChatTurn[];
 }) {
-  const action = sendSectionMessage.bind(null, siteId, pageSlug, sectionKey);
+  const action = sendSiteMessage.bind(null, siteId);
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [messages, setMessages] = useState<ChatTurn[]>(initialMessages);
   const formRef = useRef<HTMLFormElement>(null);
@@ -63,12 +64,13 @@ export function SectionChat({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-neutral-800 bg-black">
-      <div ref={listRef} className="max-h-96 space-y-3 overflow-y-auto p-3">
+    <div className="rounded-xl border border-neutral-800 bg-black">
+      <div ref={listRef} className="max-h-[26rem] space-y-3 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <p className="p-2 text-sm text-neutral-600">
-            Tell {modelLabel} what this section is for — it&rsquo;ll ask if it needs to know more before
-            writing anything.
+            Ask {modelLabel} to change anything on this site — a section&rsquo;s copy, a whole page&rsquo;s
+            tone, or something new entirely. It&rsquo;ll ask if it needs to know more before writing
+            anything.
           </p>
         ) : (
           messages.map((m, i) => (
@@ -77,7 +79,7 @@ export function SectionChat({
                 {m.role === "user" ? "You" : modelLabel}
               </span>
               <p
-                className={`fade-in-up max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                className={`fade-in-up max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
                   m.role === "user"
                     ? "bg-blue-500 text-white"
                     : "border border-neutral-800 bg-neutral-900 text-neutral-200"
@@ -104,19 +106,19 @@ export function SectionChat({
         ref={formRef}
         action={formAction}
         onSubmit={handleSubmit}
-        className="flex items-center gap-2 border-t border-neutral-800 p-2"
+        className="flex items-center gap-2 border-t border-neutral-800 p-3"
       >
         <input
           name="message"
           required
-          placeholder={`Reply to ${modelLabel}…`}
+          placeholder={`Ask ${modelLabel} to change anything on this site…`}
           disabled={disabled || isPending}
           className="field-transition flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={disabled || isPending}
-          className="press rounded-lg bg-blue-500 px-3 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
+          className="press rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 disabled:opacity-50"
         >
           Send
         </button>

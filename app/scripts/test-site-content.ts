@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import {
   countSections,
   deriveMustHavePages,
+  diffChangedSections,
   findSection,
   replaceSectionBody,
   sectionRef,
@@ -109,6 +110,32 @@ test("does not mutate the original (version snapshots depend on this)", () => {
 test("is a no-op for an unknown page or section", () => {
   assert.deepEqual(replaceSectionBody(pages, "ghost", "intro", "X"), pages);
   assert.deepEqual(replaceSectionBody(pages, "index", "ghost", "X"), pages);
+});
+
+console.log("\ndiffChangedSections");
+test("detects a changed body", () => {
+  const after = replaceSectionBody(pages, "index", "cta", "NEW CTA");
+  assert.deepEqual(diffChangedSections(pages, after), ["index/cta"]);
+});
+test("detects a changed title too, not just body", () => {
+  const after = pages.map((p) =>
+    p.slug === "about" ? { ...p, sections: [{ ...p.sections[0], title: "New Title" }] } : p
+  );
+  assert.deepEqual(diffChangedSections(pages, after), ["about/intro"]);
+});
+test("detects a brand-new section", () => {
+  const after = pages.map((p) =>
+    p.slug === "about" ? { ...p, sections: [...p.sections, { key: "hours", title: "Hours", body: "9-5" }] } : p
+  );
+  assert.deepEqual(diffChangedSections(pages, after), ["about/hours"]);
+});
+test("reports nothing when nothing changed", () => {
+  assert.deepEqual(diffChangedSections(pages, pages), []);
+});
+test("two sections changing across two different pages both show up", () => {
+  let after = replaceSectionBody(pages, "index", "intro", "NEW HOME");
+  after = replaceSectionBody(after, "about", "intro", "NEW ABOUT");
+  assert.deepEqual(diffChangedSections(pages, after).sort(), ["about/intro", "index/intro"]);
 });
 
 console.log("\ncountSections");

@@ -7,7 +7,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { AI_MODELS, type AiModelId } from "../ai/models";
 import { validateProject } from "./validate";
-import type { ChangeLogEntry, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
+import { diffChangedSections } from "../site-content";
+import type { ChangeLogEntry, ChatTurn, GeneratedPage, GenerationOutput, ProjectState, StructuredBrief, TokenUsage } from "./types";
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
 export const isGenerationConfigured = Boolean(apiKey);
@@ -91,12 +92,16 @@ async function emit(
   await onProgress?.(entry);
 }
 
-async function callModel(model: AiModelId, userMessage: string): Promise<{ output: GenerationOutput; usage: TokenUsage }> {
+async function callModel(
+  model: AiModelId,
+  system: string,
+  userMessage: string
+): Promise<{ output: GenerationOutput; usage: TokenUsage }> {
   const modelInfo = AI_MODELS.find((m) => m.id === model)!;
   const response = await client.messages.create({
     model,
     max_tokens: 4000,
-    system: SYSTEM_PROMPT,
+    system,
     ...(modelInfo.supportsEffort ? { output_config: { effort: "medium" as const } } : {}),
     messages: [{ role: "user", content: userMessage }],
   });
@@ -148,7 +153,7 @@ ${issues.map((i) => `- [${i.code}] ${i.message}`).join("\n")}
 
 Return the FULL corrected project (same JSON shape as before) with every issue resolved. Do not just patch the flagged spot — make sure the whole project is still internally consistent after your fix.`;
 
-  const fixResult = await callModel(model, fixPrompt);
+  const fixResult = await callModel(model, SYSTEM_PROMPT, fixPrompt);
   costUsd += fixResult.usage.costUsd;
   await emit(changeLog, onProgress, {
     timestamp: new Date().toISOString(),
@@ -190,7 +195,7 @@ export async function generateProject(
 ): Promise<ProjectState> {
   const changeLog: ChangeLogEntry[] = [];
 
-  const { output, usage } = await callModel(model, briefToPrompt(brief));
+  const { output, usage } = await callModel(model, SYSTEM_PROMPT, briefToPrompt(brief));
   await emit(changeLog, onProgress, {
     timestamp: new Date().toISOString(),
     kind: "generate",
@@ -241,7 +246,7 @@ Requested change — page "${pageSlug}", section "${sectionKey}": ${instruction}
 
 Apply ONLY this change. Keep every other page and section exactly as-is unless the request genuinely requires a related update (e.g. a shared design token). Return the FULL updated project in the same JSON shape as before.`;
 
-  const { output, usage } = await callModel(state.model, editPrompt);
+  const { output, usage } = await callModel(state.model, SYSTEM_PROMPT, editPrompt);
   await emit(changeLog, onProgress, {
     timestamp: new Date().toISOString(),
     kind: "edit",
@@ -260,5 +265,152 @@ Apply ONLY this change. Keep every other page and section exactly as-is unless t
     changeLog,
     status: recovered.status,
     totalCostUsd: state.totalCostUsd + usage.costUsd + recovered.costUsd,
+  };
+}
+
+const CHAT_EDIT_SYSTEM_PROMPT = `You are Francisity's AI editor, having a conversation with the owner of a
+site you already built. You can see the site's entire current content below. When the owner asks for a
+change, decide which section(s) actually need to change and rewrite them; when you don't know enough to do
+that well, ask one short clarifying question instead of guessing or writing generic filler.
+
+Respond with ONLY a JSON object, no markdown code fences, no other text, in exactly this shape:
+{
+  "reply": "<what you say back to the owner — a short clarifying question, or one short sentence describing what you changed, no exclamation marks>",
+  "pages": <the FULL updated pages array (same shape as the current pages below) with your changes applied, or null if you are only asking a question and changed nothing>
+}
+
+Rules:
+- Never add, remove, or rename a page, or change a page's slug — only edit, add, or remove SECTIONS within the existing pages.
+- Never change design tokens (colors, fonts, radius) — this chat only edits content, not the visual system.
+- When you DO make a change, return every page, not just the one(s) you touched — the response replaces the whole pages array.
+- Never write "Lorem ipsum", generic placeholder text, or anything not specific to this business.
+- This is a fictional business. Even if the brief or a page names a real, existing company, never write that real company's actual history, facts, or trademarks — a named real brand is a style reference only, never something to describe truthfully.`;
+
+interface ChatEditModelResult {
+  reply: string;
+  pages: GeneratedPage[] | null;
+}
+
+async function callChatModel(model: AiModelId, userMessage: string): Promise<{ result: ChatEditModelResult; usage: TokenUsage }> {
+  const modelInfo = AI_MODELS.find((m) => m.id === model)!;
+  const response = await client.messages.create({
+    model,
+    max_tokens: 4000,
+    system: CHAT_EDIT_SYSTEM_PROMPT,
+    ...(modelInfo.supportsEffort ? { output_config: { effort: "medium" as const } } : {}),
+    messages: [{ role: "user", content: userMessage }],
+  });
+
+  if (response.stop_reason === "refusal") {
+    throw new Error("The model declined to respond — try rewording your message.");
+  }
+
+  const textBlock = response.content.find((b): b is Anthropic.TextBlock => b.type === "text");
+  const raw = textBlock?.text.trim();
+  if (!raw) throw new Error("The model didn't return any text.");
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(extractJson(raw));
+  } catch {
+    throw new Error("The model didn't return a well-formed response — try again.");
+  }
+  const record = parsed as Record<string, unknown>;
+  if (typeof record.reply !== "string") {
+    throw new Error("The model's response was missing a reply.");
+  }
+
+  const usage = priceUsage(model, response.usage.input_tokens, response.usage.output_tokens);
+  return {
+    result: { reply: record.reply, pages: Array.isArray(record.pages) ? (record.pages as GeneratedPage[]) : null },
+    usage,
+  };
+}
+
+export interface ChatEditResult {
+  reply: string;
+  projectState: ProjectState;
+  /** "pageSlug/sectionKey" refs touched by this turn — empty when the model
+   * only asked a question, made no real change, or the edit failed
+   * validation and was discarded. */
+  changedRefs: string[];
+}
+
+/**
+ * One turn of the single, site-wide AI chat: the model sees the FULL current
+ * site and decides for itself which section(s) need to change, rather than
+ * being scoped in advance to one section the way editSection is. Reuses
+ * validateAndRecover — the exact same validate/fix/escalate machinery as
+ * generation and editSection — so a chat-driven edit gets the identical
+ * safety guarantee: if it fails validation twice, the site keeps its PRIOR
+ * working content, not the broken attempt.
+ */
+export async function chatEditProject(
+  state: ProjectState,
+  history: ChatTurn[],
+  message: string,
+  onProgress?: ProgressFn
+): Promise<ChatEditResult> {
+  if (!state.tokens) throw new Error("Cannot chat about a project that hasn't been validated yet.");
+  const changeLog = [...state.changeLog];
+
+  const conversation = [
+    ...history.map((turn) => `${turn.role === "user" ? "Owner" : "You"}: ${turn.content}`),
+    `Owner: ${message}`,
+  ].join("\n\n");
+
+  const userMessage = `Current site (tokens are fixed and shown only for context — you cannot change them):
+${JSON.stringify({ tokens: state.tokens, pages: state.pages }, null, 2)}
+
+Conversation so far:
+${conversation}
+
+Respond to the owner's latest message.`;
+
+  const { result, usage } = await callChatModel(state.model, userMessage);
+
+  if (!result.pages) {
+    // A clarifying question — nothing to validate or persist as content.
+    await emit(changeLog, onProgress, {
+      timestamp: new Date().toISOString(),
+      kind: "edit",
+      summary: `Asked a clarifying question in response to: "${message}"`,
+      usage,
+    });
+    return {
+      reply: result.reply,
+      projectState: { ...state, changeLog, totalCostUsd: state.totalCostUsd + usage.costUsd },
+      changedRefs: [],
+    };
+  }
+
+  await emit(changeLog, onProgress, {
+    timestamp: new Date().toISOString(),
+    kind: "edit",
+    summary: `Chat edit requested: "${message}"`,
+    usage,
+  });
+
+  const recovered = await validateAndRecover(
+    state.brief,
+    { tokens: state.tokens, pages: result.pages },
+    state.model,
+    changeLog,
+    onProgress
+  );
+  const isGood = recovered.status === "validated";
+  const changedRefs = isGood ? diffChangedSections(state.pages, recovered.output.pages) : [];
+
+  return {
+    reply: isGood
+      ? result.reply
+      : `${result.reply} (That edit didn't pass validation, so I've kept your site as it was — see the build log below for exactly what was wrong.)`,
+    projectState: {
+      ...state,
+      pages: isGood ? recovered.output.pages : state.pages,
+      changeLog,
+      totalCostUsd: state.totalCostUsd + usage.costUsd + recovered.costUsd,
+    },
+    changedRefs,
   };
 }

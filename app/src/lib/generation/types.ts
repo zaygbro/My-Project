@@ -77,3 +77,12 @@ export interface GenerationOutput {
   tokens: DesignTokens;
   pages: GeneratedPage[];
 }
+
+/** One turn of a conversation with the AI about a site. Structurally the
+ * same shape lib/ai/generate.ts's own ChatTurn used for the (now removed)
+ * per-section chat — kept as a separate declaration since the two chat
+ * systems are otherwise independent. */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}

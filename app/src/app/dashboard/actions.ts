@@ -6,10 +6,7 @@ import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import { PLAN_LABELS, PLAN_LIMITS, type PlanId } from "@/lib/plans";
 import { getMonthlyEditCount } from "@/lib/quota";
 import { isAiModelId, recommendModel, type AiModelId } from "@/lib/ai/models";
-import { chatAboutSection, isAnthropicConfigured, type ChatTurn } from "@/lib/ai/generate";
 import { isGenerationConfigured } from "@/lib/generation/generate";
-import type { GeneratedPage } from "@/lib/generation/types";
-import { findSection, replaceSectionBody, sectionRef } from "@/lib/site-content";
 import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
@@ -155,35 +152,10 @@ export async function createSite(
   redirect(`/dashboard/sites/${site.id}`);
 }
 
-/** Shared by manual edits and AI-generated ones: writes the new content and a version snapshot. */
-async function writeSectionEdit(
-  supabase: SupabaseClient<Database>,
-  siteId: string,
-  currentPages: GeneratedPage[],
-  pageSlug: string,
-  sectionKey: string,
-  newBody: string
-): Promise<{ error: string | null }> {
-  const newPages = replaceSectionBody(currentPages, pageSlug, sectionKey, newBody);
-
-  const { error: updateError } = await supabase
-    .from("sites")
-    .update({ pages: newPages })
-    .eq("id", siteId);
-  if (updateError) return { error: updateError.message };
-
-  const { error: versionError } = await supabase.from("site_versions").insert({
-    site_id: siteId,
-    pages: newPages,
-    changed_sections: [sectionRef(pageSlug, sectionKey)],
-    kind: "edit",
-  });
-  if (versionError) return { error: versionError.message };
-
-  return { error: null };
-}
-
-async function checkRebuildQuota(
+/** Shared by every path that can consume rebuild quota — the site-wide AI
+ * chat (chat-actions.ts) included, so there's one definition of "at your
+ * limit" rather than two that could drift. */
+export async function checkRebuildQuota(
   supabase: SupabaseClient<Database>,
   userId: string,
   plan: PlanId
@@ -196,109 +168,6 @@ async function checkRebuildQuota(
     return `You've used all ${rebuildLimit} rebuilds included on ${PLAN_LABELS[plan]} this month. Upgrade for unlimited rebuilds.`;
   }
   return null;
-}
-
-export interface SendMessageState {
-  error: string | null;
-  success?: boolean;
-  reply?: string;
-}
-
-/** One turn of the per-section AI chat: persists both sides of the exchange
- * and, unless the reply was purely conversational, writes the new body
- * through the same path a manual save uses (real version snapshot, same
- * rebuild quota — there's no separate "free chat editing" loophole). */
-export async function sendSectionMessage(
-  siteId: string,
-  pageSlug: string,
-  sectionKey: string,
-  _prevState: SendMessageState,
-  formData: FormData
-): Promise<SendMessageState> {
-  const message = String(formData.get("message") ?? "").trim();
-  if (!message) return { error: "Message can't be empty." };
-
-  if (!isAnthropicConfigured) {
-    return { error: "AI generation isn't configured yet — set ANTHROPIC_API_KEY." };
-  }
-
-  const supabase = await createClient();
-  const user = await getCurrentUser();
-  if (!user) redirect("/sign-in");
-
-  const { data: site } = await supabase
-    .from("sites")
-    .select("id, name, brief, pages, preferred_model")
-    .eq("id", siteId)
-    .eq("user_id", user.id)
-    .single();
-  if (!site) return { error: "Site not found." };
-
-  const plan = await getEffectivePlanForUser(user.id);
-
-  const quotaError = await checkRebuildQuota(supabase, user.id, plan);
-  if (quotaError) return { error: quotaError };
-
-  const currentPages = site.pages as GeneratedPage[];
-  const section = findSection(currentPages, pageSlug, sectionKey);
-  if (!section) return { error: "Unknown section." };
-
-  const { data: historyRows } = await supabase
-    .from("site_messages")
-    .select("role, content")
-    .eq("site_id", siteId)
-    .eq("page_slug", pageSlug)
-    .eq("section_key", sectionKey)
-    .order("created_at", { ascending: true });
-  const history: ChatTurn[] = (historyRows ?? []).map((row) => ({ role: row.role, content: row.content }));
-
-  const { error: userMessageError } = await supabase.from("site_messages").insert({
-    site_id: siteId,
-    page_slug: pageSlug,
-    section_key: sectionKey,
-    role: "user",
-    content: message,
-  });
-  if (userMessageError) return { error: userMessageError.message };
-
-  let result: { reply: string; body: string };
-  try {
-    result = await chatAboutSection({
-      model: site.preferred_model,
-      siteName: site.name,
-      siteBrief: site.brief,
-      sectionTitle: section.title,
-      currentBody: section.body,
-      history,
-      message,
-    });
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : "AI response failed." };
-  }
-
-  const { error: assistantMessageError } = await supabase.from("site_messages").insert({
-    site_id: siteId,
-    page_slug: pageSlug,
-    section_key: sectionKey,
-    role: "assistant",
-    content: result.reply,
-  });
-  if (assistantMessageError) return { error: assistantMessageError.message };
-
-  if (result.body !== section.body) {
-    const { error: writeError } = await writeSectionEdit(
-      supabase,
-      siteId,
-      currentPages,
-      pageSlug,
-      sectionKey,
-      result.body
-    );
-    if (writeError) return { error: writeError };
-  }
-
-  revalidatePath(`/dashboard/sites/${siteId}`);
-  return { error: null, success: true, reply: result.reply };
 }
 
 export interface UpdateModelState {
