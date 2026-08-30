@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { validatePassword } from "@/lib/password";
 import { safeNextPath } from "@/lib/redirects";
+import { Logo } from "@/components/Logo";
 
 type Method = "password" | "code";
 type Intent = "signin" | "signup";
@@ -177,9 +178,7 @@ function SignInInner() {
           href="/"
           className="press mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
         >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
-            /
-          </span>
+          <Logo size={24} />
           Francisity
         </Link>
 

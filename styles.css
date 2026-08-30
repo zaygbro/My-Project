@@ -121,6 +121,8 @@ button{ font-family: inherit; }
   box-shadow: 0 16px 44px -16px rgba(0,0,0,0.75);
   border-color: rgba(255,255,255,0.16);
 }
+.brand, .brand-row{ display:flex; align-items:center; gap: 9px; }
+.brand-mark{ display:inline-flex; flex-shrink:0; border-radius:22%; overflow:hidden; background: radial-gradient(120% 120% at 30% 20%, #16181d 0%, #0a0a0d 60%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.03); }
 .brand-name{ font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; letter-spacing: -0.01em; text-transform: uppercase; }
 .nav-links{ display:flex; gap: 30px; }
 .nav-links a{

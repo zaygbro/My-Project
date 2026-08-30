@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "./actions";
+import { Logo } from "@/components/Logo";
 
 function NavLink({
   href,
@@ -126,9 +127,7 @@ export function Sidebar({
           onClick={() => setOpen(false)}
           className="press hover-lift mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-neutral-900"
         >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
-            /
-          </span>
+          <Logo size={24} />
           Francisity
         </Link>
 

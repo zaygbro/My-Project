@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { validatePassword } from "@/lib/password";
+import { Logo } from "@/components/Logo";
 
 const FIELD =
   "field-transition w-full rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30";
@@ -76,9 +77,7 @@ export default function ResetPasswordPage() {
           href="/"
           className="press mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
         >
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
-            /
-          </span>
+          <Logo size={24} />
           Francisity
         </Link>
 

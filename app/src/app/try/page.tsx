@@ -9,6 +9,7 @@ import { loadAnonSite, saveAnonSite, clearAnonSite, type AnonSite } from "@/lib/
 import { recommendModel, type AiModelId } from "@/lib/ai/models";
 import { ModelPicker } from "../dashboard/ModelPicker";
 import { claimAnonymousSite } from "./actions";
+import { Logo } from "@/components/Logo";
 
 type Mode = "loading" | "claiming" | "create" | "editor";
 
@@ -184,9 +185,7 @@ function TryPageInner() {
             href="/"
             className="press mb-2 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
           >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-black font-mono text-sm font-bold text-blue-500">
-              /
-            </span>
+            <Logo size={24} />
             Francisity
           </Link>
           <p className="mb-8 text-center text-sm text-neutral-400">
