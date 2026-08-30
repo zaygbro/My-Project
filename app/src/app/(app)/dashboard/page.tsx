@@ -52,7 +52,7 @@ export default async function DashboardPage() {
             <circle cx="300" cy="120" r="4.5" />
           </g>
         </svg>
-        <h1 className="relative text-center text-3xl font-extrabold tracking-tight sm:text-4xl">
+        <h1 className="font-display relative text-center text-3xl font-extrabold tracking-tight sm:text-4xl">
           Let&rsquo;s build something, {displayName}
         </h1>
         <div className="relative mx-auto mt-8 max-w-2xl">

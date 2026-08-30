@@ -125,7 +125,7 @@ export function Sidebar({
         <Link
           href="/dashboard"
           onClick={() => setOpen(false)}
-          className="press hover-lift mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-neutral-900"
+          className="press hover-lift font-display mb-5 flex items-center gap-2 rounded-lg px-2 py-1.5 text-base font-extrabold uppercase tracking-tight transition-colors hover:bg-neutral-900"
         >
           <Logo size={24} />
           Francisity

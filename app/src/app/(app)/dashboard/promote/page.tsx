@@ -20,7 +20,7 @@ export default async function PromotePage() {
     <div className="fade-in-up space-y-6">
       <div>
         <p className="font-mono text-xs uppercase tracking-wide text-blue-500">Promote</p>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Video ads</h1>
+        <h1 className="font-display mt-1 text-2xl font-extrabold tracking-tight">Video ads</h1>
         <p className="mt-1 max-w-2xl text-sm text-neutral-500">
           Francisity writes the ad from your site&rsquo;s real copy — the script, the prompt to render it
           with, the caption, and how to post it. Rendering the video itself happens in your video tool;

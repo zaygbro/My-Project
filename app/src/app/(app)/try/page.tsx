@@ -250,7 +250,7 @@ function TryPageInner() {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-mono uppercase tracking-wide text-neutral-500">Trial site (not saved yet)</p>
-            <h1 className="text-2xl font-bold">{anonSite?.name}</h1>
+            <h1 className="font-display text-2xl font-bold">{anonSite?.name}</h1>
           </div>
           <Link href="/" className="text-xs text-neutral-500 hover:text-neutral-300">
             Francisity

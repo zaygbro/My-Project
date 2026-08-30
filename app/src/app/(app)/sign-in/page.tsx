@@ -176,7 +176,7 @@ function SignInInner() {
       <div className="fade-in-up w-full max-w-sm">
         <Link
           href="/"
-          className="press mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
+          className="press font-display mb-8 flex items-center justify-center gap-2 text-lg font-extrabold uppercase tracking-tight"
         >
           <Logo size={24} />
           Francisity

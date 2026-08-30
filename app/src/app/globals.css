@@ -16,6 +16,10 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Enables the `font-display` utility — the marketing site's headline
+     face, so headings in the app match the marketing site's identity
+     instead of falling back to font-sans everywhere. */
+  --font-display: var(--font-space-grotesk);
 }
 
 body {
@@ -77,11 +81,12 @@ body {
 .dashboard-glow {
   position: relative;
   overflow: hidden;
-  /* A restrained on-brand wash — blue into black, not a rainbow — so the
-     dashboard reads as a fuller "aurora-lite" backdrop like Lovable's
-     without borrowing its actual multi-hue gradient (the whole point was
-     to differ there: this stays dark and technical, not consumer-bright). */
-  background: linear-gradient(160deg, #0a0e1a 0%, #050507 38%, #000000 75%);
+  /* The marketing site's own canvas color and hero-glow opacities
+     (site-theme's --bg/.hero::before/.hero::after), not an independently
+     tuned navy wash — a stronger, permanently-visible gradient here was
+     the single biggest reason the dashboard read as a different, bluer
+     product than the marketing site rather than the same one continuing. */
+  background: #050507;
 }
 .dashboard-glow::before,
 .dashboard-glow::after {
@@ -96,7 +101,7 @@ body {
   left: 30%;
   width: 820px;
   height: 480px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.28), transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.17), transparent 70%);
   filter: blur(70px);
 }
 .dashboard-glow::after {
@@ -104,7 +109,7 @@ body {
   left: 70%;
   width: 480px;
   height: 340px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.16), transparent 72%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.09), transparent 72%);
   filter: blur(56px);
 }
 .dashboard-glow > * {

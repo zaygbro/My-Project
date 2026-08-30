@@ -61,7 +61,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         >
           ← Dashboard
         </Link>
-        <h1 className="text-2xl font-extrabold tracking-tight">{site.name}</h1>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">{site.name}</h1>
         <div className="mt-4 rounded-xl border border-amber-900 bg-amber-950/20 p-5">
           <p className="text-sm font-semibold text-amber-300">This database is missing the generation schema.</p>
           <p className="mt-2 text-sm text-neutral-400">
@@ -94,7 +94,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           ← Dashboard
         </Link>
         <header className="fade-in-up mb-6">
-          <h1 className="text-2xl font-extrabold tracking-tight">{site.name}</h1>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight">{site.name}</h1>
           {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
         </header>
         <BuildProgress
@@ -164,7 +164,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
       <header className="fade-in-up mb-8 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">{site.name}</h1>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight">{site.name}</h1>
             {site.brief && <p className="mt-1 text-sm text-neutral-400">{site.brief}</p>}
           </div>
           {PLAN_LIMITS[plan].exportEnabled ? (
@@ -261,11 +261,11 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
           {hasTraffic ? (
             <div className="flex gap-8">
               <div>
-                <p className="text-2xl font-extrabold tabular-nums">{totalViews}</p>
+                <p className="font-display text-2xl font-extrabold tabular-nums">{totalViews}</p>
                 <p className="text-xs text-neutral-500">All-time views</p>
               </div>
               <div>
-                <p className="text-2xl font-extrabold tabular-nums">{recentViews}</p>
+                <p className="font-display text-2xl font-extrabold tabular-nums">{recentViews}</p>
                 <p className="text-xs text-neutral-500">Last 7 days</p>
               </div>
             </div>

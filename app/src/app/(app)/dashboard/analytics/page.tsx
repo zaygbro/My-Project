@@ -66,7 +66,7 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
   return (
     <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
       <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className="mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{value}</p>
+      <p className="font-display mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{value}</p>
       {sub && <p className="mt-1 text-xs text-neutral-500">{sub}</p>}
     </div>
   );
@@ -165,7 +165,7 @@ export default async function AnalyticsPage() {
     <div className="fade-in-up space-y-8">
       <div>
         <p className="font-mono text-xs uppercase tracking-wide text-blue-500">Dev only</p>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">Analytics</h1>
+        <h1 className="font-display mt-1 text-2xl font-extrabold tracking-tight">Analytics</h1>
         <p className="mt-1 text-sm text-neutral-500">
           Platform-wide revenue and activity across every account, not just yours.
         </p>
@@ -208,7 +208,7 @@ export default async function AnalyticsPage() {
         </div>
         <div className="rounded-xl border border-neutral-800 bg-neutral-950 p-5">
           <p className="font-mono text-xs uppercase tracking-wide text-neutral-500">Published site views</p>
-          <p className="mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{totalViews ?? 0}</p>
+          <p className="font-display mt-1 text-2xl font-extrabold tabular-nums tracking-tight">{totalViews ?? 0}</p>
           <p className="mt-1 text-xs text-neutral-500">
             Real views of published sites, read from the{" "}
             <code className="font-mono text-neutral-400">site_events</code> table — nothing here is simulated.
