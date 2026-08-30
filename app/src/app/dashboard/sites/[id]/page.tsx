@@ -226,7 +226,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
           <div>
             <p className="mb-3 font-mono text-xs uppercase tracking-wide text-neutral-500">Preview</p>
-            <LivePreview pages={pages} tokens={tokens} />
+            <LivePreview pages={pages} tokens={tokens} openInNewTabHref={`/preview/${site.id}`} />
           </div>
         </div>
 

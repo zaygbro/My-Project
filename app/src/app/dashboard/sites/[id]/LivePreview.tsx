@@ -16,7 +16,23 @@ import type { DesignTokens, GeneratedPage } from "@/lib/generation/types";
  * renders whatever it's handed, with no opinion about whether a run is
  * still in progress.
  */
-export function LivePreview({ pages, tokens }: { pages: GeneratedPage[]; tokens: DesignTokens | null }) {
+export function LivePreview({
+  pages,
+  tokens,
+  scrollClassName = "max-h-[70vh] overflow-y-auto",
+  openInNewTabHref,
+}: {
+  pages: GeneratedPage[];
+  tokens: DesignTokens | null;
+  /** Overrides the scrollable content area's height/overflow — the
+   * dedicated full-page preview passes `flex-1 overflow-y-auto` so it fills
+   * the viewport instead of the compact split-pane cap. */
+  scrollClassName?: string;
+  /** Shows the browser-chrome "open in new tab" button pointing here.
+   * Omitted while a site is still generating — there's no stable route to
+   * open yet, only an in-memory draft. */
+  openInNewTabHref?: string;
+}) {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
 
   if (!tokens || pages.length === 0) {
@@ -56,6 +72,27 @@ export function LivePreview({ pages, tokens }: { pages: GeneratedPage[]; tokens:
         )}:wght@700&family=${encodeURIComponent(tokens.fonts.body)}:wght@400;500&display=swap`}
       />
       <div className="preview-frame overflow-hidden rounded-2xl border border-neutral-800" style={frameStyle}>
+        <div className="flex items-center justify-between gap-2 border-b border-black/10 bg-black/5 px-3 py-2">
+          <div className="flex items-center gap-1.5" aria-hidden="true">
+            <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
+            <span className="h-2.5 w-2.5 rounded-full bg-black/15" />
+          </div>
+          {openInNewTabHref && (
+            <a
+              href={openInNewTabHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="press preview-muted flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors hover:bg-black/10"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M15 3h6v6M10 14 21 3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Open in new tab
+            </a>
+          )}
+        </div>
         {pages.length > 1 && (
           <div className="flex gap-1 overflow-x-auto border-b border-black/10 bg-black/5 p-2">
             {pages.map((page, i) => (
@@ -72,7 +109,7 @@ export function LivePreview({ pages, tokens }: { pages: GeneratedPage[]; tokens:
             ))}
           </div>
         )}
-        <div className="max-h-[520px] space-y-4 overflow-y-auto p-6">
+        <div className={`${scrollClassName} space-y-4 p-6`}>
           {activePage.sections.length === 0 ? (
             <p className="preview-muted text-sm">This page&rsquo;s copy hasn&rsquo;t been drafted yet.</p>
           ) : (
