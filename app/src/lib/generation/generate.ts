@@ -42,7 +42,8 @@ Hard requirements:
 - Generate one page per page named in "Must-have pages", using a slug matching that name (lowercase, spaces to hyphens).
 - text and textMuted MUST have strong contrast against background (at least 4.5:1) — pick colors deliberately, not decoratively.
 - Never write "Lorem ipsum", "coming soon", "TODO", or any other placeholder — every sentence must be specific to the brief.
-- Do not write markdown links to pages you didn't generate.`;
+- Do not write markdown links to pages you didn't generate.
+- Every site is a NEW, FICTIONAL business, even when the brief names a real, existing company (e.g. "a coffee shop like Starbucks", or just "Starbucks"). Never write that real company's actual history, founding story, real store count, real trademarked program names (e.g. a loyalty program named after theirs), or any other verifiable fact about them — that is impersonating a real, identifiable organization, not describing this site's own business. Treat a named real brand only as a style/category reference: invent this business's own name (unless the brief gives one), its own founding story, and its own details in that same space instead.`;
 
 function briefToPrompt(brief: StructuredBrief): string {
   // Industry/tone are omitted entirely rather than printed as "undefined"

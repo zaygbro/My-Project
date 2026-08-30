@@ -21,7 +21,11 @@ export interface GenerateSectionInput {
 const SYSTEM_PROMPT = `You write body copy for one section of a website, for Francisity, an AI site builder.
 Write only the section's body text: no heading, no markdown formatting, no preamble, no quotes around it.
 Keep it concise (2-4 sentences unless the section clearly calls for a short list), concrete, and specific
-to the brief. Never write generic placeholder text.`;
+to the brief. Never write generic placeholder text.
+
+This is always a NEW, FICTIONAL business, even if the site name or brief references a real, existing
+company. Never write that real company's actual history, real facts, or real trademarked program names —
+treat a named real brand only as a style reference for this site's own, separate business.`;
 
 export async function generateSectionDraft(input: GenerateSectionInput): Promise<string> {
   const modelInfo = getModelInfo(input.model);
@@ -78,6 +82,10 @@ function chatSystemPrompt(input: ChatAboutSectionInput): string {
 conversation with the site's owner about this section's copy, the way Claude would: when you don't yet
 know enough to write something specific and true to their business, ask a short clarifying question
 instead of guessing or falling back to generic copy. Once you know enough, write it.
+
+This is always a NEW, FICTIONAL business, even if the site name or brief references a real, existing
+company. Never write that real company's actual history, real facts, or real trademarked program names —
+treat a named real brand only as a style reference for this site's own, separate business.
 
 Site name: ${input.siteName}
 Site brief: ${input.siteBrief ?? "(none given)"}
