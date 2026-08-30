@@ -53,7 +53,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
       <div className="fade-in-up">
         <Link
           href="/dashboard"
-          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white"
+          className="press mb-6 inline-flex items-center gap-1 rounded-full border border-hairline bg-surface-2 px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:border-accent hover:text-white"
         >
           ← Dashboard
         </Link>
@@ -85,7 +85,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
       <div>
         <Link
           href="/dashboard"
-          className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white"
+          className="press mb-6 inline-flex items-center gap-1 rounded-full border border-hairline bg-surface-2 px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:border-accent hover:text-white"
         >
           ← Dashboard
         </Link>
@@ -140,7 +140,10 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
 
   return (
     <div>
-      <Link href="/dashboard" className="mb-6 inline-block font-mono text-xs uppercase tracking-wide text-ink-faint hover:text-white">
+      <Link
+        href="/dashboard"
+        className="press mb-6 inline-flex items-center gap-1 rounded-full border border-hairline bg-surface-2 px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:border-accent hover:text-white"
+      >
         ← Dashboard
       </Link>
 
