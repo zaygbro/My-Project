@@ -19,7 +19,7 @@ import {
   suggestSubdomain,
   validateSubdomain,
 } from "../src/lib/publish";
-import { sanitizeTokens } from "../src/lib/site-theme";
+import { buildSiteCss, sanitizeTokens } from "../src/lib/site-theme";
 import { validatePassword } from "../src/lib/password";
 import { safeNextPath } from "../src/lib/redirects";
 import { PLATFORM_LIST, beltCommand, isPlatformId } from "../src/lib/promote/platforms";
@@ -362,6 +362,45 @@ test("falls back for empty or missing values", () => {
   assert.equal(safeNextPath(null), "/dashboard");
   assert.equal(safeNextPath(undefined), "/dashboard");
   assert.equal(safeNextPath(""), "/dashboard");
+});
+
+console.log("\npublished-site motion");
+test("the scroll reveal is gated behind @supports", () => {
+  // This is the safety property for the whole scroll-reveal feature. The
+  // reveal starts sections at opacity 0, so if that rule ever applied in a
+  // browser without scroll-driven animations, every section would be
+  // invisible forever. Gating it means unsupported browsers just show the
+  // content. Asserted structurally so a future edit can't quietly undo it.
+  const css = buildSiteCss(sanitizeTokens(tokens));
+  const supportsIndex = css.indexOf("@supports (animation-timeline: view())");
+  assert.ok(supportsIndex > 0, "expected an @supports guard");
+
+  const sectionAnim = css.indexOf(".site-section {\n      animation:");
+  assert.ok(sectionAnim > supportsIndex, ".site-section reveal must be inside @supports");
+});
+test("the scroll reveal also requires no-preference for motion", () => {
+  const css = buildSiteCss(sanitizeTokens(tokens));
+  const guard = css.indexOf("@supports (animation-timeline: view())");
+  const rm = css.indexOf("prefers-reduced-motion: no-preference", guard);
+  const sectionAnim = css.indexOf(".site-section {\n      animation:", guard);
+  assert.ok(rm > guard && rm < sectionAnim, "reduced-motion guard must wrap the reveal");
+});
+test("only compositor-friendly properties are animated", () => {
+  const css = buildSiteCss(sanitizeTokens(tokens));
+  const keyframes = css.slice(css.indexOf("@keyframes site-rise"));
+  const block = keyframes.slice(0, keyframes.indexOf("}\n}") + 3);
+  // Animating width/height/top/left would force layout on every frame.
+  for (const bad of ["width", "height", "top:", "left:", "margin", "padding"]) {
+    assert.ok(!block.includes(bad), `site-rise should not animate ${bad}`);
+  }
+});
+test("published sites stay script-free", () => {
+  // Dependency-free output is a documented promise, so the motion above has
+  // to be pure CSS — no observer, no scroll listener, no bundle.
+  const files = renderSiteToStaticFiles({ name: "X", pages, tokens, badgeEnabled: true });
+  for (const f of files.filter((f) => f.path.endsWith(".html"))) {
+    assert.ok(!f.contents.includes("<script"), `${f.path} should contain no script tag`);
+  }
 });
 
 console.log("\npromote platforms");

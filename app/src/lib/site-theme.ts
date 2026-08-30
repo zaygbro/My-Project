@@ -165,5 +165,67 @@ html body {
 @media (max-width: 600px) {
   .site-main h1 { font-size: 1.75rem; }
 }
+
+/* ---------- Motion ----------
+   Deliberately zero-JavaScript: a published site (and an exported one) has
+   no script tag, and adding one to animate would cost more than the polish
+   is worth. Only transform and opacity are animated, so everything stays on
+   the compositor. */
+
+/* A strong ease-out — the built-in curves are too weak to read as
+   intentional. Entrances use ease-out because it moves immediately, which
+   is what makes a page feel responsive rather than sluggish. */
+.site-header,
+.site-main h1 {
+  animation: site-rise 620ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.site-main h1 { animation-delay: 90ms; }
+
+@keyframes site-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Scroll-driven section reveals, done with a view() timeline so the work
+   happens off the main thread with no scroll listener and no observer.
+
+   The opacity:0 lives ONLY inside this @supports block. That is the whole
+   point: in a browser without scroll-driven animations the rule never
+   applies, so the content is simply visible rather than invisible forever
+   waiting for an animation that can't run. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-section {
+      animation: site-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 22%;
+    }
+  }
+}
+
+/* Micro-interactions. Hover only where there's a real pointer, so a tap on
+   a touch device doesn't leave a stuck hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .site-nav a,
+  .site-footer a,
+  .site-brand {
+    transition: color 180ms ease, opacity 180ms ease;
+  }
+  .site-brand:hover { opacity: 0.75; }
+}
+
+/* Reduced motion means gentler, not absent: the scroll reveal is skipped
+   entirely above, and the load entrance becomes a plain fade with no
+   movement, which is the vestibular-safe equivalent. */
+@media (prefers-reduced-motion: reduce) {
+  .site-header,
+  .site-main h1 {
+    animation: site-fade 200ms ease both;
+  }
+  @keyframes site-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
 `;
 }
