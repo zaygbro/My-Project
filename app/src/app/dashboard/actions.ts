@@ -120,23 +120,19 @@ export async function createSite(
     }
   }
 
+  // No key means nothing can be generated, and a site builder that can't
+  // build isn't usable. This used to seed a placeholder "Overview" section
+  // holding the raw brief, which looked like a finished site but was really
+  // just the user's own words handed back — say what's actually wrong
+  // instead of manufacturing content.
+  if (!isGenerationConfigured) {
+    return { error: "AI generation isn't configured yet — set ANTHROPIC_API_KEY to build sites." };
+  }
+
   // The site row is created empty and `pending`: the real multi-page
   // generation runs from the site's own page, which streams its progress.
   // Creating a site therefore returns immediately instead of blocking this
   // action (and the user's tab) on a 20-60s model call that might fail.
-  //
-  // When generation isn't configured at all, skip straight to a validated
-  // one-page site holding the brief, so the app stays usable without a key
-  // rather than parking every new site in a build screen that can't finish.
-  const configured = isGenerationConfigured;
-  const fallbackPages: GeneratedPage[] = [
-    {
-      slug: "index",
-      title: name,
-      sections: [{ key: "overview", title: "Overview", body: brief || `A new site called "${name}".` }],
-    },
-  ];
-
   const { data: site, error } = await supabase
     .from("sites")
     .insert({
@@ -144,8 +140,8 @@ export async function createSite(
       name,
       brief: brief || null,
       badge_enabled: PLAN_LIMITS[plan].badge,
-      pages: configured ? [] : fallbackPages,
-      generation_status: configured ? "pending" : "validated",
+      pages: [],
+      generation_status: "pending",
       preferred_model: model,
     })
     .select("id")
@@ -153,15 +149,6 @@ export async function createSite(
 
   if (error || !site) {
     return { error: error?.message ?? "Couldn't create the site." };
-  }
-
-  if (!configured) {
-    await supabase.from("site_versions").insert({
-      site_id: site.id,
-      pages: fallbackPages,
-      changed_sections: [],
-      kind: "create",
-    });
   }
 
   revalidatePath("/dashboard");

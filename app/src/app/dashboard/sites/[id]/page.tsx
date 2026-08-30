@@ -9,6 +9,7 @@ import { SectionEditor } from "./SectionEditor";
 import { ModelSettingsForm } from "./ModelSettingsForm";
 import { RestoreVersionButton } from "./RestoreVersionButton";
 import { BuildProgress } from "./BuildProgress";
+import { RebuildBanner } from "./RebuildBanner";
 import { PublishPanel } from "./PublishPanel";
 import { publishedUrl, suggestSubdomain } from "@/lib/publish";
 import { getModelInfo } from "@/lib/ai/models";
@@ -182,6 +183,11 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
             </div>
           )}
         </header>
+
+        {/* A site that finished generating always has design tokens, so their
+            absence is a reliable marker for one that predates the pipeline
+            (or was wrapped by the 0006 backfill) and is still a placeholder. */}
+        {tokens === null && <RebuildBanner siteId={site.id} />}
 
         <PublishPanel
           siteId={site.id}

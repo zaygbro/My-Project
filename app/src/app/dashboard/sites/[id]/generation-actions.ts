@@ -129,6 +129,39 @@ export async function startGeneration(siteId: string): Promise<GenerationSnapsho
   }
 }
 
+/**
+ * Rebuilds an already-finished site with the real pipeline.
+ *
+ * Sites created before generation was wired in (and the ones the 0006
+ * backfill wrapped into a single page) hold one placeholder "Overview"
+ * section and no design tokens — they were never actually generated. This
+ * is how those get replaced with a real multi-page site.
+ *
+ * Separate from retryGeneration on purpose: that one deliberately refuses
+ * to touch a `validated` row so a stray retry can't clobber a finished
+ * site. This one targets exactly those rows, so it only ever runs when
+ * someone explicitly asks. The current content stays recoverable through
+ * version history, which rollback can restore.
+ */
+export async function regenerateSite(siteId: string): Promise<GenerationSnapshot> {
+  const supabase = await createClient();
+  const user = await getCurrentUser();
+  if (!user) redirect("/sign-in");
+
+  const { data: claimed } = await supabase
+    .from("sites")
+    .update({ generation_status: "pending", generation_error: null, change_log: [] })
+    .eq("id", siteId)
+    .eq("user_id", user.id)
+    .select("id")
+    .maybeSingle();
+
+  if (!claimed) return { status: "failed", changeLog: [], error: "Site not found." };
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  return startGeneration(siteId);
+}
+
 /** Lightweight poll target for the build screen. */
 export async function getGenerationStatus(siteId: string): Promise<GenerationSnapshot> {
   const supabase = await createClient();
