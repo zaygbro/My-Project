@@ -131,6 +131,31 @@ export function NewSiteForm({ disabled }: { disabled: boolean }) {
     }
   }, [state]);
 
+  // Escape and click-outside dismissal — previously the only way to close
+  // this panel was clicking one of the two toggle buttons again, so a
+  // keyboard user tabbing away, or a mouse user clicking anywhere else on
+  // the page, had no way to dismiss it.
+  useEffect(() => {
+    if (!modelOpen) return;
+    function onKeyDown(e: globalThis.KeyboardEvent) {
+      if (e.key === "Escape") setModelOpen(false);
+    }
+    function onPointerDown(e: globalThis.PointerEvent) {
+      // Scoped to the whole form, not just the panel — both toggle buttons
+      // live outside the panel div, so checking against the panel alone
+      // would treat clicking them as "outside" and fight their own onClick.
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        setModelOpen(false);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [modelOpen]);
+
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
