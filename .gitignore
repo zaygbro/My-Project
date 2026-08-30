@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# Next.js build output. The app's own .gitignore covers app/.next; this
+# catches a stray build run from the repo root by mistake, which otherwise
+# drops 2.8MB of untracked artifacts here.
+.next/
