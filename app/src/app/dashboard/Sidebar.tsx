@@ -182,6 +182,17 @@ export function Sidebar({
         )}
 
         <div className="mt-4 space-y-1">
+          <NavLink
+            href="/dashboard/promote"
+            active={pathname.startsWith("/dashboard/promote")}
+            onNavigate={() => setOpen(false)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <rect x="2" y="6" width="13" height="12" rx="2" />
+              <path d="m15 11 6-3.5v9L15 13z" strokeLinejoin="round" />
+            </svg>
+            Video ads
+          </NavLink>
           {isDev && (
             <NavLink
               href="/dashboard/analytics"

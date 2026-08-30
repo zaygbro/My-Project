@@ -22,6 +22,7 @@ import {
 import { sanitizeTokens } from "../src/lib/site-theme";
 import { validatePassword } from "../src/lib/password";
 import { safeNextPath } from "../src/lib/redirects";
+import { PLATFORM_LIST, beltCommand, isPlatformId } from "../src/lib/promote/platforms";
 import type { DesignTokens, GeneratedPage } from "../src/lib/generation/types";
 
 let passed = 0;
@@ -361,6 +362,47 @@ test("falls back for empty or missing values", () => {
   assert.equal(safeNextPath(null), "/dashboard");
   assert.equal(safeNextPath(undefined), "/dashboard");
   assert.equal(safeNextPath(""), "/dashboard");
+});
+
+console.log("\npromote platforms");
+test("every platform has coherent limits", () => {
+  for (const p of PLATFORM_LIST) {
+    assert.ok(p.targetSeconds > 0, p.id);
+    // A script written to targetSeconds must actually be postable.
+    assert.ok(p.targetSeconds <= p.maxSeconds, `${p.id}: target exceeds platform max`);
+    assert.ok(p.captionLimit > 0, p.id);
+    assert.ok(p.uploadSteps.length > 0, `${p.id}: no upload steps`);
+    assert.match(p.docsUrl, /^https:\/\//, `${p.id}: docs link`);
+  }
+});
+test("isPlatformId only accepts real platforms", () => {
+  assert.equal(isPlatformId("tiktok"), true);
+  assert.equal(isPlatformId("myspace"), false);
+  // Must not be fooled by inherited Object properties.
+  assert.equal(isPlatformId("toString"), false);
+  assert.equal(isPlatformId("constructor"), false);
+});
+
+console.log("\nbeltCommand");
+test("builds a runnable command with valid JSON", () => {
+  const cmd = beltCommand("google/veo-3-1-fast", "a cat on a wall", 15, true);
+  assert.match(cmd, /^belt app run google\/veo-3-1-fast --input '/);
+  const json = cmd.slice(cmd.indexOf("'") + 1, cmd.lastIndexOf("'"));
+  const parsed = JSON.parse(json);
+  assert.equal(parsed.prompt, "a cat on a wall");
+  assert.equal(parsed.duration, 15);
+  assert.equal(parsed.generate_audio, true);
+});
+test("omits generate_audio for silent models", () => {
+  const cmd = beltCommand("xai/grok-imagine-video", "waves", 5, false);
+  assert.doesNotMatch(cmd, /generate_audio/);
+});
+test("escapes single quotes so the shell command can't break out", () => {
+  // A prompt containing a quote would otherwise close the shell's quoting
+  // and turn the rest of the prompt into separate arguments (or commands).
+  const cmd = beltCommand("google/veo-3-1-fast", "a dog's day; rm -rf /", 10, false);
+  assert.doesNotMatch(cmd, /[^\\]'; rm/);
+  assert.ok(cmd.includes(`'\\''`), "single quote should be shell-escaped");
 });
 
 console.log(`\n${passed} passed${process.exitCode ? " (with failures above)" : ""}\n`);

@@ -168,6 +168,20 @@ Visit `http://localhost:3000` — you'll land on `/sign-in`.
   `STRIPE_PRICE_IDS` — not a second hardcoded copy of the marketing
   site's prices — so it reads "—" rather than a wrong number when
   Stripe isn't configured or a price ID doesn't resolve.
+- **Video ads** (`dashboard/promote`): writes a platform-specific ad from a
+  site's *real* generated copy — hook, timed shot list, a text-to-video
+  prompt, caption, and hashtags — then shows how to post it. Francisity
+  does **not** generate video: the `ai-video-generation` skill documents
+  the inference.sh `belt` CLI, which is Claude Code tooling, not something
+  a Vercel-hosted app can shell out to. So this produces the script and a
+  copy-ready `belt` command and hands off; the page says so plainly rather
+  than implying a render happens here. Platform constraints live in
+  `lib/promote/platforms.ts` (aspect ratio, target/max length, caption
+  cap), drive both the prompt and the script length, and each carries a
+  link to the platform's own docs since these limits change. The caption
+  cap is re-enforced server-side rather than trusted to the model, and
+  `beltCommand` shell-escapes the prompt because it's copied into a
+  terminal.
 - **Export to code**: `GET /api/sites/[id]/export` (Pro/Studio only,
   via `PLAN_LIMITS[plan].exportEnabled`) renders one HTML file per page
   plus a shared stylesheet built from that site's own generated design
