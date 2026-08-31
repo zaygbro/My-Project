@@ -228,6 +228,50 @@ test("cta and text carry no items even if the model included some", () => {
   const s: PageSection = { key: "a", title: "T", body: "B", layout: "cta", items: [{ label: "x" }, { label: "y" }] };
   assert.deepEqual(sanitizeSection(s).items, []);
 });
+test("keeps a faq section with enough real items", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "FAQ",
+    body: "",
+    layout: "faq",
+    items: [{ label: "Do you deliver?", detail: "Yes, within 5 miles." }, { label: "Refunds?", detail: "Within 30 days." }],
+  };
+  assert.equal(sanitizeSection(s).layout, "faq");
+});
+test("falls back to text when a faq section has too few items", () => {
+  const s: PageSection = { key: "a", title: "FAQ", body: "", layout: "faq", items: [{ label: "Only one?" }] };
+  assert.equal(sanitizeSection(s).layout, "text");
+});
+test("keeps a team section with enough real items", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "Team",
+    body: "",
+    layout: "team",
+    items: [{ label: "Jane", detail: "Head Roaster" }, { label: "Sam", detail: "Barista Lead" }],
+  };
+  assert.equal(sanitizeSection(s).layout, "team");
+});
+test("keeps a pricing section with enough real items", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "Pricing",
+    body: "",
+    layout: "pricing",
+    items: [{ label: "Basic", detail: "$10/mo" }, { label: "Pro", detail: "$25/mo" }],
+  };
+  assert.equal(sanitizeSection(s).layout, "pricing");
+});
+test("keeps a timeline section with enough real items", () => {
+  const s: PageSection = {
+    key: "a",
+    title: "Our story",
+    body: "",
+    layout: "timeline",
+    items: [{ label: "2019", detail: "Founded" }, { label: "2022", detail: "Opened second location" }],
+  };
+  assert.equal(sanitizeSection(s).layout, "timeline");
+});
 
 console.log("\nvalidateProject — section layouts");
 const layoutBrief: StructuredBrief = { mustHavePages: ["Home"] };
@@ -328,7 +372,11 @@ test("rejects malformed token values instead of injecting them into css", () => 
   const css = renderSiteToStaticFiles({ name: "X", pages, tokens: evil, badgeEnabled: false }).find(
     (f) => f.path === "styles.css"
   )!.contents;
-  assert.doesNotMatch(css, /display\s*:\s*none/);
+  // The actual attack shape here is breaking out of the :root {} block with
+  // "} body { ... }" — checked directly, rather than banning the phrase
+  // "display: none" anywhere in the whole stylesheet, which the site's own
+  // (legitimate, hardcoded) FAQ accordion styling also uses.
+  assert.doesNotMatch(css, /}\s*body\s*{/);
   assert.doesNotMatch(css, /@import/);
   assert.doesNotMatch(css, /position\s*:\s*fixed/);
   assert.match(css, /--accent: #3b82f6;/); // fell back
@@ -362,6 +410,10 @@ test("renders each real layout's own markup, not just the plain block", () => {
         { key: "s3", title: "How it works", body: "", layout: "list", items: [{ label: "Order online" }, { label: "We roast" }] },
         { key: "s4", title: "Reviews", body: "Best coffee in town.", layout: "quote", attribution: "A regular" },
         { key: "s5", title: "Ready?", body: "Come say hi.", layout: "cta" },
+        { key: "s6", title: "FAQ", body: "", layout: "faq", items: [{ label: "Do you deliver?", detail: "Yes." }, { label: "Refunds?", detail: "Within 30 days." }] },
+        { key: "s7", title: "Team", body: "", layout: "team", items: [{ label: "Jane", detail: "Head Roaster" }, { label: "Sam", detail: "Barista Lead" }] },
+        { key: "s8", title: "Pricing", body: "", layout: "pricing", items: [{ label: "Basic", detail: "$10/mo" }, { label: "Pro", detail: "$25/mo" }] },
+        { key: "s9", title: "Our story", body: "", layout: "timeline", items: [{ label: "2019", detail: "Founded" }, { label: "2022", detail: "Opened second location" }] },
       ],
     },
   ];
@@ -377,6 +429,27 @@ test("renders each real layout's own markup, not just the plain block", () => {
   assert.match(html, /class="site-section site-section-quote"/);
   assert.match(html, /site-quote-attribution">A regular</);
   assert.match(html, /class="site-section site-section-cta"/);
+  assert.match(html, /class="site-section site-section-faq"/);
+  assert.match(html, /site-faq-question">Do you deliver\?</);
+  assert.match(html, /site-faq-answer">Yes\.</);
+  assert.match(html, /class="site-section site-section-team"/);
+  assert.match(html, /site-team-avatar" aria-hidden="true">J</);
+  assert.match(html, /site-team-name">Jane</);
+  assert.match(html, /class="site-section site-section-pricing"/);
+  assert.match(html, /site-pricing-name">Basic</);
+  assert.match(html, /site-pricing-detail">\$10\/mo</);
+  assert.match(html, /class="site-section site-section-timeline"/);
+  assert.match(html, /site-timeline-label">2019</);
+  assert.match(html, /site-timeline-detail">Founded</);
+});
+test("a pricing section with too few items exports as plain text, not a lopsided grid", () => {
+  const thin: GeneratedPage[] = [
+    { slug: "index", title: "Home", sections: [{ key: "s", title: "Pricing", body: "One plan.", layout: "pricing", items: [{ label: "Only one" }] }] },
+  ];
+  const html = renderSiteToStaticFiles({ name: "X", pages: thin, tokens, badgeEnabled: false }).find(
+    (f) => f.path === "index.html"
+  )!.contents;
+  assert.doesNotMatch(html, /site-section-pricing/);
 });
 test("a features section with too few items exports as plain text, not a broken grid", () => {
   const thin: GeneratedPage[] = [

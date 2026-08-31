@@ -72,6 +72,76 @@ export function SiteSection({ section }: { section: PageSection }) {
         </section>
       );
 
+    case "faq":
+      return (
+        <section id={safe.key} className="site-section site-section-faq">
+          <h2>{safe.title}</h2>
+          {safe.body && <p>{safe.body}</p>}
+          <div className="site-faq">
+            {safe.items.map((item, i) => (
+              <details key={i} className="site-faq-item">
+                <summary className="site-faq-question">{item.label}</summary>
+                {item.detail && <p className="site-faq-answer">{item.detail}</p>}
+              </details>
+            ))}
+          </div>
+        </section>
+      );
+
+    case "team":
+      return (
+        <section id={safe.key} className="site-section site-section-team">
+          <h2>{safe.title}</h2>
+          {safe.body && <p>{safe.body}</p>}
+          <div className="site-items">
+            {safe.items.map((item, i) => (
+              <div key={i} className="site-team-member">
+                <span className="site-team-avatar" aria-hidden="true">
+                  {item.label.charAt(0).toUpperCase()}
+                </span>
+                <span className="site-team-name">{item.label}</span>
+                {item.detail && <span className="site-team-role">{item.detail}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+
+    case "pricing":
+      return (
+        <section id={safe.key} className="site-section site-section-pricing">
+          <h2>{safe.title}</h2>
+          {safe.body && <p>{safe.body}</p>}
+          <div className="site-items">
+            {safe.items.map((item, i) => (
+              <div key={i} className="site-pricing-tier">
+                <span className="site-pricing-name">{item.label}</span>
+                {item.detail && <span className="site-pricing-detail">{item.detail}</span>}
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+
+    case "timeline":
+      return (
+        <section id={safe.key} className="site-section site-section-timeline">
+          <h2>{safe.title}</h2>
+          {safe.body && <p>{safe.body}</p>}
+          <div className="site-timeline">
+            {safe.items.map((item, i) => (
+              <div key={i} className="site-timeline-item">
+                <span className="site-timeline-marker" aria-hidden="true" />
+                <div className="site-timeline-body">
+                  <span className="site-timeline-label">{item.label}</span>
+                  {item.detail && <span className="site-timeline-detail">{item.detail}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+
     case "cta":
       return (
         <section id={safe.key} className="site-section site-section-cta">

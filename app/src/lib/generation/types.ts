@@ -40,9 +40,30 @@ export interface DesignTokens {
  * `attribution` (quote) to have anything to render beyond a plain block, and
  * fall back to "text" at render time if that's missing — see
  * site-content.ts's sanitizeSection. */
-export type SectionLayout = "text" | "cta" | "stats" | "features" | "list" | "quote";
+export type SectionLayout =
+  | "text"
+  | "cta"
+  | "stats"
+  | "features"
+  | "list"
+  | "quote"
+  | "faq"
+  | "team"
+  | "pricing"
+  | "timeline";
 
-export const SECTION_LAYOUTS: SectionLayout[] = ["text", "cta", "stats", "features", "list", "quote"];
+export const SECTION_LAYOUTS: SectionLayout[] = [
+  "text",
+  "cta",
+  "stats",
+  "features",
+  "list",
+  "quote",
+  "faq",
+  "team",
+  "pricing",
+  "timeline",
+];
 
 /** One entry in a "stats" (value + label), "features" (title + description),
  * or "list" (label, optionally with a detail line) section. Reused across

@@ -266,6 +266,12 @@ html body {
   padding: 16px 18px;
   border-radius: var(--radius);
   background: var(--surface);
+  /* A card sitting on an even-indexed section shares this exact background
+     with that section's own alternating tint band (also var(--surface)) —
+     without a border of its own the card would be invisible there. Falls
+     back to no visible border on browsers without color-mix, which is a
+     harmless no-op since the background still reads as a card via padding. */
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
 }
 .site-feature-title {
   font-weight: 700;
@@ -335,6 +341,147 @@ html body {
 }
 .site-quote-attribution::before {
   content: "— ";
+}
+
+.site-faq {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.site-faq-item {
+  border-bottom: 1px solid var(--surface);
+  padding: 14px 0;
+}
+.site-faq-item:first-child {
+  border-top: 1px solid var(--surface);
+}
+.site-faq-question {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text);
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.site-faq-question::-webkit-details-marker {
+  display: none;
+}
+.site-faq-question::after {
+  content: "+";
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.site-faq-item[open] .site-faq-question::after {
+  content: "\\2212";
+}
+.site-faq-answer {
+  margin: 10px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.site-team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  padding: 22px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+.site-team-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.site-team-name {
+  font-weight: 700;
+  color: var(--text);
+}
+.site-team-role {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.site-pricing-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px 20px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background: var(--surface);
+}
+.site-pricing-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+.site-pricing-detail {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.site-timeline {
+  position: relative;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-left: 24px;
+}
+.site-timeline::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--surface);
+}
+.site-timeline-item {
+  position: relative;
+}
+.site-timeline-marker {
+  position: absolute;
+  left: -24px;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.site-timeline-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.site-timeline-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--text);
+}
+.site-timeline-detail {
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .site-section:not(:first-of-type).site-section-cta {

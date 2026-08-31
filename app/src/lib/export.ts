@@ -73,6 +73,70 @@ ${item.detail ? `          <span class="site-list-detail">${escapeHtml(item.deta
 ${safe.attribution ? `        <cite class="site-quote-attribution">${escapeHtml(safe.attribution)}</cite>\n` : ""}      </blockquote>
     </section>`;
 
+    case "faq":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-faq">
+      ${heading}
+      ${body}
+      <div class="site-faq">
+${safe.items
+  .map(
+    (item) => `        <details class="site-faq-item">
+          <summary class="site-faq-question">${escapeHtml(item.label)}</summary>
+${item.detail ? `          <p class="site-faq-answer">${escapeHtml(item.detail)}</p>\n` : ""}        </details>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
+    case "team":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-team">
+      ${heading}
+      ${body}
+      <div class="site-items">
+${safe.items
+  .map(
+    (item) => `        <div class="site-team-member">
+          <span class="site-team-avatar" aria-hidden="true">${escapeHtml(item.label.charAt(0).toUpperCase())}</span>
+          <span class="site-team-name">${escapeHtml(item.label)}</span>
+${item.detail ? `          <span class="site-team-role">${escapeHtml(item.detail)}</span>\n` : ""}        </div>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
+    case "pricing":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-pricing">
+      ${heading}
+      ${body}
+      <div class="site-items">
+${safe.items
+  .map(
+    (item) => `        <div class="site-pricing-tier">
+          <span class="site-pricing-name">${escapeHtml(item.label)}</span>
+${item.detail ? `          <span class="site-pricing-detail">${escapeHtml(item.detail)}</span>\n` : ""}        </div>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
+    case "timeline":
+      return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-timeline">
+      ${heading}
+      ${body}
+      <div class="site-timeline">
+${safe.items
+  .map(
+    (item) => `        <div class="site-timeline-item">
+          <span class="site-timeline-marker" aria-hidden="true"></span>
+          <div class="site-timeline-body">
+            <span class="site-timeline-label">${escapeHtml(item.label)}</span>
+${item.detail ? `            <span class="site-timeline-detail">${escapeHtml(item.detail)}</span>\n` : ""}          </div>
+        </div>`
+  )
+  .join("\n")}
+      </div>
+    </section>`;
+
     case "cta":
       return `    <section id="${escapeHtml(safe.key)}" class="site-section site-section-cta">
       ${heading}

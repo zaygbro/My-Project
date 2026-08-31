@@ -16,6 +16,10 @@ const MIN_ITEMS: Partial<Record<NonNullable<GeneratedPage["sections"][number]["l
   stats: 2,
   features: 2,
   list: 1,
+  faq: 2,
+  team: 2,
+  pricing: 2,
+  timeline: 2,
 };
 
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;

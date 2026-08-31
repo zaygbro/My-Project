@@ -65,14 +65,14 @@ Respond with ONLY a JSON object, no markdown code fences, no other text, in exac
   },
   "pages": [
     { "slug": "<lowercase-hyphenated>", "title": "<page title>", "sections": [
-      { "key": "<lowercase-key>", "title": "<section heading>", "body": "<real, specific body copy — 2-5 sentences, never generic placeholder text>", "layout": "<one of: text, cta, stats, features, list, quote>" }
+      { "key": "<lowercase-key>", "title": "<section heading>", "body": "<real, specific body copy — 2-5 sentences, never generic placeholder text>", "layout": "<one of: text, cta, stats, features, list, quote, faq, team, pricing, timeline>" }
     ] }
   ]
 }
 
 A section's "layout" is optional in the schema but NOT optional in practice — see "Vary the layout" below for what each one means and why picking real ones is the actual job.
 
-Only "stats", "features", and "list" sections take an "items" array: { "key", "title", "body", "layout": "stats", "items": [ { "label": "<a value>", "detail": "<optional caption>" } ] } — "features"/"list" need at least 2/1 real items ("stats" needs at least 2). Only "quote" sections take "attribution": { "key", "title", "body": "<the quote itself>", "layout": "quote", "attribution": "<name, role>" } — attribution is optional. Every other layout ignores both fields entirely; don't include them.
+"stats", "features", "list", "faq", "team", "pricing", and "timeline" sections take an "items" array: { "key", "title", "body", "layout": "stats", "items": [ { "label": "<a value>", "detail": "<optional caption>" } ] } — minimums: "features"/"pricing"/"team"/"timeline" need 2+, "list" needs 1+, "stats"/"faq" need 2+. What "label"/"detail" mean shifts per layout — see "Vary the layout" below. Only "quote" sections take "attribution": { "key", "title", "body": "<the quote itself>", "layout": "quote", "attribution": "<name, role>" } — attribution is optional. Every other layout ignores both fields entirely; don't include them.
 
 Hard requirements:
 - Generate one page per page named in "Must-have pages", using a slug matching that name (lowercase, spaces to hyphens).
@@ -92,9 +92,13 @@ Design guidance — every generated site is compared against every other AI-gene
   - "features": several distinct things worth comparing side by side (services offered, product lines, amenities, plans) — each item is its own short label + one-line description, not a paragraph.
   - "list": a sequence or enumeration (how it works, a menu, what's included) where order or a flat rundown matters more than prose.
   - "quote": a testimonial, review, or a specific person's voice belongs in the site (only when the brief or content genuinely supports one — never invent a fake named reviewer with fabricated specifics presented as verifiable; write it as illustrative, not as attributed-to-a-real-person evidence).
+  - "faq": the business has real recurring questions worth answering up front (booking policy, what's included, how pricing works, turnaround time) — each item's "label" is the question, "detail" is the answer. Don't invent filler questions just to fill the layout.
+  - "team": the brief names specific people, or a small, personal team is clearly part of the pitch (a studio, a clinic, a boutique agency) — each item's "label" is a real name from the brief if one exists, otherwise a role-based placeholder like "Head Roaster" is fine as long as it's not presented as a named, verifiable person; "detail" is their role or one-line specialty. Never invent a fake headshot description or biographical facts about a real person.
+  - "pricing": the business has distinct, nameable tiers or packages (not just a features list) — each item's "label" is the tier name, "detail" is a single line combining the price and what it includes (e.g. "$45/session — includes consultation and one follow-up").
+  - "timeline": a genuine chronology belongs on the page (a founding story with real milestones, a multi-step process, a history) — each item's "label" is the date or milestone name, "detail" is what happened. Don't reach for this just to look sophisticated; "list" is usually the better fit when order matters but dates/milestones don't exist.
   - "cta": a closing section whose entire job is to prompt the next action — keep it short.
   - "text": the default for anything that's genuinely just prose (an about/story section, a policy, general context) — this should still be a normal fraction of the page, not fill it end to end.
-  - A typical page should use at least two or three DIFFERENT layouts across its sections, not one layout repeated for every section on it.`;
+  - A typical page should use at least two or three DIFFERENT layouts across its sections, not one layout repeated for every section on it. The four newer layouts (faq/team/pricing/timeline) exist for when the content genuinely calls for them — don't force one onto a page that has nothing to put in it; a page using only the original six layouts because that's honestly what the content needs is completely fine.`;
 
 function briefToPrompt(brief: StructuredBrief): string {
   // Industry/tone are omitted entirely rather than printed as "undefined"
@@ -493,7 +497,7 @@ Respond with ONLY a JSON object, no markdown code fences, no other text, in exac
 
 Offering options: most people asking for a site edit aren't developers and won't reach for precise terms — when your reply is a clarifying question with a small number of natural, concrete answers, spell those answers out as "options" so the owner can just click one instead of having to phrase a reply themselves. Example: asking whether to write vivid drink descriptions or restyle the menu visually becomes options ["Write vivid descriptions", "Restyle it visually"], not left for the owner to type out. Set "options" to null when the reply isn't a question, when you're only confirming a change you already made, or when the real answers are open-ended (a name, a number, freeform text) rather than a short natural list — never invent artificial choices just to have some.
 
-Each section can also carry a "layout" ("text", "cta", "stats", "features", "list", or "quote" — absent/"text" is a plain heading+paragraph block) plus, only where that layout needs them, an "items" array ({ "label", "detail"? } — "stats" needs 2+, "features" needs 2+, "list" needs 1+) or a "quote" section's "attribution". Changing a section's layout — "make this a stats section", "turn the reviews into a proper list" — is a legitimate, in-scope edit, exactly like a wording change: update that section's "layout" (and its "items"/"attribution" if the new layout needs them) in the pages you return.
+Each section can also carry a "layout" ("text", "cta", "stats", "features", "list", "quote", "faq", "team", "pricing", or "timeline" — absent/"text" is a plain heading+paragraph block) plus, only where that layout needs them, an "items" array ({ "label", "detail"? } — "stats"/"faq" need 2+, "features"/"team"/"pricing"/"timeline" need 2+, "list" needs 1+) or a "quote" section's "attribution". For "faq" label=question/detail=answer; for "team" label=name/detail=role; for "pricing" label=tier name/detail=price+what's included; for "timeline" label=date or milestone/detail=what happened. Changing a section's layout — "make this a stats section", "turn the reviews into a proper list", "add a pricing table", "make this an FAQ" — is a legitimate, in-scope edit, exactly like a wording change: update that section's "layout" (and its "items"/"attribution" if the new layout needs them) in the pages you return.
 
 Rules:
 - Never add, remove, or rename a page, or change a page's slug — only edit, add, or remove SECTIONS within the existing pages.

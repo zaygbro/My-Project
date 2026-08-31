@@ -109,11 +109,19 @@ export interface SafeSection {
   attribution: string | null;
 }
 
-const LAYOUTS_NEEDING_ITEMS: SectionLayout[] = ["stats", "features", "list"];
+const LAYOUTS_NEEDING_ITEMS: SectionLayout[] = ["stats", "features", "list", "faq", "team", "pricing", "timeline"];
 /** Below this many real items, the layout can't say anything a plain
  * paragraph doesn't already — a single "stat" isn't a comparison, so it
  * falls back to "text" rather than rendering a lopsided one-item grid. */
-const MIN_ITEMS: Partial<Record<SectionLayout, number>> = { stats: 2, features: 2, list: 1 };
+const MIN_ITEMS: Partial<Record<SectionLayout, number>> = {
+  stats: 2,
+  features: 2,
+  list: 1,
+  faq: 2,
+  team: 2,
+  pricing: 2,
+  timeline: 2,
+};
 
 export function sanitizeSection(section: PageSection): SafeSection {
   const layout: SectionLayout = SECTION_LAYOUTS.includes(section.layout as SectionLayout)
