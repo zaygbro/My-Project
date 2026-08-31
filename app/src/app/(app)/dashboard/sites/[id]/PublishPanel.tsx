@@ -44,7 +44,7 @@ export function PublishPanel({
   }, [unpublishState]);
 
   return (
-    <section className="fade-in-up mb-8 rounded-2xl border border-hairline bg-surface p-5">
+    <section id="publish" className="fade-in-up mb-8 scroll-mt-6 rounded-2xl border border-hairline bg-surface p-5">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-mono uppercase tracking-wide text-ink-faint">Publish</h2>
         {isPublished ? (

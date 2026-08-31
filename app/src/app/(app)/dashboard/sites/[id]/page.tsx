@@ -284,7 +284,7 @@ export default async function SiteDetailPage(props: PageProps<"/dashboard/sites/
         </section>
 
         {/* Version history */}
-        <section className="fade-in-up" style={{ animationDelay: "160ms" }}>
+        <section id="history" className="fade-in-up scroll-mt-6" style={{ animationDelay: "160ms" }}>
           <h2 className="mb-3 text-sm font-mono uppercase tracking-wide text-ink-faint">Version history</h2>
           <ul className="space-y-2">
             {(versions ?? []).map((version, i) => (

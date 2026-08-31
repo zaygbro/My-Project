@@ -7,6 +7,17 @@ import type { ChatTurn } from "@/lib/generation/types";
 
 const initialState: SendSiteMessageState = { error: null };
 
+/** Fills the input for the owner to review/edit before sending — unlike a
+ * clicked clarifying-question option, a quick action is a broad starting
+ * point the owner didn't ask for, so it shouldn't fire off on its own. */
+const QUICK_ACTIONS = [
+  { label: "Improve copy", prompt: "Improve the copy across this site — make it more specific and compelling, not generic." },
+  { label: "Change colors", prompt: "Suggest a different color palette that still fits this business, and apply it." },
+  { label: "Add section", prompt: "Add a new section that would genuinely strengthen this site — pick what it should be." },
+  { label: "Mobile polish", prompt: "Tighten up spacing and hierarchy for how this reads on a small mobile screen." },
+  { label: "Surprise me", prompt: "Make one meaningful improvement to this site — your choice of what." },
+];
+
 /**
  * The one place to ask for any change on this site — a section's copy, a
  * whole page's tone, anything. The model decides which section(s) to touch;
@@ -32,6 +43,7 @@ export function SiteChat({
   const [pendingOptions, setPendingOptions] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Append the assistant's reply during render (not in an effect) per
   // React's "adjust state when a prop changes" pattern — `state` is a
@@ -79,6 +91,12 @@ export function SiteChat({
     const formData = new FormData();
     formData.set("message", option);
     formAction(formData);
+  }
+
+  function fillQuickAction(prompt: string) {
+    if (disabled || isPending || !inputRef.current) return;
+    inputRef.current.value = prompt;
+    inputRef.current.focus();
   }
 
   return (
@@ -135,13 +153,27 @@ export function SiteChat({
           </div>
         )}
       </div>
+      <div className="flex shrink-0 flex-wrap gap-1.5 border-t border-hairline px-3 pt-2.5">
+        {QUICK_ACTIONS.map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            onClick={() => fillQuickAction(action.prompt)}
+            disabled={disabled || isPending}
+            className="press rounded-full border border-hairline-soft px-2.5 py-1 text-xs text-ink-dim transition-colors hover:border-accent hover:text-white disabled:opacity-50"
+          >
+            {action.label}
+          </button>
+        ))}
+      </div>
       <form
         ref={formRef}
         action={formAction}
         onSubmit={handleSubmit}
-        className="flex shrink-0 items-center gap-2 border-t border-hairline p-3"
+        className="flex shrink-0 items-center gap-2 p-3"
       >
         <input
+          ref={inputRef}
           name="message"
           required
           placeholder={`Ask ${modelLabel} to change anything on this site…`}

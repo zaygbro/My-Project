@@ -9,6 +9,7 @@ import { isGenerationConfigured } from "@/lib/generation/generate";
 import { SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
 import type { ChangeLogEntry, ChatTurn } from "@/lib/generation/types";
 import { SiteChat } from "../../../dashboard/sites/[id]/SiteChat";
+import { EditorPreview } from "./EditorPreview";
 
 /**
  * The full chat+site editing experience, on its own page instead of a
@@ -66,14 +67,28 @@ export default async function SiteEditPage(props: PageProps<"/sites/[id]/edit">)
         >
           ← {site.name}
         </Link>
-        <a
-          href={`/preview/${id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="press font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:text-white"
-        >
-          Open in new tab ↗
-        </a>
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/dashboard/sites/${id}#history`}
+            className="press hidden font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:text-white sm:inline"
+          >
+            History
+          </Link>
+          <Link
+            href={`/dashboard/sites/${id}#publish`}
+            className="press rounded-full border border-hairline px-3 py-1.5 font-mono text-xs uppercase tracking-wide text-white transition-colors hover:border-accent"
+          >
+            Publish
+          </Link>
+          <a
+            href={`/preview/${id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="press font-mono text-xs uppercase tracking-wide text-ink-faint transition-colors hover:text-white"
+          >
+            Open in new tab ↗
+          </a>
+        </div>
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-[420px_1fr]">
@@ -110,14 +125,7 @@ export default async function SiteEditPage(props: PageProps<"/sites/[id]/edit">)
           )}
         </div>
 
-        <div className="min-h-0 overflow-hidden rounded-2xl border border-hairline">
-          <iframe
-            key={previewKey}
-            src={`/preview/${id}`}
-            title={`${site.name} — live preview`}
-            className="h-full w-full"
-          />
-        </div>
+        <EditorPreview siteId={site.id} siteName={site.name} previewKey={previewKey} />
       </div>
     </div>
   );
