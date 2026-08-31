@@ -30,13 +30,94 @@ const NOTES = [
   { body: "Get a professional site — menus, booking pages, portfolios — without briefing a designer or learning a page builder.", who: "Small businesses" },
 ];
 
+// Six deliberately different compositions, not one wireframe recolored six
+// times — a hero-led image block, a grid of releases, a nav+chart dashboard,
+// a product grid, a centered text-and-rules layout, and rotated 3D tiles.
+// Each also carries its own small accent color, standing in for that site's
+// own design tokens. Still explicitly abstract wireframes, not screenshots —
+// see the section copy: these are concept previews, not real customer sites.
 const SHOWCASE = [
-  { name: "Aurora Studio", kind: "Architecture portfolio" },
-  { name: "Nightform Records", kind: "Music label storefront" },
-  { name: "Pulse Analytics", kind: "SaaS landing page" },
-  { name: "Kindred Coffee Co.", kind: "E-commerce storefront" },
-  { name: "Vertex Legal", kind: "Professional services site" },
-  { name: "Lumen 3D Studio", kind: "Motion artist portfolio" },
+  {
+    name: "Aurora Studio",
+    kind: "Architecture portfolio",
+    thumb: (
+      <>
+        <rect x="8" y="8" width="184" height="80" rx="4" stroke="#2A2A31" />
+        <rect x="8" y="8" width="184" height="80" rx="4" fill="#B08D57" fillOpacity="0.14" />
+        <line x1="8" y1="100" x2="70" y2="100" stroke="#2A2A31" />
+        <rect x="8" y="110" width="90" height="6" rx="2" fill="#2A2A31" />
+        <rect x="8" y="120" width="50" height="5" rx="2" fill="#1A1A1F" />
+      </>
+    ),
+  },
+  {
+    name: "Nightform Records",
+    kind: "Music label storefront",
+    thumb: (
+      <>
+        <rect x="8" y="8" width="184" height="40" rx="4" stroke="#2A2A31" />
+        <rect x="60" y="18" width="80" height="20" rx="2" fill="#E23D7A" fillOpacity="0.28" />
+        <rect x="8" y="56" width="54" height="54" rx="3" stroke="#2A2A31" />
+        <rect x="70" y="56" width="54" height="54" rx="3" stroke="#2A2A31" />
+        <rect x="132" y="56" width="60" height="54" rx="3" fill="#E23D7A" fillOpacity="0.2" />
+      </>
+    ),
+  },
+  {
+    name: "Pulse Analytics",
+    kind: "SaaS landing page",
+    thumb: (
+      <>
+        <line x1="8" y1="26" x2="192" y2="26" stroke="#2A2A31" />
+        <circle cx="18" cy="17" r="3" fill="#3B82F6" />
+        <rect x="8" y="40" width="90" height="10" rx="2" fill="#2A2A31" />
+        <rect x="8" y="56" width="70" height="6" rx="2" fill="#1A1A1F" />
+        <rect x="8" y="80" width="50" height="20" rx="4" fill="#3B82F6" fillOpacity="0.8" />
+        <rect x="132" y="60" width="12" height="50" fill="#3B82F6" fillOpacity="0.3" />
+        <rect x="150" y="40" width="12" height="70" fill="#3B82F6" fillOpacity="0.5" />
+        <rect x="168" y="70" width="12" height="40" fill="#3B82F6" fillOpacity="0.3" />
+      </>
+    ),
+  },
+  {
+    name: "Kindred Coffee Co.",
+    kind: "E-commerce storefront",
+    thumb: (
+      <>
+        <rect x="8" y="8" width="82" height="52" rx="3" stroke="#2A2A31" />
+        <rect x="98" y="8" width="94" height="52" rx="3" fill="#D9713C" fillOpacity="0.16" />
+        <rect x="8" y="68" width="82" height="52" rx="3" fill="#D9713C" fillOpacity="0.16" />
+        <rect x="98" y="68" width="94" height="52" rx="3" stroke="#2A2A31" />
+        <rect x="8" y="128" width="30" height="4" fill="#2A2A31" />
+      </>
+    ),
+  },
+  {
+    name: "Vertex Legal",
+    kind: "Professional services site",
+    thumb: (
+      <>
+        <rect x="60" y="14" width="80" height="10" rx="2" fill="#2A2A31" />
+        <line x1="8" y1="38" x2="192" y2="38" stroke="#2A2A31" />
+        <rect x="8" y="52" width="130" height="6" rx="2" fill="#2F5D50" fillOpacity="0.55" />
+        <rect x="8" y="66" width="100" height="6" rx="2" fill="#1A1A1F" />
+        <rect x="8" y="80" width="150" height="6" rx="2" fill="#1A1A1F" />
+        <rect x="8" y="94" width="90" height="6" rx="2" fill="#1A1A1F" />
+      </>
+    ),
+  },
+  {
+    name: "Lumen 3D Studio",
+    kind: "Motion artist portfolio",
+    thumb: (
+      <>
+        <rect x="20" y="20" width="50" height="50" rx="4" stroke="#2A2A31" transform="rotate(-8 45 45)" />
+        <rect x="70" y="35" width="60" height="60" rx="4" fill="#8B5CF6" fillOpacity="0.22" transform="rotate(6 100 65)" />
+        <rect x="130" y="15" width="50" height="50" rx="4" stroke="#2A2A31" transform="rotate(-4 155 40)" />
+        <rect x="70" y="105" width="60" height="14" rx="3" fill="#2A2A31" />
+      </>
+    ),
+  },
 ];
 
 function cssVars(vars: Record<string, string>): CSSProperties {
@@ -302,7 +383,7 @@ export default function MarketingHome() {
               <article key={item.name} className="showcase-card reveal">
                 <div className="showcase-thumb">
                   <svg viewBox="0 0 200 130" fill="none" aria-hidden="true">
-                    <rect x="8" y="8" width="184" height="114" rx="8" stroke="#2A2A31" />
+                    {item.thumb}
                   </svg>
                 </div>
                 <div className="showcase-meta">
