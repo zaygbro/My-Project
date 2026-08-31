@@ -16,7 +16,9 @@ export default async function DashboardPage() {
   const [{ data: sites, count }, plan] = await Promise.all([
     supabase
       .from("sites")
-      .select("id, name, brief, badge_enabled, generation_status", { count: "exact" })
+      .select("id, name, brief, badge_enabled, generation_status, published_at, subdomain, change_log", {
+        count: "exact",
+      })
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     getEffectivePlanForUser(user.id),

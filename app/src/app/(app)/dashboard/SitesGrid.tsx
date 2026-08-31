@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import type { GenerationStatus } from "@/lib/supabase/types";
+import type { ChangeLogEntry } from "@/lib/generation/types";
 import { deleteSite } from "./actions";
 import { DeleteSiteButton } from "./DeleteSiteButton";
 
@@ -15,6 +16,33 @@ export interface SiteSummary {
   brief: string | null;
   badge_enabled: boolean;
   generation_status: GenerationStatus;
+  published_at: string | null;
+  subdomain: string | null;
+  change_log: ChangeLogEntry[] | null;
+}
+
+/** Minutes/hours/days-ago, coarse on purpose — a dashboard card doesn't need
+ * second-level precision, just enough to answer "is this stale?" at a
+ * glance. Falls back to a short date past 30 days, same as most feeds. */
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/** The most recent real activity on a site — its last change-log entry, or
+ * (for a site with no edits yet) nothing. No separate `updated_at` column
+ * exists on `sites`, and adding one just for this would be schema change
+ * for data the change log already has. */
+function lastActivity(changeLog: ChangeLogEntry[] | null): string | null {
+  const last = changeLog?.[changeLog.length - 1];
+  return last ? timeAgo(last.timestamp) : null;
 }
 
 // A few deterministic abstract "page" thumbnails so a grid of sites doesn't
@@ -117,51 +145,91 @@ export function SitesGrid({ sites }: { sites: SiteSummary[] }) {
         <p className="text-sm text-ink-dim">No sites match &ldquo;{query}&rdquo;.</p>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((site, i) => (
-            <div key={site.id} className="list-card-exit relative" data-removing={removingIds.has(site.id)}>
-              <div className="absolute top-2 right-2 z-10">
-                <DeleteSiteButton
-                  onConfirm={() => handleDelete(site.id)}
-                  disabled={isPending && removingIds.has(site.id)}
-                />
-              </div>
-              <Link
-                href={`/dashboard/sites/${site.id}`}
-                className="hover-lift press fade-in-up flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface transition-colors hover:border-ink-faint"
+          {filtered.map((site, i) => {
+            const isReady = site.generation_status === "validated";
+            const activity = lastActivity(site.change_log);
+            return (
+              <div
+                key={site.id}
+                className="list-card-exit hover-lift fade-in-up relative flex flex-col overflow-hidden rounded-2xl border border-hairline bg-surface transition-colors hover:border-ink-faint"
+                data-removing={removingIds.has(site.id)}
                 style={{ animationDelay: `${i * 40}ms` }}
               >
-                <div className="flex items-center justify-center border-b border-hairline bg-surface-2/50 p-4">
-                  <svg viewBox="0 0 100 88" fill="none" className="h-20 w-full" aria-hidden>
-                    {THUMBS[hashToIndex(site.id, THUMBS.length)]}
-                  </svg>
+                <div className="absolute top-2 right-2 z-10">
+                  <DeleteSiteButton
+                    onConfirm={() => handleDelete(site.id)}
+                    disabled={isPending && removingIds.has(site.id)}
+                  />
                 </div>
-                <div className="flex flex-1 flex-col gap-1 p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold">{site.name}</p>
-                    {/* A site can be mid-build when you navigate back here, so
-                        say so rather than showing a card that looks finished. */}
-                    {site.generation_status === "pending" || site.generation_status === "generating" ? (
-                      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 font-mono text-[10px] uppercase text-accent">
-                        <span className="spinner" aria-hidden />
-                        Building
-                      </span>
-                    ) : site.generation_status === "failed" ? (
-                      <span className="shrink-0 rounded-full border border-red-900 bg-red-950/30 px-2 py-0.5 font-mono text-[10px] uppercase text-red-400">
-                        Failed
-                      </span>
-                    ) : (
-                      site.badge_enabled && (
-                        <span className="shrink-0 rounded-full border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
-                          Badge on
-                        </span>
-                      )
-                    )}
+                <Link href={`/dashboard/sites/${site.id}`} className="press flex flex-1 flex-col">
+                  <div className="flex items-center justify-center border-b border-hairline bg-surface-2/50 p-4">
+                    <svg viewBox="0 0 100 88" fill="none" className="h-20 w-full" aria-hidden>
+                      {THUMBS[hashToIndex(site.id, THUMBS.length)]}
+                    </svg>
                   </div>
-                  {site.brief && <p className="line-clamp-2 text-sm text-ink-dim">{site.brief}</p>}
-                </div>
-              </Link>
-            </div>
-          ))}
+                  <div className="flex flex-1 flex-col gap-1 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold">{site.name}</p>
+                      {/* A site can be mid-build when you navigate back here, so
+                          say so rather than showing a card that looks finished. */}
+                      {site.generation_status === "pending" || site.generation_status === "generating" ? (
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-accent/50 bg-accent-soft px-2 py-0.5 font-mono text-[10px] uppercase text-accent">
+                          <span className="spinner" aria-hidden />
+                          Building
+                        </span>
+                      ) : site.generation_status === "failed" ? (
+                        <span className="shrink-0 rounded-full border border-red-900 bg-red-950/30 px-2 py-0.5 font-mono text-[10px] uppercase text-red-400">
+                          Failed
+                        </span>
+                      ) : (
+                        site.badge_enabled && (
+                          <span className="shrink-0 rounded-full border border-hairline px-2 py-0.5 font-mono text-[10px] uppercase text-ink-faint">
+                            Badge on
+                          </span>
+                        )
+                      )}
+                    </div>
+                    {site.brief && <p className="line-clamp-2 text-sm text-ink-dim">{site.brief}</p>}
+                  </div>
+                </Link>
+
+                {/* Publish status, last activity, and one-click shortcuts —
+                    a sibling of the Link (not nested inside it) since an
+                    anchor can't contain other interactive elements. */}
+                {isReady && (
+                  <div className="flex items-center justify-between gap-2 border-t border-hairline-soft px-4 py-2.5">
+                    <div className="flex min-w-0 items-center gap-1.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                      {site.published_at ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 text-green-400">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-400" aria-hidden />
+                          Live
+                        </span>
+                      ) : (
+                        <span className="shrink-0">Draft</span>
+                      )}
+                      {activity && <span className="truncate">· {activity}</span>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3 text-xs">
+                      <a
+                        href={`/preview/${site.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="press font-semibold text-ink-dim transition-colors hover:text-white"
+                      >
+                        Preview
+                      </a>
+                      <Link
+                        href={`/dashboard/sites/${site.id}#publish`}
+                        className="press font-semibold text-accent transition-colors hover:text-accent-hover"
+                      >
+                        {site.published_at ? "Manage" : "Publish"}
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
