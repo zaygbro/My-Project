@@ -40,7 +40,7 @@ function relativeLuminance(hex: string): number {
   return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
 }
 
-function contrastRatio(hexA: string, hexB: string): number {
+export function contrastRatio(hexA: string, hexB: string): number {
   const l1 = relativeLuminance(hexA) + 0.05;
   const l2 = relativeLuminance(hexB) + 0.05;
   return Math.max(l1, l2) / Math.min(l1, l2);

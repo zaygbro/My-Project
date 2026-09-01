@@ -7,9 +7,9 @@ import { getEffectivePlanForUser } from "@/lib/dev-mode";
 import { getModelInfo } from "@/lib/ai/models";
 import { isGenerationConfigured } from "@/lib/generation/generate";
 import { SITE_CHAT_PAGE_SLUG, SITE_CHAT_SECTION_KEY } from "@/lib/site-content";
-import type { ChangeLogEntry, ChatTurn } from "@/lib/generation/types";
-import { SiteChat } from "../../../dashboard/sites/[id]/SiteChat";
+import type { ChangeLogEntry, ChatTurn, DesignTokens, GeneratedPage } from "@/lib/generation/types";
 import { EditorPreview } from "./EditorPreview";
+import { EditorSidebar } from "./EditorSidebar";
 
 /**
  * The full chat+site editing experience, on its own page instead of a
@@ -28,7 +28,7 @@ export default async function SiteEditPage(props: PageProps<"/sites/[id]/edit">)
   const supabase = await createClient();
   const { data: site } = await supabase
     .from("sites")
-    .select("id, name, generation_status, preferred_model, change_log")
+    .select("id, name, generation_status, preferred_model, change_log, pages, design_tokens")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -92,38 +92,19 @@ export default async function SiteEditPage(props: PageProps<"/sites/[id]/edit">)
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 lg:grid-cols-[420px_1fr]">
-        <div className="flex min-h-0 flex-col gap-2">
-          <div className="flex shrink-0 items-center justify-between">
-            <h1 className="text-sm font-mono uppercase tracking-wide text-ink-faint">
-              {isGenerationConfigured ? `Chat with ${modelInfo.label}` : "AI chat"}
-            </h1>
-            <span className="font-mono text-xs text-ink-faint">
-              {rebuildLimit === null ? "Unlimited" : `${rebuildsUsed}/${rebuildLimit} used`}
-            </span>
-          </div>
-          {isGenerationConfigured ? (
-            <div className="min-h-0 flex-1">
-              <SiteChat
-                siteId={site.id}
-                modelLabel={modelInfo.label}
-                disabled={atRebuildLimit}
-                initialMessages={chatMessages}
-              />
-            </div>
-          ) : (
-            <p className="rounded-2xl border border-hairline bg-surface p-5 text-sm text-ink-faint">
-              AI generation isn&rsquo;t configured yet — set{" "}
-              <code className="font-mono text-ink-dim">ANTHROPIC_API_KEY</code> to chat with{" "}
-              {modelInfo.label} about this site.
-            </p>
-          )}
-          {atRebuildLimit && (
-            <p className="shrink-0 text-sm text-accent">
-              You&rsquo;ve used all your rebuilds for this month on {PLAN_LABELS[plan]} — upgrade for
-              unlimited rebuilds.
-            </p>
-          )}
-        </div>
+        <EditorSidebar
+          siteId={site.id}
+          modelLabel={modelInfo.label}
+          isGenerationConfigured={isGenerationConfigured}
+          chatDisabled={atRebuildLimit}
+          atRebuildLimit={atRebuildLimit}
+          rebuildLimit={rebuildLimit}
+          rebuildsUsed={rebuildsUsed}
+          planLabel={PLAN_LABELS[plan]}
+          initialMessages={chatMessages}
+          pages={site.pages as GeneratedPage[]}
+          tokens={site.design_tokens as DesignTokens | null}
+        />
 
         <EditorPreview siteId={site.id} siteName={site.name} previewKey={previewKey} />
       </div>
